@@ -17,15 +17,23 @@ main:
 	fence
 
 	// TODO: [p1-task1] call BIOS to print string "It's bootblock!"
-
+	li a0, BIOS_PUTSTR
+	la a1, msg
+	call bios_func_entry
 
 	// TODO: [p1-task2] call BIOS to read kernel in SD card
-
+	li a0, BIOS_SDREAD
+	la a1, kernel
+	li s0, os_size_loc
+	lh a2, 0(s0)
+	li a3, 1
+	call bios_func_entry
 
 	// TODO: [p1-task4] load task-related arguments and pass them to kernel
 
 
 	// TODO: [p1-task2] jump to kernel to start UCAS-OS
+	j kernel
 
 
 // while(1) --> stop here

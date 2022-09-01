@@ -74,7 +74,19 @@ int main(void)
 
     // TODO: Load tasks by either task id [p1-task3] or task name [p1-task4],
     //   and then execute them.
-
+    
+    // for [p1-task2]
+    int ch;
+    while((ch=bios_getchar())){
+        if(ch!=-1){
+            if(ch=='\r'){
+                // \r for Carriage Return and \n for Line Feed
+                bios_putstr("\n\r");
+            }else
+                bios_putchar(ch);
+        }
+    }
+    
 
     // Infinite while loop, where CPU stays in a low-power state (QAQQQQQQQQQQQ)
     while (1)
