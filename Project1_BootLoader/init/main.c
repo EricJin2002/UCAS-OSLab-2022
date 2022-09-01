@@ -76,14 +76,37 @@ int main(void)
     //   and then execute them.
     
     // for [p1-task2]
+    /*
+     * int ch;
+     * while((ch=bios_getchar())){
+     *     if(ch!=-1){
+     *         if(ch=='\r'){
+     *             // \r for Carriage Return and \n for Line Feed
+     *             bios_putstr("\n\r");
+     *         }else
+     *             bios_putchar(ch);
+     *     }
+     * }
+     */
+    
+
+    // for [p1-task3]
+    // read task_num
+    unsigned long bootblock_end_loc = 0x50200200;
+    unsigned long task_num_loc = bootblock_end_loc - 2;
+    int task_num = (int)*(short *)task_num_loc;
+
+    // load and excute tasks 
     int ch;
     while((ch=bios_getchar())){
         if(ch!=-1){
-            if(ch=='\r'){
-                // \r for Carriage Return and \n for Line Feed
-                bios_putstr("\n\r");
-            }else
-                bios_putchar(ch);
+            bios_putchar(ch);
+            bios_putstr("\n\r");
+            if(ch<'0'+task_num && ch>='0'){
+                ((void (*)())load_task_img(ch-'0'))();
+            }else{
+                bios_putstr("Invalid task id!\n\r");
+            }
         }
     }
     

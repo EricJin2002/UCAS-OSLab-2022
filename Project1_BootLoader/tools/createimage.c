@@ -128,6 +128,13 @@ static void create_image(int nfiles, char *files[])
          */
         if (strcmp(*files, "bootblock") == 0) {
             write_padding(img, &phyaddr, SECTOR_SIZE);
+        } else{
+            int program_size = 15 * SECTOR_SIZE;
+            int new_phyaddr =  (
+                (phyaddr - SECTOR_SIZE) / program_size 
+                + ((phyaddr - SECTOR_SIZE) % program_size != 0)
+            ) * program_size + SECTOR_SIZE;
+            write_padding(img, &phyaddr, new_phyaddr);
         }
 
         fclose(fp);
@@ -214,6 +221,10 @@ static void write_img_info(int nbytes_kern, task_info_t *taskinfo,
 {
     // TODO: [p1-task3] & [p1-task4] write image info to some certain places
     // NOTE: os size, infomation about app-info sector(s) ...
+    fseek(img, OS_SIZE_LOC, SEEK_SET);
+    short kernel_sector_num = NBYTES2SEC(nbytes_kern);
+    fwrite(&kernel_sector_num, sizeof(short), 1, img);
+    fwrite(&tasknum, sizeof(short), 1, img);
 }
 
 /* print an error message and exit */
