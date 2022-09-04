@@ -246,6 +246,22 @@ static void write_img_info(int nbytes_kern, task_info_t *taskinfo,
     // save app-info for [p1-task4]
     fwrite(taskinfo, sizeof(task_info_t), TASK_MAXNUM, img);
     
+    // save bat.txt in image for [p1-task5]
+    // first record batch size, then save content
+    uint32_t bat_off = ftell(img);
+    uint32_t bat_size = 0;
+    fwrite(&bat_size, 4, 1, img); // place holder
+    FILE *bat = fopen("../bat.txt", "r");
+    char ch_b;
+    while((ch_b=fgetc(bat))!=EOF){
+        bat_size++;
+        fputc(ch_b,img);
+    }
+    fputc('\0',img);
+    bat_size++;
+    fseek(img, bat_off, SEEK_SET);
+    fwrite(&bat_size, 4, 1, img);
+
     // save kernel sector num and task num for [p1-task3] & [p1-task4]
     uint16_t kernel_sector_num = NBYTES2SEC(nbytes_kern);
     fseek(img, OS_SIZE_LOC, SEEK_SET);

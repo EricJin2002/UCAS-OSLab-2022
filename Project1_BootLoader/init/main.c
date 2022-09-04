@@ -8,6 +8,11 @@
 
 #define VERSION_BUF 50
 
+// for [p1-task4]
+// copied from createimage.c
+#define SECTOR_SIZE 512
+#define NBYTES2SEC(nbytes) (((nbytes) / SECTOR_SIZE) + ((nbytes) % SECTOR_SIZE != 0))
+
 int version = 2; // version must between 0 and 9
 char buf[VERSION_BUF];
 
@@ -84,6 +89,8 @@ int main(void)
     // TODO: Load tasks by either task id [p1-task3] or task name [p1-task4],
     //   and then execute them.
     
+    bios_putstr("\n\r");
+
     // for [p1-task2]
     /*
      * int ch;
@@ -99,7 +106,7 @@ int main(void)
      */
     
 
-    // for [p1-task3]
+    // for [p1-task3] & [p1-task4]
     // read task_num
     void *bootblock_end_loc = (void *)0x50200200;
     void *task_num_loc = bootblock_end_loc - 2;
@@ -119,8 +126,78 @@ int main(void)
      *     }
      * }
      */
+
+
+    // load and excute batch for [p1-task5]
+
+    bios_putstr("Reading batch from image...\n\r======================\n\r");
+
+    // read batch size
+    uint32_t app_info_off = *(uint32_t *)(0x50200200 - 0xc);
+    uint32_t bat_size_off = app_info_off + sizeof(task_info_t)*TASK_MAXNUM;
+    uint16_t bat_size_block_id = bat_size_off/SECTOR_SIZE;
+    uint16_t bat_size_block_num = NBYTES2SEC(bat_size_off%SECTOR_SIZE + 4);
+    bios_sdread(0x52000000, bat_size_block_num, bat_size_block_id);
+    uint32_t bat_size = *(uint32_t *)(0x52000000 + bat_size_off%SECTOR_SIZE);
     
+    // read batch content
+    char bat_cache[1024]; //TODO: what if bat.txt is too big
+    uint32_t bat_off = bat_size_off + 4;
+    uint16_t bat_block_id = bat_off/SECTOR_SIZE;
+    uint16_t bat_block_num = NBYTES2SEC(bat_off%SECTOR_SIZE + bat_size);
+    bios_sdread(0x52000000, bat_block_num, bat_block_id);
+    memcpy(bat_cache, 0x52000000 + bat_off%SECTOR_SIZE, bat_size);
+    bios_putstr(bat_cache);
+    bios_putstr("\n\r======================\n\rFinish reading!\n\r");
+
+    bios_putstr("\n\r");
+
+    //excute batch
+    bios_putstr("\n\rNow excute batch!\n\r======================\n\r");
+    int bat_iter = 0;
+    int bat_iter_his = 0;
+    while(bat_cache[bat_iter]){
+        if(bat_cache[bat_iter]=='\n'){
+            bat_cache[bat_iter]='\0';
+
+            int task_iter;
+            // compare task name one by one
+            for(task_iter=0; task_iter<task_num; task_iter++){
+                if(strcmp(tasks[task_iter].name, bat_cache + bat_iter_his)==0){
+                    ((void (*)())load_task_img(task_iter))();
+                    break;
+                }
+            }
+            if(task_iter==task_num){
+                bios_putstr("No task named ");
+                bios_putstr(bat_cache + bat_iter_his);
+                bios_putstr("!\n\r");
+            }
+            
+            bat_iter_his=bat_iter+1;
+        }
+        bat_iter++;
+    }
+    int task_iter;
+    // compare task name one by one
+    for(task_iter=0; task_iter<task_num; task_iter++){
+        if(strcmp(tasks[task_iter].name, bat_cache + bat_iter_his)==0){
+            ((void (*)())load_task_img(task_iter))();
+            break;
+        }
+    }
+    if(task_iter==task_num){
+        bios_putstr("No task named ");
+        bios_putstr(bat_cache + bat_iter_his);
+        bios_putstr("!\n\r");
+    }
+
+    bios_putstr("======================\n\rAll tasks in batch are excuted!\n\r");
+
+    bios_putstr("\n\r");
+
     // load and excute tasks by name for [p1-task4]
+    bios_putstr("What to do next?\n\r");
     char cache[20];
     int head=0;
     int ch;
