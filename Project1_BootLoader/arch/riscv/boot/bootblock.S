@@ -30,7 +30,13 @@ main:
 	call bios_func_entry
 
 	// TODO: [p1-task4] load task-related arguments and pass them to kernel
-
+	// load task-info (i.e. app-info) block
+	li a0, BIOS_SDREAD
+	la a1, 0x52000000 // app address
+	li s0, os_size_loc
+	lh a2, -2(s0)
+	lh a3, -4(s0)
+	call bios_func_entry
 
 	// TODO: [p1-task2] jump to kernel to start UCAS-OS
 	j kernel

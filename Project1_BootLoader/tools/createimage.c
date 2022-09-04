@@ -20,7 +20,9 @@
 
 /* TODO: [p1-task4] design your own task_info_t */
 typedef struct {
-
+    char name[20];
+    int offset;
+    int size;
 } task_info_t;
 
 #define TASK_MAXNUM 16
@@ -104,6 +106,13 @@ static void create_image(int nfiles, char *files[])
         read_ehdr(&ehdr, fp);
         printf("0x%04lx: %s\n", ehdr.e_entry, *files);
 
+        // for [p1-task4]
+        // record task offset and name
+        if(taskidx >= 0){
+            taskinfo[taskidx].offset = phyaddr;
+            strcpy(taskinfo[taskidx].name, *files);
+        }
+
         /* for each program header */
         for (int ph = 0; ph < ehdr.e_phnum; ph++) {
 
@@ -119,6 +128,13 @@ static void create_image(int nfiles, char *files[])
             }
         }
 
+        // for [p1-task4]
+        // record task size
+        if(taskidx >= 0){
+            taskinfo[taskidx].size = phyaddr - taskinfo[taskidx].offset;
+            printf("taskidx %d\tname %s\toffset %#x\tsize %#x\n", taskidx, taskinfo[taskidx].name, taskinfo[taskidx].offset, taskinfo[taskidx].size);
+        }
+
         /* write padding bytes */
         /**
          * TODO:
@@ -128,14 +144,19 @@ static void create_image(int nfiles, char *files[])
          */
         if (strcmp(*files, "bootblock") == 0) {
             write_padding(img, &phyaddr, SECTOR_SIZE);
-        } else{
-            int program_size = 15 * SECTOR_SIZE;
-            int new_phyaddr =  (
-                (phyaddr - SECTOR_SIZE) / program_size 
-                + ((phyaddr - SECTOR_SIZE) % program_size != 0)
-            ) * program_size + SECTOR_SIZE;
-            write_padding(img, &phyaddr, new_phyaddr);
-        }
+        } 
+
+        // for [p1-task3]
+        // pad for kernel and apps
+        /* else{
+         *     int program_size = 15 * SECTOR_SIZE;
+         *     int new_phyaddr =  (
+         *         (phyaddr - SECTOR_SIZE) / program_size 
+         *         + ((phyaddr - SECTOR_SIZE) % program_size != 0)
+         *     ) * program_size + SECTOR_SIZE;
+         *     write_padding(img, &phyaddr, new_phyaddr);
+         * }
+         */
 
         fclose(fp);
         files++;
@@ -221,10 +242,28 @@ static void write_img_info(int nbytes_kern, task_info_t *taskinfo,
 {
     // TODO: [p1-task3] & [p1-task4] write image info to some certain places
     // NOTE: os size, infomation about app-info sector(s) ...
+    
+    // save app-info for [p1-task4]
+    fwrite(taskinfo, sizeof(task_info_t), TASK_MAXNUM, img);
+    
+    // save kernel sector num and task num for [p1-task3] & [p1-task4]
+    uint16_t kernel_sector_num = NBYTES2SEC(nbytes_kern);
     fseek(img, OS_SIZE_LOC, SEEK_SET);
-    short kernel_sector_num = NBYTES2SEC(nbytes_kern);
-    fwrite(&kernel_sector_num, sizeof(short), 1, img);
-    fwrite(&tasknum, sizeof(short), 1, img);
+    fwrite(&kernel_sector_num, 2, 1, img);
+    fwrite(&tasknum, 2, 1, img);
+    
+    // save app-info offset and block id and block num for [p1-task4]
+    uint32_t app_info_off = taskinfo[tasknum-1].offset + taskinfo[tasknum-1].size;
+    uint16_t app_info_block_id = app_info_off/SECTOR_SIZE;
+    uint16_t app_info_block_num = NBYTES2SEC(app_info_off%SECTOR_SIZE + sizeof(task_info_t)*TASK_MAXNUM);
+    printf("app-info offset %#x\n", app_info_off);
+    printf("app-info size %#lx\n", sizeof(task_info_t)*TASK_MAXNUM);
+    printf("app-info block id %d\n", app_info_block_id);
+    printf("app-info blcok num %d\n", app_info_block_num);
+    fseek(img, OS_SIZE_LOC-8, SEEK_SET);
+    fwrite(&app_info_off, 4, 1, img);
+    fwrite(&app_info_block_id, 2, 1, img);
+    fwrite(&app_info_block_num, 2, 1, img);
 }
 
 /* print an error message and exit */

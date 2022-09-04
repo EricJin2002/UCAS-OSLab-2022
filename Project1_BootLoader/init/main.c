@@ -40,6 +40,15 @@ static void init_task_info(void)
 {
     // TODO: [p1-task4] Init 'tasks' array via reading app-info sector
     // NOTE: You need to get some related arguments from bootblock first
+    uint32_t app_info_off = *(uint32_t *)(0x50200200 - 0xc);
+    task_info_t *tasks_mem_ptr = (task_info_t *)(0x52000000 + app_info_off%0x200);
+    // copy app_info from mem to bss
+    // since mem will be overwritten by the first app
+    for(int i=0; i<TASK_MAXNUM; i++){
+        strcpy(tasks[i].name, tasks_mem_ptr[i].name);
+        tasks[i].offset = tasks_mem_ptr[i].offset;
+        tasks[i].size = tasks_mem_ptr[i].size;
+    }
 }
 
 int main(void)
@@ -92,24 +101,59 @@ int main(void)
 
     // for [p1-task3]
     // read task_num
-    unsigned long bootblock_end_loc = 0x50200200;
-    unsigned long task_num_loc = bootblock_end_loc - 2;
-    int task_num = (int)*(short *)task_num_loc;
+    void *bootblock_end_loc = (void *)0x50200200;
+    void *task_num_loc = bootblock_end_loc - 2;
+    uint16_t task_num = *(uint16_t *)task_num_loc;
 
-    // load and excute tasks 
+    // load and excute tasks by id for [p1-task3]
+    /* int ch;
+     * while((ch=bios_getchar())){
+     *     if(ch!=-1){
+     *         bios_putchar(ch);
+     *         bios_putstr("\n\r");
+     *         if(ch<'0'+task_num && ch>='0'){
+     *             ((void (*)())load_task_img(ch-'0'))();
+     *         }else{
+     *             bios_putstr("Invalid task id!\n\r");
+     *         }
+     *     }
+     * }
+     */
+    
+    // load and excute tasks by name for [p1-task4]
+    char cache[20];
+    int head=0;
     int ch;
     while((ch=bios_getchar())){
         if(ch!=-1){
-            bios_putchar(ch);
-            bios_putstr("\n\r");
-            if(ch<'0'+task_num && ch>='0'){
-                ((void (*)())load_task_img(ch-'0'))();
+            if(ch=='\r'){// \r for Carriage Return and \n for Line Feed
+                bios_putstr("\n\r");
+                cache[head]='\0';
+                int task_iter;
+                // compare task name one by one
+                for(task_iter=0; task_iter<task_num; task_iter++){
+                    if(strcmp(tasks[task_iter].name, cache)==0){
+                        ((void (*)())load_task_img(task_iter))();
+                        break;
+                    }
+                }
+                if(task_iter==task_num){
+                    bios_putstr("No task named ");
+                    bios_putstr(cache);
+                    bios_putstr("!\n\r");
+                }
+                head=0;
             }else{
-                bios_putstr("Invalid task id!\n\r");
+                if(head<20){
+                    bios_putchar(ch);
+                    cache[head++]=ch;
+                }else{
+                    bios_putstr("\n\rMaximal input reached!\n\r");
+                    head=0;
+                }
             }
         }
     }
-    
 
     // Infinite while loop, where CPU stays in a low-power state (QAQQQQQQQQQQQ)
     while (1)
