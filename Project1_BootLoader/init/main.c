@@ -19,6 +19,9 @@ char buf[VERSION_BUF];
 // Task info array
 task_info_t tasks[TASK_MAXNUM];
 
+// for [p1-task4]
+uint16_t task_num;
+
 static int bss_check(void)
 {
     for (int i = 0; i < VERSION_BUF; ++i)
@@ -49,11 +52,11 @@ static void init_task_info(void)
     task_info_t *tasks_mem_ptr = (task_info_t *)(0x52000000 + app_info_off%0x200);
     // copy app_info from mem to bss
     // since mem will be overwritten by the first app
-    for(int i=0; i<TASK_MAXNUM; i++){
-        strcpy(tasks[i].name, tasks_mem_ptr[i].name);
-        tasks[i].offset = tasks_mem_ptr[i].offset;
-        tasks[i].size = tasks_mem_ptr[i].size;
-    }
+    memcpy(tasks, tasks_mem_ptr, TASK_MAXNUM * sizeof(task_info_t));
+
+    // for [p1-task3] & [p1-task4]
+    // read task_num
+    task_num = *(uint16_t *)0x502001fe;
 }
 
 int main(void)
@@ -106,12 +109,6 @@ int main(void)
      */
     
 
-    // for [p1-task3] & [p1-task4]
-    // read task_num
-    void *bootblock_end_loc = (void *)0x50200200;
-    void *task_num_loc = bootblock_end_loc - 2;
-    uint16_t task_num = *(uint16_t *)task_num_loc;
-
     // load and excute tasks by id for [p1-task3]
     /* int ch;
      * while((ch=bios_getchar())){
@@ -159,39 +156,12 @@ int main(void)
     while(bat_cache[bat_iter]){
         if(bat_cache[bat_iter]=='\n'){
             bat_cache[bat_iter]='\0';
-
-            int task_iter;
-            // compare task name one by one
-            for(task_iter=0; task_iter<task_num; task_iter++){
-                if(strcmp(tasks[task_iter].name, bat_cache + bat_iter_his)==0){
-                    ((void (*)())load_task_img(task_iter))();
-                    break;
-                }
-            }
-            if(task_iter==task_num){
-                bios_putstr("No task named ");
-                bios_putstr(bat_cache + bat_iter_his);
-                bios_putstr("!\n\r");
-            }
-            
+            excute_task_img_via_name(bat_cache + bat_iter_his);
             bat_iter_his=bat_iter+1;
         }
         bat_iter++;
     }
-    int task_iter;
-    // compare task name one by one
-    for(task_iter=0; task_iter<task_num; task_iter++){
-        if(strcmp(tasks[task_iter].name, bat_cache + bat_iter_his)==0){
-            ((void (*)())load_task_img(task_iter))();
-            break;
-        }
-    }
-    if(task_iter==task_num){
-        bios_putstr("No task named ");
-        bios_putstr(bat_cache + bat_iter_his);
-        bios_putstr("!\n\r");
-    }
-
+    excute_task_img_via_name(bat_cache + bat_iter_his);
     bios_putstr("======================\n\rAll tasks in batch are excuted!\n\r");
 
     bios_putstr("\n\r");
@@ -206,19 +176,7 @@ int main(void)
             if(ch=='\r'){// \r for Carriage Return and \n for Line Feed
                 bios_putstr("\n\r");
                 cache[head]='\0';
-                int task_iter;
-                // compare task name one by one
-                for(task_iter=0; task_iter<task_num; task_iter++){
-                    if(strcmp(tasks[task_iter].name, cache)==0){
-                        ((void (*)())load_task_img(task_iter))();
-                        break;
-                    }
-                }
-                if(task_iter==task_num){
-                    bios_putstr("No task named ");
-                    bios_putstr(cache);
-                    bios_putstr("!\n\r");
-                }
+                excute_task_img_via_name(cache);
                 head=0;
             }else{
                 if(head<20){

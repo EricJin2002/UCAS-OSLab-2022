@@ -20,9 +20,10 @@
 
 /* TODO: [p1-task4] design your own task_info_t */
 typedef struct {
-    char name[20];
+    char name[32];
     int offset;
     int size;
+    uint64_t entrypoint;
 } task_info_t;
 
 #define TASK_MAXNUM 16
@@ -111,6 +112,7 @@ static void create_image(int nfiles, char *files[])
         if(taskidx >= 0){
             taskinfo[taskidx].offset = phyaddr;
             strcpy(taskinfo[taskidx].name, *files);
+            taskinfo[taskidx].entrypoint = get_entrypoint(ehdr);
         }
 
         /* for each program header */
@@ -248,7 +250,7 @@ static void write_img_info(int nbytes_kern, task_info_t *taskinfo,
     
     // save bat.txt in image for [p1-task5]
     // first record batch size, then save content
-    uint32_t bat_off = ftell(img);
+    uint32_t bat_size_off = ftell(img);
     uint32_t bat_size = 0;
     fwrite(&bat_size, 4, 1, img); // place holder
     FILE *bat = fopen("../bat.txt", "r");
@@ -259,7 +261,7 @@ static void write_img_info(int nbytes_kern, task_info_t *taskinfo,
     }
     fputc('\0',img);
     bat_size++;
-    fseek(img, bat_off, SEEK_SET);
+    fseek(img, bat_size_off, SEEK_SET);
     fwrite(&bat_size, 4, 1, img);
 
     // save kernel sector num and task num for [p1-task3] & [p1-task4]
