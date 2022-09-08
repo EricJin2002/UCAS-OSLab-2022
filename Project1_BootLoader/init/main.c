@@ -48,9 +48,9 @@ static void init_task_info(void)
 {
     // TODO: [p1-task4] Init 'tasks' array via reading app-info sector
     // NOTE: You need to get some related arguments from bootblock first
-    uint32_t app_info_off = *(uint32_t *)(0x50200200 - 0xc);
-    task_info_t *tasks_mem_ptr = (task_info_t *)(0x52000000 + app_info_off%0x200);
-    // copy app_info from mem to bss
+    uint32_t task_info_off = *(uint32_t *)(0x50200200 - 0xc);
+    task_info_t *tasks_mem_ptr = (task_info_t *)(0x52000000 + task_info_off%0x200);
+    // copy task_info from mem to bss
     // since mem will be overwritten by the first app
     memcpy(tasks, tasks_mem_ptr, TASK_MAXNUM * sizeof(task_info_t));
 
@@ -125,46 +125,48 @@ int main(void)
      */
 
 
-    // load and excute batch for [p1-task5]
-
-    bios_putstr("Reading batch from image...\n\r======================\n\r");
-
-    // read batch size
-    uint32_t app_info_off = *(uint32_t *)(0x50200200 - 0xc);
-    uint32_t bat_size_off = app_info_off + sizeof(task_info_t)*TASK_MAXNUM;
-    uint16_t bat_size_block_id = bat_size_off/SECTOR_SIZE;
-    uint16_t bat_size_block_num = NBYTES2SEC(bat_size_off%SECTOR_SIZE + 4);
-    bios_sdread(0x52000000, bat_size_block_num, bat_size_block_id);
-    uint32_t bat_size = *(uint32_t *)(0x52000000 + bat_size_off%SECTOR_SIZE);
-    
-    // read batch content
-    char bat_cache[1024]; //TODO: what if bat.txt is too big
-    uint32_t bat_off = bat_size_off + 4;
-    uint16_t bat_block_id = bat_off/SECTOR_SIZE;
-    uint16_t bat_block_num = NBYTES2SEC(bat_off%SECTOR_SIZE + bat_size);
-    bios_sdread(0x52000000, bat_block_num, bat_block_id);
-    memcpy(bat_cache, 0x52000000 + bat_off%SECTOR_SIZE, bat_size);
-    bios_putstr(bat_cache);
-    bios_putstr("\n\r======================\n\rFinish reading!\n\r");
-
-    bios_putstr("\n\r");
-
-    //excute batch
-    bios_putstr("\n\rNow excute batch!\n\r======================\n\r");
-    int bat_iter = 0;
-    int bat_iter_his = 0;
-    while(bat_cache[bat_iter]){
-        if(bat_cache[bat_iter]=='\n'){
-            bat_cache[bat_iter]='\0';
-            excute_task_img_via_name(bat_cache + bat_iter_his);
-            bat_iter_his=bat_iter+1;
-        }
-        bat_iter++;
-    }
-    excute_task_img_via_name(bat_cache + bat_iter_his);
-    bios_putstr("======================\n\rAll tasks in batch are excuted!\n\r");
-
-    bios_putstr("\n\r");
+    // abandoned implementation
+/*    // load and excute batch for [p1-task5]
+ *
+ *    bios_putstr("Reading batch from image...\n\r======================\n\r");
+ *
+ *    // read batch size
+ *    uint32_t task_info_off = *(uint32_t *)(0x50200200 - 0xc);
+ *    uint32_t bat_size_off = task_info_off + sizeof(task_info_t)*TASK_MAXNUM;
+ *    uint16_t bat_size_block_id = bat_size_off/SECTOR_SIZE;
+ *    uint16_t bat_size_block_num = NBYTES2SEC(bat_size_off%SECTOR_SIZE + 4);
+ *    bios_sdread(0x52000000, bat_size_block_num, bat_size_block_id);
+ *    uint32_t bat_size = *(uint32_t *)(0x52000000 + bat_size_off%SECTOR_SIZE);
+ *    
+ *    // read batch content
+ *    char bat_cache[1024]; //TODO: what if bat.txt is too big
+ *    uint32_t bat_off = bat_size_off + 4;
+ *    uint16_t bat_block_id = bat_off/SECTOR_SIZE;
+ *    uint16_t bat_block_num = NBYTES2SEC(bat_off%SECTOR_SIZE + bat_size);
+ *    bios_sdread(0x52000000, bat_block_num, bat_block_id);
+ *    memcpy(bat_cache, 0x52000000 + bat_off%SECTOR_SIZE, bat_size);
+ *    bios_putstr(bat_cache);
+ *    bios_putstr("\n\r======================\n\rFinish reading!\n\r");
+ *
+ *    bios_putstr("\n\r");
+ *
+ *    //excute batch
+ *    bios_putstr("\n\rNow excute batch!\n\r======================\n\r");
+ *    int bat_iter = 0;
+ *    int bat_iter_his = 0;
+ *    while(bat_cache[bat_iter]){
+ *        if(bat_cache[bat_iter]=='\n'){
+ *            bat_cache[bat_iter]='\0';
+ *            excute_task_img_via_name(bat_cache + bat_iter_his);
+ *            bat_iter_his=bat_iter+1;
+ *        }
+ *        bat_iter++;
+ *    }
+ *    excute_task_img_via_name(bat_cache + bat_iter_his);
+ *    bios_putstr("======================\n\rAll tasks in batch are excuted!\n\r");
+ *
+ *    bios_putstr("\n\r");
+ */
 
     // load and excute tasks by name for [p1-task4]
     bios_putstr("What to do next?\n\r");

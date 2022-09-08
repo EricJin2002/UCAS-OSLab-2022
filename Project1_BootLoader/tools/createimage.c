@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <elf.h>
+#include <dirent.h> // for [p1-task5] to read batch dir
 
 #define IMAGE_FILE "./image"
 #define ARGS "[--extended] [--vm] <bootblock> <executable-file> ..."
@@ -18,12 +19,18 @@
 
 #define NBYTES2SEC(nbytes) (((nbytes) / SECTOR_SIZE) + ((nbytes) % SECTOR_SIZE != 0))
 
+// for [p1-task5]
+typedef enum{
+    app, bat
+} TYPE;
+
 /* TODO: [p1-task4] design your own task_info_t */
 typedef struct {
     char name[32];
     int offset;
     int size;
     uint64_t entrypoint;
+    TYPE type; // for [p1-task5]
 } task_info_t;
 
 #define TASK_MAXNUM 16
@@ -113,6 +120,7 @@ static void create_image(int nfiles, char *files[])
             taskinfo[taskidx].offset = phyaddr;
             strcpy(taskinfo[taskidx].name, *files);
             taskinfo[taskidx].entrypoint = get_entrypoint(ehdr);
+            taskinfo[taskidx].type = app;
         }
 
         /* for each program header */
@@ -244,25 +252,71 @@ static void write_img_info(int nbytes_kern, task_info_t *taskinfo,
 {
     // TODO: [p1-task3] & [p1-task4] write image info to some certain places
     // NOTE: os size, infomation about app-info sector(s) ...
-    
-    // save app-info for [p1-task4]
+
+    // for [p1-task5]
+    // record batch info and save batch content
+    DIR *dir = opendir("../bat");
+    if(!dir){
+        printf("Failed to open bat dir!\n");
+    }else{
+        struct dirent *dirp;
+        while((dirp=readdir(dir))){
+            int file_ext_off = strlen(dirp->d_name) - 4;
+            if(file_ext_off>=0 && !strcmp(dirp->d_name + file_ext_off, ".txt")){
+                // record batch name
+                printf("Reading %s ",dirp->d_name);
+                strncpy(taskinfo[tasknum].name, dirp->d_name, file_ext_off);
+                taskinfo[tasknum].name[file_ext_off] = '\0';
+                printf("as %s ", taskinfo[tasknum].name);
+                char dir_name[40] = "../bat/";
+                strcat(dir_name, dirp->d_name);
+                printf("from %s\n", dir_name);
+
+                // save bat/*.txt in image
+                uint32_t bat_off = ftell(img);
+                uint32_t bat_size = 0;
+                FILE *bat_fp = fopen(dir_name, "r");
+                char ch_b;
+                while((ch_b=fgetc(bat_fp))!=EOF){
+                    bat_size++;
+                    fputc(ch_b,img);
+                }
+                fputc('\0',img);
+                bat_size++;
+                fclose(bat_fp);
+
+                // record other batch info
+                taskinfo[tasknum].size = bat_size;
+                taskinfo[tasknum].offset = bat_off;
+                taskinfo[tasknum].type = bat;
+                printf("taskidx %d\tname %s\toffset %#x\tsize %#x\n", tasknum, taskinfo[tasknum].name, taskinfo[tasknum].offset, taskinfo[tasknum].size);
+
+                tasknum++;
+            }
+        }
+        closedir(dir);
+    }
+
+    // save task-info for [p1-task4]
     fwrite(taskinfo, sizeof(task_info_t), TASK_MAXNUM, img);
     
+    // abandoned implementation
     // save bat.txt in image for [p1-task5]
     // first record batch size, then save content
-    uint32_t bat_size_off = ftell(img);
-    uint32_t bat_size = 0;
-    fwrite(&bat_size, 4, 1, img); // place holder
-    FILE *bat = fopen("../bat.txt", "r");
-    char ch_b;
-    while((ch_b=fgetc(bat))!=EOF){
-        bat_size++;
-        fputc(ch_b,img);
-    }
-    fputc('\0',img);
-    bat_size++;
-    fseek(img, bat_size_off, SEEK_SET);
-    fwrite(&bat_size, 4, 1, img);
+    /* uint32_t bat_size_off = ftell(img);
+     * uint32_t bat_size = 0;
+     * fwrite(&bat_size, 4, 1, img); // place holder
+     * FILE *bat = fopen("../bat.txt", "r");
+     * char ch_b;
+     * while((ch_b=fgetc(bat))!=EOF){
+     *     bat_size++;
+     *     fputc(ch_b,img);
+     * }
+     * fputc('\0',img);
+     * bat_size++;
+     * fseek(img, bat_size_off, SEEK_SET);
+     * fwrite(&bat_size, 4, 1, img);
+     */
 
     // save kernel sector num and task num for [p1-task3] & [p1-task4]
     uint16_t kernel_sector_num = NBYTES2SEC(nbytes_kern);
@@ -270,18 +324,18 @@ static void write_img_info(int nbytes_kern, task_info_t *taskinfo,
     fwrite(&kernel_sector_num, 2, 1, img);
     fwrite(&tasknum, 2, 1, img);
     
-    // save app-info offset and block id and block num for [p1-task4]
-    uint32_t app_info_off = taskinfo[tasknum-1].offset + taskinfo[tasknum-1].size;
-    uint16_t app_info_block_id = app_info_off/SECTOR_SIZE;
-    uint16_t app_info_block_num = NBYTES2SEC(app_info_off%SECTOR_SIZE + sizeof(task_info_t)*TASK_MAXNUM);
-    printf("app-info offset %#x\n", app_info_off);
-    printf("app-info size %#lx\n", sizeof(task_info_t)*TASK_MAXNUM);
-    printf("app-info block id %d\n", app_info_block_id);
-    printf("app-info blcok num %d\n", app_info_block_num);
+    // save task-info offset and block id and block num for [p1-task4]
+    uint32_t task_info_off = taskinfo[tasknum-1].offset + taskinfo[tasknum-1].size;
+    uint16_t task_info_block_id = task_info_off/SECTOR_SIZE;
+    uint16_t task_info_block_num = NBYTES2SEC(task_info_off%SECTOR_SIZE + sizeof(task_info_t)*TASK_MAXNUM);
+    printf("task-info offset %#x\n", task_info_off);
+    printf("task-info size %#lx\n", sizeof(task_info_t)*TASK_MAXNUM);
+    printf("task-info block id %d\n", task_info_block_id);
+    printf("task-info blcok num %d\n", task_info_block_num);
     fseek(img, OS_SIZE_LOC-8, SEEK_SET);
-    fwrite(&app_info_off, 4, 1, img);
-    fwrite(&app_info_block_id, 2, 1, img);
-    fwrite(&app_info_block_num, 2, 1, img);
+    fwrite(&task_info_off, 4, 1, img);
+    fwrite(&task_info_block_id, 2, 1, img);
+    fwrite(&task_info_block_num, 2, 1, img);
 }
 
 /* print an error message and exit */
