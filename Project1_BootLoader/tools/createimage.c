@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <elf.h>
-#include <dirent.h> // for [p1-task5] to read batch dir
+#include <dirent.h> // for [p1-task5] to read batch file under certain dir
 
 #define IMAGE_FILE "./image"
 #define ARGS "[--extended] [--vm] <bootblock> <executable-file> ..."
@@ -30,7 +30,7 @@ typedef struct {
     int offset;
     int size;
     uint64_t entrypoint;
-    TYPE type; // for [p1-task5]
+    TYPE type; // used to judge app or bat for [p1-task5]
 } task_info_t;
 
 #define TASK_MAXNUM 16

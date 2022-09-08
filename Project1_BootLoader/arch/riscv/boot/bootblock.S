@@ -30,7 +30,7 @@ main:
 	call bios_func_entry
 
 	// TODO: [p1-task4] load task-related arguments and pass them to kernel
-	// load task-info (i.e. app-info) block
+	// load task-info block
 	li a0, BIOS_SDREAD
 	la a1, 0x52000000 // app address
 	li s0, os_size_loc

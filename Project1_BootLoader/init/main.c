@@ -8,11 +8,6 @@
 
 #define VERSION_BUF 50
 
-// for [p1-task4]
-// copied from createimage.c
-#define SECTOR_SIZE 512
-#define NBYTES2SEC(nbytes) (((nbytes) / SECTOR_SIZE) + ((nbytes) % SECTOR_SIZE != 0))
-
 int version = 2; // version must between 0 and 9
 char buf[VERSION_BUF];
 
@@ -21,6 +16,8 @@ task_info_t tasks[TASK_MAXNUM];
 
 // for [p1-task4]
 uint16_t task_num;
+
+#define TASK_NAME_MAXLEN 20
 
 static int bss_check(void)
 {
@@ -48,11 +45,11 @@ static void init_task_info(void)
 {
     // TODO: [p1-task4] Init 'tasks' array via reading app-info sector
     // NOTE: You need to get some related arguments from bootblock first
-    uint32_t task_info_off = *(uint32_t *)(0x50200200 - 0xc);
+    uint64_t task_info_off = *(uint32_t *)(0x50200200 - 0xc);
     task_info_t *tasks_mem_ptr = (task_info_t *)(0x52000000 + task_info_off%0x200);
     // copy task_info from mem to bss
     // since mem will be overwritten by the first app
-    memcpy(tasks, tasks_mem_ptr, TASK_MAXNUM * sizeof(task_info_t));
+    memcpy((uint8_t *)tasks, (uint8_t *)tasks_mem_ptr, TASK_MAXNUM * sizeof(task_info_t));
 
     // for [p1-task3] & [p1-task4]
     // read task_num
@@ -95,8 +92,7 @@ int main(void)
     bios_putstr("\n\r");
 
     // for [p1-task2]
-    /*
-     * int ch;
+    /* int ch;
      * while((ch=bios_getchar())){
      *     if(ch!=-1){
      *         if(ch=='\r'){
@@ -169,8 +165,8 @@ int main(void)
  */
 
     // load and excute tasks by name for [p1-task4]
-    bios_putstr("What to do next?\n\r");
-    char cache[20];
+    bios_putstr("Input help to show help infomation\n\r");
+    char cache[TASK_NAME_MAXLEN];
     int head=0;
     int ch;
     while((ch=bios_getchar())){
@@ -181,7 +177,7 @@ int main(void)
                 excute_task_img_via_name(cache);
                 head=0;
             }else{
-                if(head<20){
+                if(head<TASK_NAME_MAXLEN+1){
                     bios_putchar(ch);
                     cache[head++]=ch;
                 }else{

@@ -3,6 +3,11 @@
 
 #include <type.h>
 
+// for [p1-task4]
+// copied from createimage.c
+#define SECTOR_SIZE 512
+#define NBYTES2SEC(nbytes) (((nbytes) / SECTOR_SIZE) + ((nbytes) % SECTOR_SIZE != 0))
+
 uint64_t load_task_img(int taskid);
 
 // for [p1-task4]
