@@ -165,9 +165,10 @@ int main(void)
  */
 
     // load and excute tasks by name for [p1-task4]
-    bios_putstr("Input help to show help infomation\n\r");
-    char cache[TASK_NAME_MAXLEN];
+    bios_putstr("Type help to show help infomation\n\r");
+    char cache[TASK_NAME_MAXLEN+1];
     int head=0;
+    bios_putstr("$ ");
     int ch;
     while((ch=bios_getchar())){
         if(ch!=-1){
@@ -176,13 +177,15 @@ int main(void)
                 cache[head]='\0';
                 excute_task_img_via_name(cache);
                 head=0;
+                bios_putstr("$ ");
             }else{
-                if(head<TASK_NAME_MAXLEN+1){
+                if(head<TASK_NAME_MAXLEN){
                     bios_putchar(ch);
                     cache[head++]=ch;
                 }else{
                     bios_putstr("\n\rMaximal input reached!\n\r");
                     head=0;
+                    bios_putstr("$ ");
                 }
             }
         }
