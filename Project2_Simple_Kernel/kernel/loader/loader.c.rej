@@ -1,0 +1,10 @@
+--- kernel/loader/loader.c	2022-09-18 22:44:39.488943590 +0800
++++ kernel/loader/loader.c	2022-09-18 22:44:39.488943590 +0800
+@@ -1,6 +1,6 @@
+ #include <os/task.h>
+ #include <os/string.h>
+-#include <os/bios.h>
++#include <os/kernel.h>
+ #include <type.h>
+ 
+ uint64_t load_task_img(int taskid)
