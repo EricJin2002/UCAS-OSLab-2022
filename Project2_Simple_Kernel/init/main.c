@@ -106,15 +106,38 @@ static void init_pcb_stack(
      */
     switchto_context_t *pt_switchto =
         (switchto_context_t *)((ptr_t)pt_regs - sizeof(switchto_context_t));
+    
+    pt_switchto->regs[0] = entry_point; //ra
+    pt_switchto->regs[1] = user_stack;  //sp
+
+    pcb->kernel_sp = (reg_t) pt_switchto;
 
 }
 
 static void init_pcb(void)
 {
     /* TODO: [p2-task1] load needed tasks and init their corresponding PCB */
+    // for [p2-task1]
+    //char needed_task_name[][32] = {"print1", "print2", "fly"};
 
+    // for [p2-task2]
+    char needed_task_name[][32] = {"lock1", "lock2", "fly"};
+
+    for(int i=1; i<=sizeof(needed_task_name)/32; i++){
+        pcb[i].kernel_sp = allocKernelPage(1);
+        pcb[i].user_sp = allocUserPage(1);
+        pcb[i].pid = i;
+        pcb[i].status = TASK_READY;
+        pcb[i].entrypoint = load_task_img_via_name(needed_task_name[i-1]);
+        init_pcb_stack(pcb[i].kernel_sp, pcb[i].user_sp, pcb[i].entrypoint, pcb+i);
+        list_push(&ready_queue, &pcb[i].list);
+    }
+    pcb[0]=pid0_pcb;
+    pcb_list_print(&ready_queue);
 
     /* TODO: [p2-task1] remember to initialize 'current_running' */
+    current_running=pcb+0;
+    current_running->status=TASK_RUNNING;
 
 }
 
@@ -235,6 +258,7 @@ int main(void)
 
     // load and excute tasks by name for [p1-task4]
     bios_putstr("Type help to show help infomation\n\r");
+    bios_putstr("Type quit to skip\n\r");
     char cache[TASK_NAME_MAXLEN+1];
     int head=0;
     bios_putstr("$ ");
@@ -244,6 +268,8 @@ int main(void)
             if(ch=='\r'){// \r for Carriage Return and \n for Line Feed
                 bios_putstr("\n\r");
                 cache[head]='\0';
+                if(!strcmp(cache, "quit"))
+                    break;
                 excute_task_img_via_name(cache);
                 head=0;
                 bios_putstr("$ ");
@@ -259,6 +285,8 @@ int main(void)
             }
         }
     }
+
+    init_screen();
 
     // Infinite while loop, where CPU stays in a low-power state (QAQQQQQQQQQQQ)
     while (1)

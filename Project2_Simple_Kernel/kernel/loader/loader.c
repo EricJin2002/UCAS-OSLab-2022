@@ -66,15 +66,12 @@ uint64_t load_task_img(int taskid)
     return 0;
 }
 
-void excute_task_img_via_name(char *taskname){
+uint64_t load_task_img_via_name(char *taskname){
     int task_iter;
     // compare task name one by one
     for(task_iter=0; task_iter<task_num; task_iter++){
         if(strcmp(tasks[task_iter].name, taskname)==0){
-            uint64_t func;
-            if((func=load_task_img(task_iter)))
-                ((void (*)())func)();
-            break;
+            return load_task_img(task_iter);
         }
     }
     if(task_iter==task_num){
@@ -86,4 +83,11 @@ void excute_task_img_via_name(char *taskname){
             bios_putstr("!\n\r");
         }
     }
+    return 0;
+}
+
+void excute_task_img_via_name(char *taskname){
+    uint64_t func;
+    if((func=load_task_img_via_name(taskname)))
+        ((void (*)())func)();
 }

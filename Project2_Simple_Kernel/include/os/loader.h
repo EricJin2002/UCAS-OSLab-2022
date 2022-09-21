@@ -11,6 +11,7 @@
 uint64_t load_task_img(int taskid);
 
 // for [p1-task4]
+uint64_t load_task_img_via_name(char *taskname);
 void excute_task_img_via_name(char *taskname);
 
 #endif

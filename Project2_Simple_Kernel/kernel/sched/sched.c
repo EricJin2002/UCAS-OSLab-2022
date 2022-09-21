@@ -30,10 +30,27 @@ void do_scheduler(void)
 
 
     // TODO: [p2-task1] Modify the current_running pointer.
+    pcb_list_print(&ready_queue);
 
+    pcb_t *prev_running = current_running;
+    if(prev_running->status==TASK_RUNNING){
+        // else, the task is blocked, don't push it to ready_queue
+        list_push(&ready_queue, &prev_running->list);
+        prev_running->status = TASK_READY;
+    }
+    
+    list_node_t *next_node = list_pop(&ready_queue);
+    if(!next_node) return; // nothing to do 
+    
+    current_running = LIST2PCB(next_node);
+    current_running->status = TASK_RUNNING;
+
+    pcb_list_print(&ready_queue);
 
     // TODO: [p2-task1] switch_to current_running
-
+    printl("switching from %d to %d\n\r", prev_running->pid, current_running->pid);
+    switch_to(prev_running, current_running);
+    printl("!!!after switch_to\n\r");
 }
 
 void do_sleep(uint32_t sleep_time)
@@ -48,9 +65,19 @@ void do_sleep(uint32_t sleep_time)
 void do_block(list_node_t *pcb_node, list_head *queue)
 {
     // TODO: [p2-task2] block the pcb task into the block queue
+    list_push(queue, pcb_node);
+    LIST2PCB(pcb_node)->status = TASK_BLOCKED;
+    printl("do_block pid %d\n\r",LIST2PCB(pcb_node)->pid);
+    pcb_list_print(&ready_queue);
+    do_scheduler();
+    printl("!!!after do_scheduler\n\r");
 }
 
 void do_unblock(list_node_t *pcb_node)
 {
     // TODO: [p2-task2] unblock the `pcb` from the block queue
+    list_push(&ready_queue, pcb_node);
+    LIST2PCB(pcb_node)->status = TASK_READY;
+    printl("do_unblock pid %d\n\r",LIST2PCB(pcb_node)->pid);
+    pcb_list_print(&ready_queue);
 }
