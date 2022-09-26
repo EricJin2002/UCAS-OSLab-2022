@@ -85,6 +85,10 @@ static void init_task_info(void)
     // for [p1-task3] & [p1-task4]
     // read task_num
     task_num = *(uint16_t *)0x502001fe;
+
+    for(int i=0; i<task_num; i++){
+        printl("task name %s entrypoint %lx\n", tasks[i].name, tasks[i].entrypoint);
+    }
 }
 
 static void init_pcb_stack(
@@ -108,7 +112,9 @@ static void init_pcb_stack(
         (switchto_context_t *)((ptr_t)pt_regs - sizeof(switchto_context_t));
     
     pt_switchto->regs[0] = entry_point; //ra
-    pt_switchto->regs[1] = user_stack;  //sp
+    pt_switchto->regs[1] = kernel_stack;  //sp
+
+    printl("entrypoint %lx\n", entry_point);
 
     pcb->kernel_sp = (reg_t) pt_switchto;
 
@@ -121,15 +127,14 @@ static void init_pcb(void)
     //char needed_task_name[][32] = {"print1", "print2", "fly"};
 
     // for [p2-task2]
-    char needed_task_name[][32] = {"lock1", "lock2", "fly"};
+    char needed_task_name[][32] = {"print1", "print2", "fly", "lock1", "lock2"};
 
     for(int i=1; i<=sizeof(needed_task_name)/32; i++){
-        pcb[i].kernel_sp = allocKernelPage(1);
-        pcb[i].user_sp = allocUserPage(1);
-        pcb[i].pid = i;
+        pcb[i].kernel_sp = allocKernelPage(1) + PAGE_SIZE;
+        pcb[i].user_sp = allocUserPage(1) + PAGE_SIZE;
+        pcb[i].pid = process_id++;
         pcb[i].status = TASK_READY;
-        pcb[i].entrypoint = load_task_img_via_name(needed_task_name[i-1]);
-        init_pcb_stack(pcb[i].kernel_sp, pcb[i].user_sp, pcb[i].entrypoint, pcb+i);
+        init_pcb_stack(pcb[i].kernel_sp, pcb[i].user_sp, load_task_img_via_name(needed_task_name[i-1]), pcb+i);
         list_push(&ready_queue, &pcb[i].list);
     }
     pcb[0]=pid0_pcb;
@@ -257,36 +262,37 @@ int main(void)
  */
 
     // load and excute tasks by name for [p1-task4]
-    bios_putstr("Type help to show help infomation\n\r");
-    bios_putstr("Type quit to skip\n\r");
-    char cache[TASK_NAME_MAXLEN+1];
-    int head=0;
-    bios_putstr("$ ");
-    int ch;
-    while((ch=bios_getchar())){
-        if(ch!=-1){
-            if(ch=='\r'){// \r for Carriage Return and \n for Line Feed
-                bios_putstr("\n\r");
-                cache[head]='\0';
-                if(!strcmp(cache, "quit"))
-                    break;
-                excute_task_img_via_name(cache);
-                head=0;
-                bios_putstr("$ ");
-            }else{
-                if(head<TASK_NAME_MAXLEN){
-                    bios_putchar(ch);
-                    cache[head++]=ch;
-                }else{
-                    bios_putstr("\n\rMaximal input reached!\n\r");
-                    head=0;
-                    bios_putstr("$ ");
-                }
-            }
-        }
-    }
-
-    init_screen();
+/*    bios_putstr("Type help to show help infomation\n\r");
+ *    bios_putstr("Type quit to skip\n\r");
+ *    char cache[TASK_NAME_MAXLEN+1];
+ *    int head=0;
+ *    bios_putstr("$ ");
+ *    int ch;
+ *    while((ch=bios_getchar())){
+ *        if(ch!=-1){
+ *            if(ch=='\r'){// \r for Carriage Return and \n for Line Feed
+ *                bios_putstr("\n\r");
+ *                cache[head]='\0';
+ *                if(!strcmp(cache, "quit"))
+ *                    break;
+ *                excute_task_img_via_name(cache);
+ *                head=0;
+ *                bios_putstr("$ ");
+ *            }else{
+ *                if(head<TASK_NAME_MAXLEN){
+ *                    bios_putchar(ch);
+ *                    cache[head++]=ch;
+ *                }else{
+ *                    bios_putstr("\n\rMaximal input reached!\n\r");
+ *                    head=0;
+ *                    bios_putstr("$ ");
+ *                }
+ *            }
+ *        }
+ *    }
+ *
+ *    init_screen();
+ */
 
     // Infinite while loop, where CPU stays in a low-power state (QAQQQQQQQQQQQ)
     while (1)
