@@ -103,6 +103,10 @@ static void init_pcb_stack(
     regs_context_t *pt_regs =
         (regs_context_t *)(kernel_stack - sizeof(regs_context_t));
 
+    pt_regs->sepc       = (reg_t) entry_point;
+    pt_regs->sstatus    = (reg_t) SR_SPIE & ~SR_SPP;
+    pt_regs->regs[2]    = (reg_t) user_stack;   //sp
+    pt_regs->regs[4]    = (reg_t) pcb;          //tp
 
     /* TODO: [p2-task1] set sp to simulate just returning from switch_to
      * NOTE: you should prepare a stack, and push some values to
@@ -111,12 +115,13 @@ static void init_pcb_stack(
     switchto_context_t *pt_switchto =
         (switchto_context_t *)((ptr_t)pt_regs - sizeof(switchto_context_t));
     
-    pt_switchto->regs[0] = entry_point; //ra
-    pt_switchto->regs[1] = kernel_stack;  //sp
+    pt_switchto->regs[0] = (reg_t) ret_from_exception;  //ra
+    pt_switchto->regs[1] = (reg_t) pt_switchto;         //sp
 
     printl("entrypoint %lx\n", entry_point);
 
     pcb->kernel_sp = (reg_t) pt_switchto;
+    pcb->user_sp = user_stack;
 
 }
 
@@ -127,28 +132,43 @@ static void init_pcb(void)
     //char needed_task_name[][32] = {"print1", "print2", "fly"};
 
     // for [p2-task2]
-    char needed_task_name[][32] = {"print1", "print2", "fly", "lock1", "lock2"};
+    char needed_task_name[][32] = {"timer", "sleep", "print1", "print2", "fly", "lock1", "lock2"};
 
     for(int i=1; i<=sizeof(needed_task_name)/32; i++){
-        pcb[i].kernel_sp = allocKernelPage(1) + PAGE_SIZE;
-        pcb[i].user_sp = allocUserPage(1) + PAGE_SIZE;
         pcb[i].pid = process_id++;
         pcb[i].status = TASK_READY;
-        init_pcb_stack(pcb[i].kernel_sp, pcb[i].user_sp, load_task_img_via_name(needed_task_name[i-1]), pcb+i);
+        init_pcb_stack(
+            allocKernelPage(1) + PAGE_SIZE,
+            allocUserPage(1) + PAGE_SIZE,
+            load_task_img_via_name(needed_task_name[i-1]), 
+            pcb+i
+        );
         list_push(&ready_queue, &pcb[i].list);
     }
     pcb[0]=pid0_pcb;
+
+    printl("initial ready_queue ");
     pcb_list_print(&ready_queue);
 
     /* TODO: [p2-task1] remember to initialize 'current_running' */
     current_running=pcb+0;
-    current_running->status=TASK_RUNNING;
+    current_running->status=TASK_BLOCKED; // to stop pcb0 from being pushed into ready_queue
 
 }
 
 static void init_syscall(void)
 {
     // TODO: [p2-task3] initialize system call table.
+    syscall[SYSCALL_SLEEP]          = (long (*)())do_sleep;
+    syscall[SYSCALL_YIELD]          = (long (*)())do_scheduler;
+    syscall[SYSCALL_WRITE]          = (long (*)())screen_write;
+    syscall[SYSCALL_CURSOR]         = (long (*)())screen_move_cursor;
+    syscall[SYSCALL_REFLUSH]        = (long (*)())screen_reflush;
+    syscall[SYSCALL_GET_TIMEBASE]   = (long (*)())get_time_base;
+    syscall[SYSCALL_GET_TICK]       = (long (*)())get_ticks;
+    syscall[SYSCALL_LOCK_INIT]      = (long (*)())do_mutex_lock_init;
+    syscall[SYSCALL_LOCK_ACQ]       = (long (*)())do_mutex_lock_acquire;
+    syscall[SYSCALL_LOCK_RELEASE]   = (long (*)())do_mutex_lock_release;
 }
 
 int main(void)
@@ -165,6 +185,7 @@ int main(void)
 
     // Read CPU frequency (｡•ᴗ-)_
     time_base = bios_read_fdt(TIMEBASE);
+    printl("time_base %u\n", time_base);
 
     // Init lock mechanism o(´^｀)o
     init_locks();
