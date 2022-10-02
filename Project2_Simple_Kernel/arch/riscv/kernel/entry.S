@@ -59,7 +59,7 @@
   /* TODO: [p2-task3] save sstatus, sepc, stval and scause on kernel stack */
   csrr t1, CSR_SSTATUS
   csrr t2, CSR_SEPC
-  addi t2, t2, 4
+//addi t2, t2, 4    // move to interrupt_helper in [p2-task4]
   csrr t3, CSR_STVAL
   csrr t4, CSR_SCAUSE
   sd t1, OFFSET_REG_SSTATUS  (sp)

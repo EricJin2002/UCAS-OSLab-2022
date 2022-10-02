@@ -60,7 +60,7 @@ void do_scheduler(void)
     // TODO: [p2-task1] switch_to current_running
     printl("switching from %d to %d\n\r", prev_running->pid, current_running->pid);
     switch_to(prev_running, current_running);
-    printl("\n\r");
+    screen_move_cursor(current_running->cursor_x, current_running->cursor_y);
 }
 
 void do_sleep(uint32_t sleep_time)

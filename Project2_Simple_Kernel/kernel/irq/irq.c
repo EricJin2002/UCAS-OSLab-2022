@@ -14,19 +14,26 @@ void interrupt_helper(regs_context_t *regs, uint64_t stval, uint64_t scause)
 {
     // TODO: [p2-task3] & [p2-task4] interrupt handler.
     // call corresponding handler by the value of `scause`
-    //printl("enter interrupt_helper\n");
+    printl("enter interrupt_helper ");
     if(scause>>63){
-        irq_table[scause&0x7fffffff](regs, stval, scause);
+        printl("irq_table code %d\n",scause&0x7fffffffffffffffU);
+        irq_table[scause&0x7fffffffffffffffU](regs, stval, scause);
     }else{
+        printl("exc_table code %d\n",scause);
+        regs->sepc+=4;
         exc_table[scause](regs, stval, scause);
     }
-    //printl("leave interrupt_helper\n");
+    printl("leave interrupt_helper\n");
+    printl("\n\r");
 }
 
 void handle_irq_timer(regs_context_t *regs, uint64_t stval, uint64_t scause)
 {
     // TODO: [p2-task4] clock interrupt handler.
     // Note: use bios_set_timer to reset the timer and remember to reschedule
+    printl("handle_irq_timer pid %d\n", ((pcb_t *)regs->regs[4])->pid);
+    bios_set_timer(get_ticks() + TIMER_INTERVAL);
+    do_scheduler();
 }
 
 void init_exception()
@@ -45,6 +52,15 @@ void init_exception()
 
     /* TODO: [p2-task4] initialize irq_table */
     /* NOTE: handle_int, handle_other, etc.*/
+    irq_table[IRQC_U_SOFT]  = handle_other;
+    irq_table[IRQC_S_SOFT]  = handle_other;
+    irq_table[IRQC_M_SOFT]  = handle_other;
+    irq_table[IRQC_U_TIMER] = handle_other;
+    irq_table[IRQC_S_TIMER] = handle_irq_timer;
+    irq_table[IRQC_M_TIMER] = handle_other;
+    irq_table[IRQC_U_EXT]   = handle_other;
+    irq_table[IRQC_S_EXT]   = handle_other;
+    irq_table[IRQC_M_EXT]   = handle_other;
 
     /* TODO: [p2-task3] set up the entrypoint of exceptions */
     setup_exception();
