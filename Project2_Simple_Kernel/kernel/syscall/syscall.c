@@ -19,6 +19,7 @@ void handle_syscall(regs_context_t *regs, uint64_t interrupt, uint64_t cause)
         regs->regs[13], 
         regs->regs[14]
     );
+    regs->sepc+=4;
     printl("ret a0 %d\n",regs->regs[10]);
     //printl("leave handle_syscall with regs[a0] %lx\n", regs->regs[10]);
 }

@@ -20,7 +20,6 @@ void interrupt_helper(regs_context_t *regs, uint64_t stval, uint64_t scause)
         irq_table[scause&0x7fffffffffffffffU](regs, stval, scause);
     }else{
         printl("exc_table code %d\n",scause);
-        regs->sepc+=4;
         exc_table[scause](regs, stval, scause);
     }
     printl("leave interrupt_helper\n");
