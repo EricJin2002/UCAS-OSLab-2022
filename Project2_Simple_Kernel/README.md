@@ -1,16 +1,18 @@
-# Project 1 引导、镜像文件和ELF文件
+# Project 2 简易内核实现
 
 ## 实验任务
 
-本实验包括五个任务，其中前三个为S-core，前四个为A-core，前五个为C-core.
+本实验包括五个任务，其中前两个为S-core，前四个为A-core，前五个为C-core.
+
+前两个为PART-Ⅰ内容，后三个为PART-Ⅱ内容。
 
 具体如下：
 
-- 任务1：第一个引导块的制作（C,A,S-core）
-- 任务2：开始制作镜像文件（C,A,S-core）
-- 任务3：加载并选择启动多个用户程序之一（C,A,S-core）
-- 任务4：镜像文件压缩（C,A-core）
-- 任务5：批处理运行多个用户程序（C-core）
+- 任务1：任务启动与非抢占式调度（C,A,S-core）
+- 任务2：互斥锁的实现（C,A,S-core）
+- 任务3：系统调用（C,A-core）
+- 任务4：时钟中断、抢占式调度（C,A-core）
+- 任务5：实现线程的创建 thread_create（C-core）
 
 ## 运行说明
 
@@ -22,293 +24,119 @@ make floppy     # 将镜像写入SD卡
 make minicom    # 监视串口
 ```
 
-进入BBL界面后，输入```loadboot```命令来启动bootloader。将进入以下界面：
+修改```init/main.c```中```init_pcb```函数内的```needed_task_name```变量来选择```test/test_project2/```目录下待执行的应用程序。
+
+进入BBL界面后，输入```loadbootd```命令来启动bootloader。运行时的界面如下：
 
 ```
-=> loadboot
-It's a bootloader...
-Hello OS!
-bss check: t version: 2
-
-Type help to show help infomation
-$ 
+> [TASK] This task is to test scheduler. (35)                                   
+> [TASK] This task is to test scheduler. (33)                                   
+> [TASK] Applying for a lock.                                                   
+> [TASK] Has acquired lock and running.(4)                                      
+> [TASK] This task is to test sleep. (1)                                        
+> [TASK] This is a thread to timing! (5/58454045 seconds).                      
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                     _                                                          
+                   -=\`\                                                        
+               |\ ____\_\__                                                     
+             -=\`""""""" "`)                                                    
+               `~~~~~/ /~~`                                                     
+                 -==/ /                                                         
+                   '-'                                           
 ```
-
-此时，操作系统已成功进入kernel，等待用户输入待执行的**应用（Application, 以下简称app）**或**批处理文件（Batch File, 以下简称bat）**。
-
-输入help来查看帮助。
-
-```
-Type help to show help infomation
-$ help
-Type app name to launch an application
-or bat name (without ".txt") to launch a batch file
-$ 
-```
-
-输入应用程序名来执行对应应用。（其实上面的help也是一个应用）
-
-应用程序源代码为```.c```文件，存放在```test/```目录下。
-
-例如执行应用程序```2048```：
-
-```
-$ 2048
- 2048 - Game
- * Use h-j-k-l / w-a-s-d keys to move the tiles.
- * When two tiles with the same number touch, they merge into one.
-
-              ^                       ^
-              k                       w
-        < h       l >           < a       d >
-              j                       s
-              v                       v
-
- * Commands: 
-         n - New game
-         q - Exit
-Press 'Enter' key to continue.. 
-```
-
-输入批处理文件名来执行对应的批处理程序。
-
-批处理程序为```.txt```文件，存放在```bat/```目录下。
-
-例如执行批处理文件```example.txt```：
-
-```
-$ example
-
-===Reading batch from image...===
-auipc
-bss
-auipc
-bss
-bss
-
-auipc
-data
-qwerty
-data
-===Finish reading!===
-
-
-===Now excute batch!===
-[auipc] Info: testpc = 0x520102f6
-[bss] Info: passed bss check!
-[auipc] Info: testpc = 0x520102f6
-[bss] Info: passed bss check!
-[bss] Info: passed bss check!
-Task name empty!
-[auipc] Info: testpc = 0x520102f6
-[data] Info: checking data!
-[data] Info: checking data --- [OK]!
-No task named qwerty!
-[data] Info: checking data!
-[data] Info: checking data --- [OK]!
-===All tasks in batch are excuted!===
-
-$ 
-```
-
-所有往命令行输入的指令，或批处理文件中的每一行，都被视作一个**任务（task）**。任务可以是一个**app**，也可以是一个**bat**
-
-P.S. 这意味着你甚至可以在批处理文件中调用批处理文件！
-
-P.P.S. 甚至可以让批处理文件自己调用自己！详见```bat/cycle.txt```
-
-（虽然这样只会死循环... 为了好玩加了个名为pause的用户程序，来为每次循环暂停一下...
-
-如果任务名为空，将提示```Task name empty!```
-
-如果不存在该任务，将提示```No task named xxx!```
-（例如```example```执行结果中的```No task named qwerty!```）
 
 ## 运作流程
 
-### 引导块
+### 初始化内核
 
-```arch/riscv/boot/bootblock.S```完成下述操作：
+内核的初始化包括以下操作：
 
-- 打印```"It's bootblock!"```
-- 将sd卡中的kernel所在块加载到内存
-- **将sd卡中的task-info所在块加载到内存（暂时存放在应用程序入口地址处）**
-- 跳转到kernel入口地址
+- `init_jmptab`用于将kernel与bios提供的函数记录在跳转表中
+- `init_task_info`用于保存loadboot时预存的task-info信息
+- `init_pcb`具体包括下述功能：
+  - 加载用户程序到内存
+  - 为用户程序分配用户栈与内核栈空间
+  - 修改栈内数据及栈顶指针来模拟“刚受到中断、将从`switch_to`返回”
+  - 在PCB中记录用户程序的pid，栈指针等信息
+  - 将用户程序的状态标记为ready，并添加到ready队列
+  - 令第零号PCB为`pid0_pcb`，并设置`current_running`
+  - 设置`tp`寄存器的值为`current_running`（这是为了当发生第一次抢占时，`SAVE_CONTEXT`能找到PCB地址）
+- `bios_read_fdt`用于读取CPU频率，设置`time_base`以供`kernel/sched/time.c`使用
+- `init_locks`用于将所有锁标记为未使用
+- `init_exception`用于初始化例外表（及中断表），并设置中断处理入口地址`stvec`，打开中断
+- `init_syscall`用于初始化系统调用表
+- `init_screen`用于初始化屏幕
+- `bios_set_timer`，`enable_interrupt`，`enable_preempt`等用于开启抢占式调度
 
-### 内核起点
+### 例外的触发与处理
 
-```arch/riscv/kernel/head.S```完成下述操作：
+当发生例外时（例如当触发时钟中断时），内核依次完成下述操作：
+- `ecall`指令进入内核态
+- 进入`exception_handler_entry`
+- 进入`SAVE_CONTEXT`，保存上下文到内核栈，并令`sp`指向内核栈
+- 进入`interrupt_helper`，根据`scause`调用相应例外处理函数
 
-- 清空bss段
-- 设置内核栈指针
+对于例外，目前仅支持处理系统调用与时钟中断：
+- 对于系统调用，将进入`handle_syscall`，根据`a7`寄存器内存储的值调用系统调用表内函数，随后令`sepc`加4
+- 对于时钟中断，将进入`handle_irq_timer`，更新抢占时刻，并进行下一次调度
 
-```init/main.c```完成下述操作：
+### 任务的调度与切换
 
-- 检验bss段已清空
-- 初始化bios
-- **读取暂存在应用程序入口地址的task-info，保存到位于bss段的全局变量中，以防被后续应用覆盖**
-- 读取用户输入，调用各应用/批处理程序
+当例外类型为时钟中断或系统调用`yield`函数时，将进入`do_scheduler`进行下一次调度：
 
-### 用户任务的加载与执行
+- `check_sleeping`用于从sleep队列中唤醒正处于blocked状态的任务（修改其状态为ready，将其添加至ready队列）
+- 若当前任务尚处于running状态，同样修改其状态为ready，将其添加至ready队列
+- 让ready队列中处于队头的进程出队
+- 调用`switch_to`，完成进程间的切换
 
-```kernel/loader/loader.c```共提供了两个函数，以供```init/main.c```调用：
+### 例外的返回
 
-```h
-uint64_t load_task_img(int taskid);
-void excute_task_img_via_name(char *taskname);
-```
+- 从`interrupt_helper`返回，进入`ret_from_exception`
+- 进入`RESTORE_CONTEXT`，恢复先前保存的上下文变量，并令`sp`指向用户栈
+- `sret`返回用户态
 
-其中，
+## 部分PART-Ⅰ设计细节（摘自 PART-Ⅰ REVIEW 时制作的PPT）
 
-```load_task_img```将从sd卡中读取指定```taskid```下的task。若task类型为app，则返回该应用程序的入口地址。若task类型为bat，则直接依次执行该bat内所有task，结束后返回0。该函数的调用者进而根据函数返回值来判断是否要跳转到应用程序。
+- When a process is blocked, how does the kernel handle the blocked process?
+- When someone acquire a lock . . .
+  - If the lock LOCKED, 
+    - Do_block
+      - Push pcb_node to block_queue & Set its status to TASK_BLOCKED
+      - Do_scheduler
+  - Else if the lock UNLOCKED, 
+    - Set lock status to LOCKED
+- When someone release a lock . . . 
+  - If block_queue not empty,
+    - Pop a pcb_node from block_queue
+    - Do_unblock
+      - Push pcb_node to ready_queue & Set its status to TASK_READY
+  - Else if block_queue empty,
+    - Set lock status to UNLOCKED
+- Where to place the PCB when the process is blocked/unblocked?
+  - Place those blocked PCBs in the block_queue of mutex locks
+  - Place those unblocked PCBs in the ready_queue or current_running
 
-```excute_task_img_via_name```将在```task-info```信息中逐个比对输入的task名。若输入的任务存在，则调用```load_task_img```函数执行该任务；否则，输出反馈信息。
+## 实验过程
 
-### 测试程序入口
+### 区分内核栈与用户栈
 
-```crt0.S```完成下述操作：
+在p2-task1 & p2-task2最初的实现中，我将```switch_to```上下文变量中的```sp```（亦即```init/main.c```中```init_pcb_stack```函数内的```pt_switchto->regs[1]```变量）理解成了用户栈栈顶指针。因此，每次切换应用程序时，保存与恢复的栈指针也均为用户栈指针。这样能正确地实现功能。然而，```switch_to```函数的调用发生在内核态，原本应为内核态的操作使用了用户态的栈——这显然是不太合理的。
 
-- 清空bss段
-- 保存返回地址到栈空间
-- 调用main
-- 恢复栈中的返回地址
-- 返回内核
-
-## 设计细节
-
-### 镜像文件结构
-
-镜像文件由```createimage.c```合成，具体依次存放了以下信息：
-
-- bootblock (padding到512B)
-- kernel
-- app 1, app 2, ... , app n
-- bat 1, bat 2, ... , bat m
-- task-info
-
-其中，
-
-在任务三中，kernel和各个app均被padding到15个扇区（512B）。
-
-在任务四中，kernel，各个app以及app-info依次紧密存储。
-
-在任务五中，kernel，各个app，各个bat以及task-info依次紧密存储。
-
-### task-info结构
-
-task-info主要包括以下信息：
-
-```h
-// include/os/task.h
-
-// for [p1-task5]
-typedef enum{
-    app, bat
-} TYPE;
-
-typedef struct {
-    char name[32];
-    int offset;
-    int size;
-    uint64_t entrypoint;
-    TYPE type; // for [p1-task5]
-} task_info_t;
-
-extern task_info_t tasks[TASK_MAXNUM];
-
-// for [p1-task4]
-extern uint16_t task_num;
-```
-
-其中，
-- ```name```属性用来标识task的调用名（对于bat来说不含“.txt”后缀）
-- ```offset```属性用来记录该task在image文件中距离文件开始位置的偏移量
-- ```size```属性用来记录该task在image文件中的字节数
-- ```entrypoint```属性来自ELF文件中记载的程序入口地址
-
-在实验五中，bat-info和app-info以相同的格式一并保存在task-info中，因此增设了```type```属性来指示当前task的类型。```task_num```为所有app和bat的总数。
-
-### 辅助信息的存储
-
-bios提供的```bios_sdread```函数需要提供块id，块数信息来一块一块地（512B）读取sd卡。这意味着需要存储kernel块数，task-info块id、块数信息，以辅助sd上数据块的加载。
-
-注意到bootblock块末尾有大端空白，因此将这些信息存储在了bootblock块的最后的12B中。依次为：
-
-- task-info信息在image文件中的偏移量（用于判断块中有效信息位置），4B
-- task-info块id，2B
-- task-info块数，2B
-- kernel块数，2B
-- task_num，2B
-
-这些信息随bootblock块在一开始就被加载到内存。
-
-## 实验心得
-
-### 善于使用工具
-
-在开始调试代码时，我因为不擅长使用gdb，导致代码调试陷入了瓶颈。随着我逐渐熟识了gdb工具，代码编写也不再困难。我还掌握了```vim```中的```:%!xxd```指令和```hexdump```指令，来查看image的二进制编码。我发现，```hexdump```指令和```vim```中的```:%!xxd```指令输出不尽相同。前者输出时会自动调整相邻字节的输出顺序，而后者不会。
-
-### 严格按位宽处理数据
-
-在代码调试的过程中，我一开始使用了short, int, long等变量定义数据。由于事先未关注各数据的位宽大小，在编译时，不同位宽数据在转换的过程中收到了不少warning。最后的解决方案是用uintxx_t类型取代位宽模糊的short, int, long, long long类型。
-
-此外，在上板测试的过程中，我和另外两个同学被2048程序无法正常相应回车键的问题困扰很久。最后在老师和同学们的帮助下，发现是因为我们在栈中保存和恢复返回地址时错误地使用了lw,sw指令（而非ld,sd指令），并且栈空间也仅开了4字节（而非8字节）。这是因为我惯性地顺从了体系结构研讨课的思维，误以为该机器是32位。但实际上该机器是64位的，栈指针的非对齐访问导致了最终的出错。
-
-在此感谢所有耐心指导的老师和同学们！
-
-## 目录结构
+PART-Ⅰ REVIEW 时，在助教的帮助下，我意识到start code中```switch_to```函数内原先被我注释的第一行是发生在内核栈上的。
 
 ```
-Project1_BootLoader/
-├── arch
-│   └── riscv
-│       ├── bios
-│       │   └── common.c
-│       ├── boot
-│       │   └── bootblock.S
-│       ├── crt0
-│       │   └── crt0.S
-│       ├── include
-│       │   ├── asm
-│       │   │   └── biosdef.h
-│       │   ├── asm.h
-│       │   ├── common.h
-│       │   └── csr.h
-│       └── kernel
-│           └── head.S
-├── bat
-│   ├── cycle.txt
-│   └── example.txt
-├── build
-├── createimage
-├── include
-│   ├── os
-│   │   ├── bios.h
-│   │   ├── loader.h
-│   │   ├── string.h
-│   │   └── task.h
-│   └── type.h
-├── init
-│   └── main.c
-├── kernel
-│   └── loader
-│       └── loader.c
-├── libs
-│   └── string.c
-├── Makefile
-├── README.md
-├── riscv.lds
-├── task2.sh
-├── test
-│   └── test_project1
-│       ├── 2048.c
-│       ├── auipc.c
-│       ├── bss.c
-│       ├── data.c
-│       └── pause.c
-├── tiny_libc
-│   └── include
-│       └── bios.h
-└── tools
-    └── createimage.c
+addi sp, sp, -(SWITCH_TO_SIZE)
 ```
+
+我进而修改了内核栈空间的初始化方式来模拟应用切换时的上下文逻辑。这样的设计能实现和先前一样的逻辑，且保证内核态操作能运行在内核栈上。（但值得注意的是，此时用户态操作也运行在了内核栈上）
+
+内核态与用户态在p2-task3中得到彻底区分。这是通过系统调用来实现的，内核栈指针与用户栈指针在```SAVE_CONTEXT```与```RESTORE_CONTEXT```的过程中发生切换。
+
+### 掌握新的调试工具使用技巧
+
+在调试系统调用功能时，我发现gdb的```si```命令在遇到```sret```指令时，无法随程序进入用户态。这为调试带来了极大的麻烦，我的实验进程也因此停滞很久。在此过程中，我曾尝试使用```printl```来打印内核态信息，使用```while(1)```在用户态阻塞程序运行，来推算程序运行状况——但是效果均不是很好。
+
+我也曾和同学讨论更加方便的调试方法，并尝试配置了```.vscode/*```调试环境。最终，在同学的分享下，我学会了用gdb的```b * 0x...```命令为用户态程序设置断点。结合汇编文件，可以掌握程序在用户态的行为，进而彻底解决了调试难题。在此表示感谢。
