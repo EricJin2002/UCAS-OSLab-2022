@@ -119,4 +119,7 @@ static inline void pcb_list_print(list_head *listptr){
     printl("\n\r");
 }
 
+// for [p2-task5]
+void thread_create(uint64_t entrypoint, long a0, long a1, long a2, long a3);
+
 #endif

@@ -12,4 +12,7 @@
 #define SYSCALL_LOCK_ACQ 41
 #define SYSCALL_LOCK_RELEASE 42
 
+// for [p2-task5]
+#define SYSCALL_THREAD_CREATE 50
+
 #endif

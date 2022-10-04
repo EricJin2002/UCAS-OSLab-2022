@@ -104,7 +104,7 @@ static void init_pcb_stack(
         (regs_context_t *)(kernel_stack - sizeof(regs_context_t));
 
     pt_regs->sepc       = (reg_t) entry_point;
-    pt_regs->sstatus    = (reg_t) SR_SPIE & ~SR_SPP;
+    pt_regs->sstatus    = (reg_t) (SR_SPIE & ~SR_SPP);
     pt_regs->regs[2]    = (reg_t) user_stack;   //sp
     pt_regs->regs[4]    = (reg_t) pcb;          //tp
 
@@ -132,7 +132,7 @@ static void init_pcb(void)
     //char needed_task_name[][32] = {"print1", "print2", "fly"};
 
     // for [p2-task2]
-    char needed_task_name[][32] = {"print1", "print2", "fly", "lock1", "lock2", "timer", "sleep"};
+    char needed_task_name[][32] = {"print1", "print2", "fly", "lock1", "lock2", "timer", "sleep", "add"};
 
     for(int i=1; i<=sizeof(needed_task_name)/32; i++){
         pcb[i].pid = process_id++;
@@ -172,6 +172,7 @@ static void init_syscall(void)
     syscall[SYSCALL_LOCK_INIT]      = (long (*)())do_mutex_lock_init;
     syscall[SYSCALL_LOCK_ACQ]       = (long (*)())do_mutex_lock_acquire;
     syscall[SYSCALL_LOCK_RELEASE]   = (long (*)())do_mutex_lock_release;
+    syscall[SYSCALL_THREAD_CREATE]  = (long (*)())thread_create;
 }
 
 int main(void)

@@ -14,4 +14,7 @@ int sys_mutex_init(int key);
 void sys_mutex_acquire(int mutex_idx);
 void sys_mutex_release(int mutex_idx);
 
+// for [p2-task5]
+void sys_thread_create(uint64_t entrypoint, long a0, long a1, long a2, long a3);
+
 #endif

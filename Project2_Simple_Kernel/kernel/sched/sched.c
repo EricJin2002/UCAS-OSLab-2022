@@ -6,6 +6,7 @@
 #include <screen.h>
 #include <printk.h>
 #include <assert.h>
+#include <csr.h> // for [p2-task5]
 
 pcb_t pcb[NUM_MAX_TASK];
 const ptr_t pid0_stack = INIT_KERNEL_STACK + PAGE_SIZE;
@@ -95,4 +96,40 @@ void do_unblock(list_node_t *pcb_node)
     LIST2PCB(pcb_node)->status = TASK_READY;
     printl("do_unblock pid %d\n\r",LIST2PCB(pcb_node)->pid);
     //pcb_list_print(&ready_queue);
+}
+
+// for [p2-task5]
+extern void ret_from_exception();
+void thread_create(uint64_t entrypoint, long a0, long a1, long a2, long a3){
+    int i = process_id++;
+    pcb[i].pid = i;
+    pcb[i].status = TASK_READY;
+
+    ptr_t kernel_stack = allocKernelPage(1) + PAGE_SIZE;
+    ptr_t user_stack = allocUserPage(1) + PAGE_SIZE;
+
+    regs_context_t *pt_regs =
+        (regs_context_t *)(kernel_stack - sizeof(regs_context_t));
+
+    pt_regs->sepc       = (reg_t) entrypoint;
+    pt_regs->sstatus    = (reg_t) (SR_SPIE & ~SR_SPP);
+    pt_regs->regs[2]    = (reg_t) user_stack;   //sp
+    pt_regs->regs[4]    = (reg_t) (pcb + i);    //tp
+    pt_regs->regs[10]   = (reg_t) a0;
+    pt_regs->regs[11]   = (reg_t) a1;
+    pt_regs->regs[12]   = (reg_t) a2;
+    pt_regs->regs[13]   = (reg_t) a3;
+
+    switchto_context_t *pt_switchto =
+        (switchto_context_t *)((ptr_t)pt_regs - sizeof(switchto_context_t));
+    
+    pt_switchto->regs[0] = (reg_t) ret_from_exception;  //ra
+    pt_switchto->regs[1] = (reg_t) pt_switchto;         //sp
+
+    printl("entrypoint %lx\n", entrypoint);
+
+    pcb[i].kernel_sp = (reg_t) pt_switchto;
+    pcb[i].user_sp = user_stack;
+
+    list_push(&ready_queue, &pcb[i].list);
 }
