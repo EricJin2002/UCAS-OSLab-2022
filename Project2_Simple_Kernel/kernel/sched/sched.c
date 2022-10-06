@@ -101,20 +101,32 @@ void do_unblock(list_node_t *pcb_node)
 // for [p2-task5]
 extern void ret_from_exception();
 void thread_create(uint64_t entrypoint, long a0, long a1, long a2, long a3){
-    int i = process_id++;
-    pcb[i].pid = i;
-    pcb[i].status = TASK_READY;
+    // int i = process_id++;
+    // pcb[i].pid = i;
+    // pcb[i].status = TASK_READY;
 
     ptr_t kernel_stack = allocKernelPage(1) + PAGE_SIZE;
     ptr_t user_stack = allocUserPage(1) + PAGE_SIZE;
+
+    tcb_t *tcb = (tcb_t *)kernel_stack;
+    kernel_stack -= sizeof(tcb_t);
+    tcb->pid = current_running->pid;
+    list_node_t *father_list = &current_running->tcb_list;
+    while(TCBLIST2TCB(father_list)->tid){
+        father_list = father_list->next;
+    }
+    tcb->tid = TCBLIST2TCB(father_list->prev)->tid + 1; // todo: what if tid reaches its upper limit
+    list_push(father_list, &tcb->tcb_list);
+
+    tcb->status = TASK_READY;
 
     regs_context_t *pt_regs =
         (regs_context_t *)(kernel_stack - sizeof(regs_context_t));
 
     pt_regs->sepc       = (reg_t) entrypoint;
     pt_regs->sstatus    = (reg_t) (SR_SPIE & ~SR_SPP);
-    pt_regs->regs[2]    = (reg_t) user_stack;   //sp
-    pt_regs->regs[4]    = (reg_t) (pcb + i);    //tp
+    pt_regs->regs[2]    = (reg_t) user_stack;           //sp
+    pt_regs->regs[4]    = (reg_t) tcb; //(pcb + i);     //tp
     pt_regs->regs[10]   = (reg_t) a0;
     pt_regs->regs[11]   = (reg_t) a1;
     pt_regs->regs[12]   = (reg_t) a2;
@@ -128,8 +140,8 @@ void thread_create(uint64_t entrypoint, long a0, long a1, long a2, long a3){
 
     printl("entrypoint %lx\n", entrypoint);
 
-    pcb[i].kernel_sp = (reg_t) pt_switchto;
-    pcb[i].user_sp = user_stack;
+    tcb->kernel_sp = (reg_t) pt_switchto;
+    tcb->user_sp = user_stack;
 
-    list_push(&ready_queue, &pcb[i].list);
+    list_push(&ready_queue, &tcb->list);
 }

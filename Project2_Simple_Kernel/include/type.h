@@ -45,6 +45,7 @@ typedef int      __attribute__((__mode__(DI))) int64_t;
 typedef unsigned __attribute__((__mode__(DI))) uint64_t;
 
 typedef int32_t pid_t;
+typedef int32_t tid_t; // for [p2-task5]
 typedef uint64_t reg_t;
 typedef uint64_t ptr_t;
 typedef uint64_t uintptr_t;

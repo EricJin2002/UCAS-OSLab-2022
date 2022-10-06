@@ -75,6 +75,10 @@ typedef struct pcb
     /* process id */
     pid_t pid;
 
+    // for [p2-task5]
+    tid_t tid; // 0 indicates main thread
+    list_node_t tcb_list;
+
     /* BLOCK | READY | RUNNING */
     task_status_t status;
 
@@ -84,7 +88,7 @@ typedef struct pcb
 
     /* time(seconds) to wake up sleeping PCB */
     uint64_t wakeup_time;
-} pcb_t;
+} pcb_t, tcb_t;
 
 /* ready queue to run */
 extern list_head ready_queue;
@@ -118,6 +122,9 @@ static inline void pcb_list_print(list_head *listptr){
     }
     printl("\n\r");
 }
+
+// for [p2-task5]
+#define TCBLIST2TCB(listptr) ((tcb_t *)((void *)(listptr)-40))
 
 // for [p2-task5]
 void thread_create(uint64_t entrypoint, long a0, long a1, long a2, long a3);

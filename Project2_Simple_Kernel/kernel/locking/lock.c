@@ -74,7 +74,7 @@ void do_mutex_lock_acquire(int mlock_idx)
 void do_mutex_lock_release(int mlock_idx)
 {
     /* TODO: [p2-task2] release mutex lock */
-    // todo: still with bug if preemptive scheduling
+    // todo: still with bug when multiple cores
     list_node_t *node_to_be_unblocked = list_pop(&mlocks[mlock_idx].block_queue);
     if(node_to_be_unblocked){
         do_unblock(node_to_be_unblocked);

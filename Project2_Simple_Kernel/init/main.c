@@ -137,6 +137,12 @@ static void init_pcb(void)
     for(int i=1; i<=sizeof(needed_task_name)/32; i++){
         pcb[i].pid = process_id++;
         pcb[i].status = TASK_READY;
+
+        // for [p2-task5]
+        pcb[i].tid = 0;
+        pcb[i].tcb_list.prev = &pcb[i].tcb_list;
+        pcb[i].tcb_list.next = &pcb[i].tcb_list;
+        
         init_pcb_stack(
             allocKernelPage(1) + PAGE_SIZE,
             allocUserPage(1) + PAGE_SIZE,

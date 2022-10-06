@@ -4,9 +4,11 @@
 static int data[1200];
 
 void add1(int *finished1, int *ans1){
-    // sys_move_cursor(0, 8);
+    // sys_move_cursor(0, 7);
     // printf("1 %d %d\n", *finished1, *ans1);
     for(int i=0;i<600;i++){
+        sys_move_cursor(0, 7);
+        printf("add1 thread is calculating *ans1+=data[%d]", i);
         *ans1+=data[i];
     }
     *finished1 = 1;
@@ -14,9 +16,11 @@ void add1(int *finished1, int *ans1){
 }
 
 void add2(int *finished2, int *ans2){
-    // sys_move_cursor(0, 9);
+    // sys_move_cursor(0, 8);
     // printf("2 %d %d\n", *finished2, *ans2);
     for(int i=600;i<1200;i++){
+        sys_move_cursor(0, 8);
+        printf("add2 thread is calculating *ans2+=data[%d]", i);
         *ans2+=data[i];
     }
     *finished2 = 1;
