@@ -5,10 +5,12 @@
 .macro SAVE_CONTEXT // return sp at pt_regs
   /* TODO: [p2-task3] save all general purpose registers here! */
   /* HINT: Pay attention to the function of tp and sp, and save them carefully! */
-  sd t0, -8(sp)
+  // sd t0, -8(sp)
+  csrw CSR_SSCRATCH, t0
   ld t0, PCB_KERNEL_SP(tp)
   sd sp, OFFSET_REG_SP-OFFSET_SIZE(t0)  // store user stack pointer
-  ld t0, -8(sp)
+  // ld t0, -8(sp)
+  csrr t0, CSR_SSCRATCH
   ld sp, PCB_KERNEL_SP(tp)              // load kernel stack pointer
 
   addi sp, sp, -(OFFSET_SIZE)
