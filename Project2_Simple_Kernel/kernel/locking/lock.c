@@ -42,7 +42,7 @@ int do_mutex_lock_init(int key)
     for(int i=0;i<LOCK_NUM;i++){
         if(mlocks[i].handle_num>0 && mlocks[i].key==key){
             mlocks[i].handle_num++;
-            printl("use mlock %d for key %d\n\r",i,key);
+            // printl("use mlock %d for key %d\n\r",i,key);
             return i;
         }
     }
@@ -53,7 +53,7 @@ int do_mutex_lock_init(int key)
             mlocks[i].block_queue.next=&mlocks[i].block_queue;
             mlocks[i].block_queue.prev=&mlocks[i].block_queue;
             mlocks[i].key=key;
-            printl("allocate mlock %d for key %d\n\r",i,key);
+            // printl("allocate mlock %d for key %d\n\r",i,key);
             return i;
         }
     }
@@ -65,9 +65,9 @@ void do_mutex_lock_acquire(int mlock_idx)
     /* TODO: [p2-task2] acquire mutex lock */
     if(atomic_swap(LOCKED, (ptr_t)&mlocks[mlock_idx].lock.status)==LOCKED){
         do_block(&current_running->list, &mlocks[mlock_idx].block_queue);
-        printl("!!!after do_block\n\r");
+        // printl("!!!after do_block\n\r");
     }else{
-        printl("mlock_idx %d locked\n\r", mlock_idx);
+        // printl("mlock_idx %d locked\n\r", mlock_idx);
     }
 }
 
@@ -80,6 +80,6 @@ void do_mutex_lock_release(int mlock_idx)
         do_unblock(node_to_be_unblocked);
     }else{
         mlocks[mlock_idx].lock.status = UNLOCKED;
-        printl("mlock_idx %d unlocked\n\r", mlock_idx);
+        // printl("mlock_idx %d unlocked\n\r", mlock_idx);
     }
 }

@@ -52,14 +52,14 @@ void do_scheduler(void)
     current_running = LIST2PCB(next_node);
     current_running->status = TASK_RUNNING;
 
-    printl("current ready_queue ");
-    pcb_list_print(&ready_queue);
+    // printl("current ready_queue ");
+    // pcb_list_print(&ready_queue);
 
-    printl("current sleep_queue ");
-    pcb_list_print(&sleep_queue);
+    // printl("current sleep_queue ");
+    // pcb_list_print(&sleep_queue);
 
     // TODO: [p2-task1] switch_to current_running
-    printl("switching from %d to %d\n\r", prev_running->pid, current_running->pid);
+    // printl("switching from %d to %d\n\r", prev_running->pid, current_running->pid);
     switch_to(prev_running, current_running);
 }
 
@@ -73,7 +73,7 @@ void do_sleep(uint32_t sleep_time)
     list_push(&sleep_queue, &current_running->list);
     current_running->status = TASK_BLOCKED;
     current_running->wakeup_time = get_timer() + sleep_time;
-    printl("do_sleep pid %d time %d wakeup_time %d\n\r",current_running->pid,sleep_time,current_running->wakeup_time);
+    // printl("do_sleep pid %d time %d wakeup_time %d\n\r",current_running->pid,sleep_time,current_running->wakeup_time);
     do_scheduler();
 }
 
@@ -82,10 +82,10 @@ void do_block(list_node_t *pcb_node, list_head *queue)
     // TODO: [p2-task2] block the pcb task into the block queue
     list_push(queue, pcb_node);
     LIST2PCB(pcb_node)->status = TASK_BLOCKED;
-    printl("do_block pid %d\n\r",LIST2PCB(pcb_node)->pid);
-    //pcb_list_print(&ready_queue);
+    // printl("do_block pid %d\n\r",LIST2PCB(pcb_node)->pid);
+    // pcb_list_print(&ready_queue);
     do_scheduler();
-    printl("!!!after do_scheduler\n\r");
+    // printl("!!!after do_scheduler\n\r");
 }
 
 void do_unblock(list_node_t *pcb_node)
@@ -93,8 +93,8 @@ void do_unblock(list_node_t *pcb_node)
     // TODO: [p2-task2] unblock the `pcb` from the block queue
     list_push(&ready_queue, pcb_node);
     LIST2PCB(pcb_node)->status = TASK_READY;
-    printl("do_unblock pid %d\n\r",LIST2PCB(pcb_node)->pid);
-    //pcb_list_print(&ready_queue);
+    // printl("do_unblock pid %d\n\r",LIST2PCB(pcb_node)->pid);
+    // pcb_list_print(&ready_queue);
 }
 
 // for [p2-task5]
@@ -137,7 +137,7 @@ void thread_create(uint64_t entrypoint, long a0, long a1, long a2, long a3){
     pt_switchto->regs[0] = (reg_t) ret_from_exception;  //ra
     pt_switchto->regs[1] = (reg_t) pt_switchto;         //sp
 
-    printl("entrypoint %lx\n", entrypoint);
+    // printl("entrypoint %lx\n", entrypoint);
 
     tcb->kernel_sp = (reg_t) pt_switchto;
     tcb->user_sp = user_stack;

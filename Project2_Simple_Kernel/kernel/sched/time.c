@@ -38,11 +38,12 @@ void check_sleeping(void)
     uint64_t curr_time = get_timer();
     while(head->next!=&sleep_queue){
         if(curr_time>=LIST2PCB(head->next)->wakeup_time){
-            printl("about to wake up\n\r");
-            list_node_t *node_to_wakeup = list_pop(head);
-            list_push(&ready_queue, node_to_wakeup);
-            LIST2PCB(node_to_wakeup)->status = TASK_READY;
-            printl("wake up pid %d\n\r",LIST2PCB(node_to_wakeup)->pid);
+            // printl("about to wake up\n\r");
+            // list_node_t *node_to_wakeup = list_pop(head);
+            do_unblock(list_pop(head));
+            // list_push(&ready_queue, node_to_wakeup);
+            // LIST2PCB(node_to_wakeup)->status = TASK_READY;
+            // printl("wake up pid %d\n\r",LIST2PCB(node_to_wakeup)->pid);
         }else{
             head = head->next;
         }
