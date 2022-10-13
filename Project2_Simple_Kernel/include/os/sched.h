@@ -78,6 +78,7 @@ typedef struct pcb
     // for [p2-task5]
     tid_t tid; // 0 indicates main thread
     list_node_t tcb_list;
+    void *retval;
 
     /* BLOCK | READY | RUNNING */
     task_status_t status;
@@ -127,6 +128,8 @@ static inline void pcb_list_print(list_head *listptr){
 #define TCBLIST2TCB(listptr) ((tcb_t *)((void *)(listptr)-40))
 
 // for [p2-task5]
-void thread_create(uint64_t entrypoint, long a0, long a1, long a2, long a3);
+void thread_create(tid_t *tidptr, uint64_t entrypoint, long a0, long a1, long a2);
+void thread_exit(void *retval);
+int thread_join(tid_t tid, void **retvalptr);
 
 #endif

@@ -14,5 +14,7 @@
 
 // for [p2-task5]
 #define SYSCALL_THREAD_CREATE 50
+#define SYSCALL_THREAD_EXIT 51
+#define SYSCALL_THREAD_JOIN 52
 
 #endif

@@ -84,6 +84,12 @@ void sys_sleep(uint32_t time)
 }
 
 // for [p2-task5]
-void sys_thread_create(uint64_t entrypoint, long a0, long a1, long a2, long a3){
-    invoke_syscall(SYSCALL_THREAD_CREATE, entrypoint, a0, a1, a2, a3);
+void sys_thread_create(int32_t *tidptr, uint64_t entrypoint, long a0, long a1, long a2){
+    invoke_syscall(SYSCALL_THREAD_CREATE, (long)tidptr, entrypoint, a0, a1, a2);
+}
+void sys_thread_exit(void *retval){
+    invoke_syscall(SYSCALL_THREAD_EXIT, (long)retval, IGNORE, IGNORE, IGNORE, IGNORE);
+}
+int sys_thread_join(int32_t tid, void **retvalptr){
+    return invoke_syscall(SYSCALL_THREAD_JOIN, (long)tid, (long)retvalptr, IGNORE, IGNORE, IGNORE);
 }

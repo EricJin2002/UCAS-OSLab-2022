@@ -132,7 +132,7 @@ static void init_pcb(void)
     //char needed_task_name[][32] = {"print1", "print2", "fly"};
 
     // for [p2-task2]
-    char needed_task_name[][32] = {"print1", "print2", "fly", "lock1", "lock2", "timer", "sleep", "add"};
+    char needed_task_name[][32] = {"print1", "print2", "fly", "lock1", "lock2", "timer", "sleep", "add2"};
 
     for(int i=1; i<=sizeof(needed_task_name)/32; i++){
         pcb[i].pid = process_id++;
@@ -179,6 +179,8 @@ static void init_syscall(void)
     syscall[SYSCALL_LOCK_ACQ]       = (long (*)())do_mutex_lock_acquire;
     syscall[SYSCALL_LOCK_RELEASE]   = (long (*)())do_mutex_lock_release;
     syscall[SYSCALL_THREAD_CREATE]  = (long (*)())thread_create;
+    syscall[SYSCALL_THREAD_EXIT]    = (long (*)())thread_exit;
+    syscall[SYSCALL_THREAD_JOIN]    = (long (*)())thread_join;
 }
 
 int main(void)

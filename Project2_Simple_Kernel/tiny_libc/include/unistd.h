@@ -15,6 +15,8 @@ void sys_mutex_acquire(int mutex_idx);
 void sys_mutex_release(int mutex_idx);
 
 // for [p2-task5]
-void sys_thread_create(uint64_t entrypoint, long a0, long a1, long a2, long a3);
+void sys_thread_create(int32_t *tidptr, uint64_t entrypoint, long a0, long a1, long a2);
+void sys_thread_exit(void *retval);
+int sys_thread_join(int32_t tid, void **retvalptr);
 
 #endif

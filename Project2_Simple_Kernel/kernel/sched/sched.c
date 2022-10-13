@@ -37,6 +37,7 @@ void do_scheduler(void)
     pcb_t *prev_running = current_running;
     if(prev_running->status==TASK_RUNNING){
         // else, the task is blocked, don't push it to ready_queue
+        // or is exited, don't push it to ready_queue (for [p2-task5])
         list_push(&ready_queue, &prev_running->list);
         prev_running->status = TASK_READY;
     }
@@ -99,7 +100,7 @@ void do_unblock(list_node_t *pcb_node)
 
 // for [p2-task5]
 extern void ret_from_exception();
-void thread_create(uint64_t entrypoint, long a0, long a1, long a2, long a3){
+void thread_create(tid_t *tidptr, uint64_t entrypoint, long a0, long a1, long a2){
     // int i = process_id++;
     // pcb[i].pid = i;
     // pcb[i].status = TASK_READY;
@@ -110,12 +111,13 @@ void thread_create(uint64_t entrypoint, long a0, long a1, long a2, long a3){
     tcb_t *tcb = (tcb_t *)kernel_stack;
     kernel_stack -= sizeof(tcb_t);
     tcb->pid = current_running->pid;
-    list_node_t *father_list = &current_running->tcb_list;
-    while(TCBLIST2TCB(father_list)->tid){
-        father_list = father_list->next;
+    list_node_t *father_node = &current_running->tcb_list;
+    while(TCBLIST2TCB(father_node)->tid){
+        father_node = father_node->next;
     }
-    tcb->tid = TCBLIST2TCB(father_list->prev)->tid + 1; // todo: what if tid reaches its upper limit
-    list_push(father_list, &tcb->tcb_list);
+    tcb->tid = TCBLIST2TCB(father_node->prev)->tid + 1; // todo: what if tid reaches its upper limit
+    list_push(father_node, &tcb->tcb_list);
+    *tidptr=tcb->tid;
 
     tcb->status = TASK_READY;
 
@@ -129,7 +131,7 @@ void thread_create(uint64_t entrypoint, long a0, long a1, long a2, long a3){
     pt_regs->regs[10]   = (reg_t) a0;
     pt_regs->regs[11]   = (reg_t) a1;
     pt_regs->regs[12]   = (reg_t) a2;
-    pt_regs->regs[13]   = (reg_t) a3;
+    // pt_regs->regs[13]   = (reg_t) a3;
 
     switchto_context_t *pt_switchto =
         (switchto_context_t *)((ptr_t)pt_regs - sizeof(switchto_context_t));
@@ -143,4 +145,34 @@ void thread_create(uint64_t entrypoint, long a0, long a1, long a2, long a3){
     tcb->user_sp = user_stack;
 
     list_push(&ready_queue, &tcb->list);
+}
+
+void thread_exit(void *retval){
+    current_running->status = TASK_EXITED;
+    current_running->retval = retval;
+    do_scheduler();
+}
+
+// on success, return 0; on error, return -1
+int thread_join(tid_t tid, void **retvalptr){
+    list_node_t *joining_node = &current_running->tcb_list;
+    do{
+        joining_node = joining_node->next;
+        if(joining_node==&current_running->tcb_list){
+            return -1;
+        }
+    }while(TCBLIST2TCB(joining_node)->tid!=tid);
+
+    tcb_t *joining_tcb = TCBLIST2TCB(joining_node);
+
+    while(joining_tcb->status!=TASK_EXITED){
+        do_scheduler();
+    }
+
+    *retvalptr = joining_tcb->retval;
+    list_pop(joining_node->prev); // delete joining_node from tcb_list
+
+    // todo: recycle stack after thread joins
+
+    return 0;
 }

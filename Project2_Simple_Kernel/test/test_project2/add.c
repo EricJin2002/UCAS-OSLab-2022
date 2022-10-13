@@ -35,8 +35,10 @@ int main(void)
         data[i]=i;
     }
 
-    sys_thread_create((uint64_t)add1, (long)&finished1, (long)&ans1, 0L, 0L);
-    sys_thread_create((uint64_t)add2, (long)&finished2, (long)&ans2, 0L, 0L);
+    int32_t tid1,tid2;
+
+    sys_thread_create(&tid1, (uint64_t)add1, (long)&finished1, (long)&ans1, 0L);
+    sys_thread_create(&tid2, (uint64_t)add2, (long)&finished2, (long)&ans2, 0L);
 
     while(!finished1||!finished2);
     sys_move_cursor(0, print_location);
