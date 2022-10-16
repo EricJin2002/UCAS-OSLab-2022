@@ -98,7 +98,9 @@ make minicom    # 监视串口
 - 进入`RESTORE_CONTEXT`，恢复先前保存的上下文变量，并令`sp`指向用户栈
 - `sret`返回用户态
 
-## 部分PART-Ⅰ设计细节（摘自 PART-Ⅰ REVIEW 时制作的PPT）
+## 设计细节
+
+### 部分PART-Ⅰ设计细节（摘自 PART-Ⅰ REVIEW 时制作的PPT）
 
 - When a process is blocked, how does the kernel handle the blocked process?
 - When someone acquire a lock . . .
@@ -118,6 +120,52 @@ make minicom    # 监视串口
 - Where to place the PCB when the process is blocked/unblocked?
   - Place those blocked PCBs in the block_queue of mutex locks
   - Place those unblocked PCBs in the ready_queue or current_running
+
+### 线程的创建、退出与回收
+
+### 线程的创建（thread_create）
+
+thread_create函数接收五个参数，其中：
+- 第一个参数为一个tid指针，用于返回创建的新线程tid
+- 第二个参数为新线程的函数入口地址
+- 后三个参数用于向新线程传递函数调用参数
+
+在内核态，线程的创建包含以下操作：
+- 为新线程分配内核栈与用户栈空间
+- 在新分配的内核栈上创建tcb
+- 为新线程分配tid
+- 初始化tcb
+- 初始化内核栈
+- 将新线程加入ready队列以待调度
+
+其中，这里的tcb复用了pcb的逻辑，并在原来的pcb结构体中增添了以下内容：
+- tid，该项用于记录线程的tid；对于进程而言，此项为0（子线程的pid与父进程的pid一致）
+- tcb_list，该项用于连接pid相同的所有线程（进程）
+- retval，该项用于存储线程的返回值
+
+在为新线程分配tid时，将遍历tcb_list，以避免同一tid已经被分配给拥有相同pid的线程。
+
+### 线程的退出（thread_exit）
+
+thread_exit函数接收一个参数，为线程的返回值。
+
+在内核态，线程的退出包含以下操作：
+- 将线程的状态设置为TASK_EXITED
+- 在tcb中记录线程的返回值，以待回收
+- 运行新调度
+
+### 线程的回收（thread_join）
+
+thread_join函数接收两个参数，其中：
+- 第一个参数为待回收的线程tid
+- 第二个参数为该线程退出时的返回值
+
+若成功回收线程，thread_join函数将返回0；反之，将返回-1。
+
+在内核态，线程的回收包含以下操作：
+- 等待线程退出
+- 传递线程退出时的返回值
+- 将线程从对应的tcb_list中删去，以避免重复回收同一线程
 
 ## 实验过程
 
