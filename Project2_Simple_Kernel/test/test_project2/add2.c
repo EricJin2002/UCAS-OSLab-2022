@@ -5,7 +5,7 @@ static int data[1200];
 
 void add1(){
     // sys_move_cursor(0, 7);
-    int sum;
+    long sum;
     for(int i=0;i<600;i++){
         sys_move_cursor(0, 7);
         printf("add1 thread is calculating *ans1+=data[%d]", i);
@@ -19,7 +19,7 @@ void add1(){
 
 void add2(){
     // sys_move_cursor(0, 8);
-    int sum;
+    long sum;
     for(int i=600;i<1200;i++){
         sys_move_cursor(0, 8);
         printf("add2 thread is calculating *ans2+=data[%d]", i);
@@ -48,7 +48,7 @@ int main(void)
     printf("> [TASK] Thread created: tid1=%d tid2=%d", tid1, tid2);
 
     // while(!finished1||!finished2);
-    void *ans_from_join1, *ans_from_join2;
+    long ans_from_join1, ans_from_join2;
     sys_thread_join(tid1, (void **)&ans_from_join1);
     sys_move_cursor(0, 7);
     printf("> [TASK] Thread joined: tid1=%d ans_from_join1=%d", tid1, ans_from_join1);
