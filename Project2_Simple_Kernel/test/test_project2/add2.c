@@ -5,12 +5,14 @@ static int data[1200];
 
 void add1(){
     // sys_move_cursor(0, 7);
-    long sum;
+    long sum=0;
     for(int i=0;i<600;i++){
         sys_move_cursor(0, 7);
-        printf("add1 thread is calculating *ans1+=data[%d]", i);
+        printf("add1 thread is calculating *ans1+=data[%d] (sum %d)", i, sum);
         sum+=data[i];
     }
+    sys_move_cursor(0, 7);
+    printf("                                                            ");
     sys_move_cursor(0, 7);
     printf("add1 thread finishes calculating *ans1=%d", sum);
     sys_thread_exit((void *)(long)sum);
@@ -19,12 +21,14 @@ void add1(){
 
 void add2(){
     // sys_move_cursor(0, 8);
-    long sum;
+    long sum=0;
     for(int i=600;i<1200;i++){
         sys_move_cursor(0, 8);
-        printf("add2 thread is calculating *ans2+=data[%d]", i);
+        printf("add2 thread is calculating *ans2+=data[%d] (sum %d)", i, sum);
         sum+=data[i];
     }
+    sys_move_cursor(0, 8);
+    printf("                                                            ");
     sys_move_cursor(0, 8);
     printf("add2 thread finishes calculating *ans2=%d", sum);
     sys_thread_exit((void *)(long)sum);
