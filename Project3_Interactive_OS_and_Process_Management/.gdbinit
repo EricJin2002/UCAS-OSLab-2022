@@ -1,9 +1,8 @@
-add-symbol-file ~/jinyang20/Project2_Simple_Kernel/build/add
-add-symbol-file ~/jinyang20/Project2_Simple_Kernel/build/fly
-add-symbol-file ~/jinyang20/Project2_Simple_Kernel/build/lock1
-add-symbol-file ~/jinyang20/Project2_Simple_Kernel/build/lock2
-add-symbol-file ~/jinyang20/Project2_Simple_Kernel/build/lock3
-add-symbol-file ~/jinyang20/Project2_Simple_Kernel/build/print1
-add-symbol-file ~/jinyang20/Project2_Simple_Kernel/build/print2
-add-symbol-file ~/jinyang20/Project2_Simple_Kernel/build/sleep
-add-symbol-file ~/jinyang20/Project2_Simple_Kernel/build/timer
+add-symbol-file ./build/barrier
+add-symbol-file ./build/bootblock
+add-symbol-file ./build/main
+add-symbol-file ./build/ready_to_exit
+add-symbol-file ./build/shell
+add-symbol-file ./build/test_barrier
+add-symbol-file ./build/wait_locks
+add-symbol-file ./build/waitpid

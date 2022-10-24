@@ -28,8 +28,6 @@ clear_bss_done:
     addi sp, sp, 8
     ret
 
-    /* TODO: [P3] call sys_exit */
-
 // while(1) loop, unreachable here
 loop:
     wfi

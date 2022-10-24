@@ -1,0 +1,25 @@
+{
+    "files.associations": {
+        "list.h": "c",
+        "sched.h": "c",
+        "loader.h": "c",
+        "type.h": "c",
+        "kernel.h": "c",
+        "csr.h": "c",
+        "printk.h": "c",
+        "assert.h": "c",
+        "time.h": "c",
+        "screen.h": "c",
+        "syscall.h": "c",
+        "stdint.h": "c",
+        "unistd.h": "c",
+        "stdio.h": "c",
+        "stdarg.h": "c",
+        "asm.h": "c",
+        "common.h": "c",
+        "irq.h": "c",
+        "lock.h": "c",
+        "stddef.h": "c",
+        "stdlib.h": "c"
+    }
+}
