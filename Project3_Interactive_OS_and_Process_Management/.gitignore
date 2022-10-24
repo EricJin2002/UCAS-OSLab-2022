@@ -1,0 +1,6 @@
+.vscode
+build
+*.txt
+bat/*.txt
+!bat/cycle.txt
+!bat/example.txt
