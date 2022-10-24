@@ -115,9 +115,12 @@ void do_sleep(uint32_t);
 void do_block(list_node_t *, list_head *queue);
 void do_unblock(list_node_t *);
 
+// for [p3]
+#define STRUCT_OFFSET(struct_type, element) (unsigned long)&((struct struct_type *)0)->element
+
 // for [p2-task1]
-// todo: struct pcb modified
-#define LIST2PCB(listptr) ((pcb_t *)((void *)(listptr)-16))
+// #define LIST2PCB(listptr) ((pcb_t *)((void *)(listptr)-16)) // wrong in [p3]
+#define LIST2PCB(listptr) ((pcb_t *)((void *)(listptr)-STRUCT_OFFSET(pcb, list)))
 // for debug
 #include <printk.h>
 static inline void pcb_list_print(list_head *listptr){
@@ -129,8 +132,8 @@ static inline void pcb_list_print(list_head *listptr){
 }
 
 // for [p2-task5]
-// todo: struct pcb modified
-#define TCBLIST2TCB(listptr) ((tcb_t *)((void *)(listptr)-40))
+// #define TCBLIST2TCB(listptr) ((tcb_t *)((void *)(listptr)-40)) // wrong in [p3]
+#define TCBLIST2TCB(listptr) ((tcb_t *)((void *)(listptr)-STRUCT_OFFSET(pcb, tcb_list)))
 
 // for [p2-task5]
 void thread_create(tid_t *tidptr, uint64_t entrypoint, long a0, long a1, long a2);
