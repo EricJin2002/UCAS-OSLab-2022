@@ -41,6 +41,12 @@ static void screen_write_ch(char ch)
     {
         current_running->cursor_x = 0;
         current_running->cursor_y++;
+
+        // for [p3-task1]
+        if(current_running->cursor_y==SCREEN_HEIGHT-1){
+            screen_scroll(20); // SHELL_BEGIN is defined in shell.c
+            current_running->cursor_y--;
+        }
     }
     else
     {
@@ -123,4 +129,16 @@ void screen_backspace(void){
     screen_move_cursor(current_running->cursor_x-1,current_running->cursor_y);
     screen_write(" ");
     screen_move_cursor(current_running->cursor_x-1,current_running->cursor_y);
+}
+
+// for [p3-task1]
+void screen_scroll(int shell_begin){
+    for(int i=shell_begin+1; i<SCREEN_HEIGHT-1; i++){
+        for(int j=0; j<SCREEN_WIDTH; j++){
+            new_screen[SCREEN_LOC(j, i)] = new_screen[SCREEN_LOC(j, i+1)];
+        }
+    }
+    for(int j=0; j<SCREEN_WIDTH; j++){
+        new_screen[SCREEN_LOC(j,SCREEN_HEIGHT-1)] = ' ';
+    }
 }

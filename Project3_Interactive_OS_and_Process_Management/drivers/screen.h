@@ -45,4 +45,7 @@ void screen_move_cursor(int x, int y);
 // for [p3-task1]
 void screen_backspace(void);
 
+// for [p3-task1]
+void screen_scroll(int shell_begin);
+
 #endif

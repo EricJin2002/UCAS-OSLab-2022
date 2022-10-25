@@ -190,12 +190,11 @@ int main(void)
         }else if(!strcmp(argv[0],"exit")){
             sys_exit();
         }else if(!strcmp(argv[0],"kill")){
-            pid_t pid;
-            if(!(pid=sys_kill(argv[1]))){
+            if(!sys_kill(atol(argv[1]))){
                 printf("Error: No such pid!\n");
                 err=1;
             }else{
-                printf("Info: Process pid %d is killed.\n", pid);
+                printf("Info: Process pid %d is killed.\n", atol(argv[1]));
             }
         }else if(!strcmp(argv[0],"waitpid")){
             if(!sys_waitpid(atol(argv[1]))){
@@ -216,7 +215,7 @@ int main(void)
             printf("[History Table]\n");
             printf("IDX COMMAND\n");
             for(int i=0;i<HISTORY_SIZE;i++){
-                printf("[%d]\t%s\n",i,history[i]);
+                printf("[%d] %s\n",i,history[i]);
             }
         }else{
             printf("Error: Unknown command %s!\n",argv[0]);

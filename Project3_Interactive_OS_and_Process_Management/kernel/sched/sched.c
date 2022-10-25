@@ -319,7 +319,7 @@ void do_exit(void){
 }
 
 int do_kill(pid_t pid){
-    for(int i=0;i<process_id;i++){
+    for(int i=1;i<process_id;i++){
         if(pcb[i].status!=TASK_UNUSED){
             if(pcb[i].pid==pid){
                 pcb[i].status=TASK_EXITED;
@@ -341,7 +341,7 @@ int do_kill(pid_t pid){
 }
 
 int do_waitpid(pid_t pid){
-    for(int i=0;i<process_id;i++){
+    for(int i=1;i<process_id;i++){
         if(pcb[i].status!=TASK_UNUSED){
             if(pcb[i].pid==pid){
                 if(pcb[i].status!=TASK_EXITED){
@@ -360,10 +360,10 @@ pid_t do_getpid(){
 
 void do_process_show(){
     printk("[Process Table]\n");
-    printk("IDX\tPID\tSTATUS\tTASK_NAME\n");
+    printk("IDX PID STATUS TASK_NAME\n");
     for(int i=0;i<process_id;i++){
         if(pcb[i].status!=TASK_UNUSED){
-            printk("[%d]\t %d\t%s\t%s\n", 
+            printk("[%d]  %d %s %s\n", 
                 i, pcb[i].pid, task_status_str[pcb[i].status], pcb[i].name);
         }
     }
@@ -371,9 +371,9 @@ void do_process_show(){
 
 void do_task_show(){
     printk("[Task Table]\n");
-    printk("IDX\tTYPE\tNAME\n");
+    printk("IDX TYPE NAME\n");
     for(int i=0;i<task_num;i++){
-        printk("[%d]\t %s\t%s\n", 
+        printk("[%d]  %s %s\n", 
             i, tasks[i].type==app?"APP":"BAT", tasks[i].name);
     }
     printk("Note: Not supported to run tasks with type BAT yet!\n");
