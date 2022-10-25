@@ -4,6 +4,7 @@
 #include <stdint.h>
 typedef int32_t pid_t;
 
+#define S_CORE
 
 void sys_sleep(uint32_t time);
 void sys_yield(void);
@@ -26,16 +27,23 @@ void sys_ps(void);
 int  sys_getchar(void);
 
 /* TODO: [P3 task1] exec, exit, kill waitpid */
+#ifdef S_CORE
 // S-core
 pid_t  sys_exec(int id, int argc, uint64_t arg0, uint64_t arg1, uint64_t arg2);
+#else
 // A/C-core
-// pid_t  sys_exec(char *name, int argc, char **argv);
+pid_t  sys_exec(char *name, int argc, char **argv);
+#endif
 
 void sys_exit(void);
 int  sys_kill(pid_t pid);
 int  sys_waitpid(pid_t pid);
 pid_t sys_getpid();
 
+// for [p3-task1]
+void sys_clear(void);
+void sys_backspace(void);
+void sys_show_task(void);
 
 /* TODO: [P3 task2] barrier */ 
 int  sys_barrier_init(int key, int goal);

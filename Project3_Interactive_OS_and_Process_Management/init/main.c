@@ -51,7 +51,7 @@ task_info_t tasks[TASK_MAXNUM];
 // for [p1-task4]
 uint16_t task_num;
 
-#define TASK_NAME_MAXLEN 20
+// #define TASK_NAME_MAXLEN 20
 
 static void init_jmptab(void)
 {
@@ -91,39 +91,7 @@ static void init_task_info(void)
     }
 }
 
-static void init_pcb_stack(
-    ptr_t kernel_stack, ptr_t user_stack, ptr_t entry_point,
-    pcb_t *pcb)
-{
-     /* TODO: [p2-task3] initialization of registers on kernel stack
-      * HINT: sp, ra, sepc, sstatus
-      * NOTE: To run the task in user mode, you should set corresponding bits
-      *     of sstatus(SPP, SPIE, etc.).
-      */
-    regs_context_t *pt_regs =
-        (regs_context_t *)(kernel_stack - sizeof(regs_context_t));
-
-    pt_regs->sepc       = (reg_t) entry_point;
-    pt_regs->sstatus    = (reg_t) (SR_SPIE & ~SR_SPP);
-    pt_regs->regs[2]    = (reg_t) user_stack;   //sp
-    pt_regs->regs[4]    = (reg_t) pcb;          //tp
-
-    /* TODO: [p2-task1] set sp to simulate just returning from switch_to
-     * NOTE: you should prepare a stack, and push some values to
-     * simulate a callee-saved context.
-     */
-    switchto_context_t *pt_switchto =
-        (switchto_context_t *)((ptr_t)pt_regs - sizeof(switchto_context_t));
-    
-    pt_switchto->regs[0] = (reg_t) ret_from_exception;  //ra
-    pt_switchto->regs[1] = (reg_t) pt_switchto;         //sp
-
-    printl("entrypoint %lx\n", entry_point);
-
-    pcb->kernel_sp = (reg_t) pt_switchto;
-    pcb->user_sp = user_stack;
-
-}
+// init_pcb_stack moved to sched.c
 
 static void init_pcb(void)
 {
@@ -132,24 +100,20 @@ static void init_pcb(void)
     //char needed_task_name[][32] = {"print1", "print2", "fly"};
 
     // for [p2-task2]
-    char needed_task_name[][32] = {"print1", "print2", "fly", "lock1", "lock2", "timer", "sleep", "add2"};
+    //char needed_task_name[][32] = {"print1", "print2", "fly", "lock1", "lock2", "timer", "sleep", "add2"};
+
+    // for [p3-task1]
+    // `ps` won't print exited pcb
+    for(int i=1;i<NUM_MAX_TASK;i++){
+        pcb[i].status=TASK_UNUSED;
+    }
+
+    // for [p3-task1]
+    char needed_task_name[][32] = {"shell"};
 
     for(int i=1; i<=sizeof(needed_task_name)/32; i++){
-        pcb[i].pid = process_id++;
-        pcb[i].status = TASK_READY;
-
-        // for [p2-task5]
-        pcb[i].tid = 0;
-        pcb[i].tcb_list.prev = &pcb[i].tcb_list;
-        pcb[i].tcb_list.next = &pcb[i].tcb_list;
-        
-        init_pcb_stack(
-            allocKernelPage(1) + PAGE_SIZE,
-            allocUserPage(1) + PAGE_SIZE,
-            load_task_img_via_name(needed_task_name[i-1]), 
-            pcb+i
-        );
-        list_push(&ready_queue, &pcb[i].list);
+        init_pcb_via_name(i, load_task_img_via_name(needed_task_name[i-1]), needed_task_name[i-1], 
+            (uint64_t)0, (uint64_t)0, (uint64_t)0, (uint64_t)0);
     }
     pcb[0]=pid0_pcb;
 
@@ -173,14 +137,28 @@ static void init_syscall(void)
     syscall[SYSCALL_WRITE]          = (long (*)())screen_write;
     syscall[SYSCALL_CURSOR]         = (long (*)())screen_move_cursor;
     syscall[SYSCALL_REFLUSH]        = (long (*)())screen_reflush;
+    syscall[SYSCALL_CLEAR]          = (long (*)())screen_clear;
+    syscall[SYSCALL_BACKSPACE]      = (long (*)())screen_backspace;
+    
     syscall[SYSCALL_GET_TIMEBASE]   = (long (*)())get_time_base;
     syscall[SYSCALL_GET_TICK]       = (long (*)())get_ticks;
     syscall[SYSCALL_LOCK_INIT]      = (long (*)())do_mutex_lock_init;
     syscall[SYSCALL_LOCK_ACQ]       = (long (*)())do_mutex_lock_acquire;
     syscall[SYSCALL_LOCK_RELEASE]   = (long (*)())do_mutex_lock_release;
+    
     syscall[SYSCALL_THREAD_CREATE]  = (long (*)())thread_create;
     syscall[SYSCALL_THREAD_EXIT]    = (long (*)())thread_exit;
     syscall[SYSCALL_THREAD_JOIN]    = (long (*)())thread_join;
+
+    syscall[SYSCALL_PS]             = (long (*)())do_process_show;
+    syscall[SYSCALL_READCH]         = (long (*)())bios_getchar;
+    syscall[SYSCALL_EXEC]           = (long (*)())do_exec;
+    syscall[SYSCALL_EXIT]           = (long (*)())do_exit;
+    syscall[SYSCALL_KILL]           = (long (*)())do_kill;
+    syscall[SYSCALL_WAITPID]        = (long (*)())do_waitpid;
+    syscall[SYSCALL_GETPID]         = (long (*)())do_getpid;
+
+    syscall[SYSCALL_SHOW_TASK]      = (long (*)())do_task_show;
 }
 
 int main(void)

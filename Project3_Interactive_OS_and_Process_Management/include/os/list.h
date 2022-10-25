@@ -72,4 +72,8 @@ static inline list_node_t *list_pop(list_head *queue){
     return ret;
 }
 
+static inline int list_delete(list_node_t *node){
+    return list_pop(node->prev)?1:0;
+}
+
 #endif

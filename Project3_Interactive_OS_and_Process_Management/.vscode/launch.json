@@ -15,10 +15,10 @@
             "miDebuggerServerAddress": "localhost:1234",
             "miDebuggerPath": "/opt/riscv64-linux/bin/riscv64-unknown-linux-gnu-gdb",
             "externalConsole": false,
-            "MIMode": "gdb"//,
-            //"setupCommands": [{
-            //    "text":"source ${workspaceFolder}/.gdbinit"
-            //}]
+            "MIMode": "gdb",
+            "setupCommands": [{
+               "text":"source ${workspaceFolder}/.gdbinit"
+            }]
         }
     ]
 }

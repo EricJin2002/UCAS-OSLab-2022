@@ -18,6 +18,11 @@ uint64_t load_task_img(int taskid)
      * return 0x52000000 + 0x10000 * taskid;
      */
 
+    if(!(taskid>=0&&taskid<task_num)){
+        // no such taskid
+        return 0;
+    }
+
     if(tasks[taskid].type == app){
         // for [p1-task4]
         uint32_t block_id = tasks[taskid].offset/SECTOR_SIZE;
@@ -38,8 +43,8 @@ uint64_t load_task_img(int taskid)
         uint32_t bat_off = tasks[taskid].offset;
         uint16_t bat_block_id = bat_off/SECTOR_SIZE;
         uint16_t bat_block_num = NBYTES2SEC(bat_off%SECTOR_SIZE + bat_size);
-        bios_sdread(0x52000000, bat_block_num, bat_block_id);
-        memcpy((uint8_t *)bat_cache, (uint8_t *)(uint64_t)(0x52000000 + bat_off%SECTOR_SIZE), bat_size);
+        bios_sdread(bat_cache, bat_block_num, bat_block_id);
+        memcpy((uint8_t *)bat_cache, (uint8_t *)(uint64_t)(bat_cache + bat_off%SECTOR_SIZE), bat_size);
         bios_putstr(bat_cache);
         bios_putstr("\n\r===Finish reading!===\n\r");
 

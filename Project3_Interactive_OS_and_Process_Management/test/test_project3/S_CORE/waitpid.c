@@ -19,7 +19,7 @@ int main(int argc, int arg0)
 
     // Launch two assistant processes, and pass mutex handles to them
     // TODO: [P3-TASK1 S-core] use your "ready_to_exit" id here
-    int rte_id = -1;
+    int rte_id = 3;
     assert(rte_id != -1);
     pid_t pid1 = sys_exec(rte_id, 3, print_location + 1, handle1, handle2);
 
@@ -27,7 +27,7 @@ int main(int argc, int arg0)
     
 
     // TODO: [P3-TASK1 S-core] use your "wait_locks" id here
-    int wl_id = -1;
+    int wl_id = 4;
     assert(wl_id != -1);
     pid_t pid2 = sys_exec(wl_id, 3, print_location + 2, handle1, handle2);
 

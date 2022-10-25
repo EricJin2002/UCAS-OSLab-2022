@@ -1,8 +1,8 @@
-add-symbol-file ./build/barrier
-add-symbol-file ./build/bootblock
-add-symbol-file ./build/main
-add-symbol-file ./build/ready_to_exit
-add-symbol-file ./build/shell
-add-symbol-file ./build/test_barrier
-add-symbol-file ./build/wait_locks
-add-symbol-file ./build/waitpid
+add-symbol-file /home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management/build/barrier
+add-symbol-file /home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management/build/bootblock
+add-symbol-file /home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management/build/main
+add-symbol-file /home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management/build/ready_to_exit
+add-symbol-file /home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management/build/shell
+add-symbol-file /home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management/build/test_barrier
+add-symbol-file /home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management/build/wait_locks
+add-symbol-file /home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management/build/waitpid

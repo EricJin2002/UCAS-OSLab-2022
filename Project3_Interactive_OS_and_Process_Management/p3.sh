@@ -4,7 +4,7 @@ make all
 
 folder="./build/"  
 out=".gdbinit"
-prefix="add-symbol-file ./build/"
+prefix="add-symbol-file $(pwd)/build/"
 : > $out
 for file in ${folder}/*.txt
 do  

@@ -59,7 +59,11 @@ typedef enum {
     TASK_RUNNING,
     TASK_READY,
     TASK_EXITED,
+    TASK_UNUSED
 } task_status_t;
+
+// for [p3-task1]
+extern const char *task_status_str[];
 
 /* Process Control Block */
 typedef struct pcb
@@ -77,6 +81,9 @@ typedef struct pcb
 
     /* process id */
     pid_t pid;
+
+    // for [p3-task1]
+    char name[32];
 
     // for [p2-task5]
     tid_t tid; // 0 indicates main thread
@@ -140,6 +147,8 @@ void thread_create(tid_t *tidptr, uint64_t entrypoint, long a0, long a1, long a2
 void thread_exit(void *retval);
 int thread_join(tid_t tid, void **retvalptr);
 
+#define S_CORE
+
 /* TODO [P3-TASK1] exec exit kill waitpid ps*/
 #ifdef S_CORE
 extern pid_t do_exec(int id, int argc, uint64_t arg0, uint64_t arg1, uint64_t arg2);
@@ -152,5 +161,10 @@ extern int do_waitpid(pid_t pid);
 extern void do_process_show();
 extern pid_t do_getpid();
 
+// for [p3-task1]
+extern void do_task_show();
+
+// for [p3-task1]
+extern pid_t init_pcb_via_name(int i, uint64_t entrypoint, char *taskname, reg_t a0, reg_t a1, reg_t a2, reg_t a3);
 
 #endif

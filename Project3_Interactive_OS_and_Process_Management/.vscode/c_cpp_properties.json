@@ -2,9 +2,12 @@
     "configurations": [
         {
             "name": "Linux",
-            "includePath": [
-                "${workspaceFolder}/**"
-            ],
+//            "includePath": [
+//                "${workspaceFolder}/**"//,
+//                // "${workspaceFolder}/arch/riscv/include",
+//                // "${workspaceFolder}/tiny_libc/include",
+//                // "${workspaceFolder}/include"
+//            ],
             "defines": [],
             "compilerPath": "/opt/riscv64-linux/bin/riscv64-unknown-linux-gnu-gcc",
             "cStandard": "gnu17",

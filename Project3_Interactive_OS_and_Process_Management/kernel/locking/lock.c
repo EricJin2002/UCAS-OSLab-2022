@@ -10,8 +10,9 @@ void init_locks(void)
     /* TODO: [p2-task2] initialize mlocks */
     for(int i=0;i<LOCK_NUM;i++){
         mlocks[i].handle_num = 0;
-        // not necessary
-        // mlocks[i].lock.status = UNLOCKED;
+        mlocks[i].lock.status=UNLOCKED;
+        mlocks[i].block_queue.next=&mlocks[i].block_queue;
+        mlocks[i].block_queue.prev=&mlocks[i].block_queue;
     }
 }
 

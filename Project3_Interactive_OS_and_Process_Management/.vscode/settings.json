@@ -20,6 +20,10 @@
         "irq.h": "c",
         "lock.h": "c",
         "stddef.h": "c",
-        "stdlib.h": "c"
+        "stdlib.h": "c",
+        "string.h": "c",
+        "task.h": "c",
+        "typeinfo": "c",
+        "ctype.h": "c"
     }
 }

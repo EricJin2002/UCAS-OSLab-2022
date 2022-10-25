@@ -34,9 +34,11 @@
 #define SYSCALL_MBOX_RECV 55
 
 // for [p2-task5]
-// todo: change syscall number
-#define SYSCALL_THREAD_CREATE 50
-#define SYSCALL_THREAD_EXIT 51
-#define SYSCALL_THREAD_JOIN 52
+#define SYSCALL_THREAD_CREATE 60
+#define SYSCALL_THREAD_EXIT 61
+#define SYSCALL_THREAD_JOIN 62
+
+// for [p3-task1]
+#define SYSCALL_BACKSPACE 63
 
 #endif

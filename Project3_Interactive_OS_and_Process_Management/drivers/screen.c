@@ -117,3 +117,10 @@ void screen_reflush(void)
     /* recover cursor position */
     vt100_move_cursor(current_running->cursor_x, current_running->cursor_y);
 }
+
+void screen_backspace(void){
+    // \033[1C
+    screen_move_cursor(current_running->cursor_x-1,current_running->cursor_y);
+    screen_write(" ");
+    screen_move_cursor(current_running->cursor_x-1,current_running->cursor_y);
+}

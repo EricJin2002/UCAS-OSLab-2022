@@ -48,6 +48,15 @@ void sys_reflush(void)
     invoke_syscall(SYSCALL_REFLUSH, IGNORE, IGNORE, IGNORE, IGNORE, IGNORE);
 }
 
+// for [p3-task1]
+void sys_clear(void){
+    invoke_syscall(SYSCALL_CLEAR, IGNORE, IGNORE, IGNORE, IGNORE, IGNORE);
+}
+void sys_backspace(void){
+    invoke_syscall(SYSCALL_BACKSPACE, IGNORE, IGNORE, IGNORE, IGNORE, IGNORE);
+}
+
+
 int sys_mutex_init(int key)
 {
     /* TODO: [p2-task3] call invoke_syscall to implement sys_mutex_init */
@@ -95,47 +104,63 @@ int sys_thread_join(int32_t tid, void **retvalptr){
     return invoke_syscall(SYSCALL_THREAD_JOIN, (long)tid, (long)retvalptr, IGNORE, IGNORE, IGNORE);
 }
 
+#ifdef S_CORE
 // S-core
 pid_t  sys_exec(int id, int argc, uint64_t arg0, uint64_t arg1, uint64_t arg2)
 {
     /* TODO: [p3-task1] call invoke_syscall to implement sys_exec for S_CORE */
-}    
+    return invoke_syscall(SYSCALL_EXEC, (long)id, (long)argc, (long)arg0, (long)arg1, (long)arg2);
+}
+#else
 // A/C-core
-// pid_t  sys_exec(char *name, int argc, char **argv)
-// {
-//     /* TODO: [p3-task1] call invoke_syscall to implement sys_exec */
-// }
+pid_t  sys_exec(char *name, int argc, char **argv)
+{
+    /* TODO: [p3-task1] call invoke_syscall to implement sys_exec */
+    return invoke_syscall(SYSCALL_EXEC, (long)name, (long)argc, (long)argv, IGNORE, IGNORE);
+}
+#endif
 
 
 void sys_exit(void)
 {
     /* TODO: [p3-task1] call invoke_syscall to implement sys_exit */
+    invoke_syscall(SYSCALL_EXIT, IGNORE, IGNORE, IGNORE, IGNORE, IGNORE);
 }
 
 int  sys_kill(pid_t pid)
 {
     /* TODO: [p3-task1] call invoke_syscall to implement sys_kill */
+    return invoke_syscall(SYSCALL_KILL, (long)pid, IGNORE, IGNORE, IGNORE, IGNORE);
 }
 
 int  sys_waitpid(pid_t pid)
 {
     /* TODO: [p3-task1] call invoke_syscall to implement sys_waitpid */
+    return invoke_syscall(SYSCALL_WAITPID, (long)pid, IGNORE, IGNORE, IGNORE, IGNORE);
 }
 
 
 void sys_ps(void)
 {
     /* TODO: [p3-task1] call invoke_syscall to implement sys_ps */
+    invoke_syscall(SYSCALL_PS, IGNORE, IGNORE, IGNORE, IGNORE, IGNORE);
 }
 
 pid_t sys_getpid()
 {
     /* TODO: [p3-task1] call invoke_syscall to implement sys_getpid */
+    return invoke_syscall(SYSCALL_GETPID, IGNORE, IGNORE, IGNORE, IGNORE, IGNORE);
 }
 
 int  sys_getchar(void)
 {
     /* TODO: [p3-task1] call invoke_syscall to implement sys_getchar */
+    return invoke_syscall(SYSCALL_READCH, IGNORE, IGNORE, IGNORE, IGNORE, IGNORE);
+}
+
+// for [p3-task1]
+void sys_show_task(void){
+    invoke_syscall(SYSCALL_SHOW_TASK, IGNORE, IGNORE, IGNORE, IGNORE, IGNORE);
 }
 
 int  sys_barrier_init(int key, int goal)
