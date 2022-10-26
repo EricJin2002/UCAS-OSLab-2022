@@ -31,6 +31,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <assert.h>
+#include <stdlib.h>
 
 #define SHELL_BEGIN 20
 

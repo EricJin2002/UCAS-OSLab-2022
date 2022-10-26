@@ -44,7 +44,7 @@ uint64_t load_task_img(int taskid)
         uint32_t bat_off = tasks[taskid].offset;
         uint16_t bat_block_id = bat_off/SECTOR_SIZE;
         uint16_t bat_block_num = NBYTES2SEC(bat_off%SECTOR_SIZE + bat_size);
-        bios_sdread(bat_cache, bat_block_num, bat_block_id);
+        bios_sdread((unsigned int)(uint64_t)bat_cache, bat_block_num, bat_block_id);
         memcpy((uint8_t *)bat_cache, (uint8_t *)(uint64_t)(bat_cache + bat_off%SECTOR_SIZE), bat_size);
         printk(bat_cache);
         printk("\n===Finish reading!===\n");

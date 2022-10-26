@@ -316,7 +316,7 @@ pid_t do_exec(char *name, int argc, char *argv[]){
             ptr_t user_sp_now = (ptr_t)argv_base;
             for(int i=0;i<argc;i++){
                 user_sp_now -= strlen(argv[i])+1;
-                strcpy(user_sp_now, argv[i]);
+                strcpy((char *)user_sp_now, argv[i]);
                 argv_base[i] = user_sp_now;
             }
             argv_base[argc] = (uint64_t)0;
@@ -330,10 +330,10 @@ pid_t do_exec(char *name, int argc, char *argv[]){
             // according to entry.S
             // we now load user_sp from pcb
             pcb[i].user_sp = user_sp_now;
-            pt_regs->regs[2] = user_sp_now; // so this line is not necessary
+            pt_regs->regs[2] = (reg_t)user_sp_now; // so this line is not necessary
 
-            pt_regs->regs[10] = argc;
-            pt_regs->regs[11] = argv_base;
+            pt_regs->regs[10] = (reg_t)argc;
+            pt_regs->regs[11] = (reg_t)argv_base;
 
             // for(int i=0;i<argc;i++){
             //     printk("argv[%d]: %s\n", i, argv_base[i]);
