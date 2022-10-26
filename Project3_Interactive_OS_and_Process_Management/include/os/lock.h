@@ -48,7 +48,11 @@ typedef struct mutex_lock
     list_head block_queue;
     int key;
     int handle_num; // for [p2-task2]
+    volatile lock_status_t status;  // for [p3]
+    pid_t owner;                    // for [p3]
 } mutex_lock_t;
+
+mutex_lock_t mlocks[LOCK_NUM];      // for [p3]
 
 void init_locks(void);
 
@@ -56,6 +60,9 @@ void spin_lock_init(spin_lock_t *lock);
 int spin_lock_try_acquire(spin_lock_t *lock);
 void spin_lock_acquire(spin_lock_t *lock);
 void spin_lock_release(spin_lock_t *lock);
+
+// for [p3]
+void do_mutex_lock_release_compulsorily(int mlock_idx);
 
 int do_mutex_lock_init(int key);
 void do_mutex_lock_acquire(int mlock_idx);

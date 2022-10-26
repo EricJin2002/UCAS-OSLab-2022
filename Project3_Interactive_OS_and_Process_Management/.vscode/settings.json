@@ -24,6 +24,7 @@
         "string.h": "c",
         "task.h": "c",
         "typeinfo": "c",
-        "ctype.h": "c"
+        "ctype.h": "c",
+        "atomic.h": "c"
     }
 }

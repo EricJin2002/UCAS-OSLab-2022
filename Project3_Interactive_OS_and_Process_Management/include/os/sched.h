@@ -31,6 +31,7 @@
 
 #include <type.h>
 #include <os/list.h>
+#include <os/lock.h> // for [p3]
 
 #define NUM_MAX_TASK 16
 
@@ -115,11 +116,14 @@ extern pcb_t pcb[NUM_MAX_TASK];
 extern pcb_t pid0_pcb;
 extern const ptr_t pid0_stack;
 
+// for [p3]
+extern spin_lock_t pcb_lock;
+
 extern void switch_to(pcb_t *prev, pcb_t *next);
 void do_scheduler(void);
 void do_sleep(uint32_t);
 
-void do_block(list_node_t *, list_head *queue);
+void do_block(list_node_t *, list_head *queue, spin_lock_t *lock);
 void do_unblock(list_node_t *);
 
 // for [p3]

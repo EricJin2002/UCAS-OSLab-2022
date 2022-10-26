@@ -158,6 +158,10 @@ static void init_syscall(void)
     syscall[SYSCALL_GETPID]         = (long (*)())do_getpid;
 
     syscall[SYSCALL_SHOW_TASK]      = (long (*)())do_task_show;
+
+    syscall[SYSCALL_BARR_INIT]      = (long (*)())do_barrier_init;
+    syscall[SYSCALL_BARR_WAIT]      = (long (*)())do_barrier_wait;
+    syscall[SYSCALL_BARR_DESTROY]   = (long (*)())do_barrier_destroy;
 }
 
 int main(void)

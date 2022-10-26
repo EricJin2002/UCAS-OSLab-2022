@@ -20,6 +20,10 @@ pcb_t pid0_pcb = {
     .name = "kernel"
 };
 
+// for [p3]
+// todo: add pcb lock logic
+spin_lock_t pcb_lock;
+
 LIST_HEAD(ready_queue);
 LIST_HEAD(sleep_queue);
 
@@ -75,6 +79,7 @@ void do_scheduler(void)
     // TODO: [p2-task1] switch_to current_running
     // printl("switching from %d to %d\n\r", prev_running->pid, current_running->pid);
     switch_to(prev_running, current_running);
+    screen_reflush();
 }
 
 void do_sleep(uint32_t sleep_time)
@@ -93,11 +98,18 @@ void do_sleep(uint32_t sleep_time)
 
     // modified in [p3-task1]
     current_running->wakeup_time = get_timer() + sleep_time;
-    do_block(&current_running->list, &sleep_queue);
+    do_block(&current_running->list, &sleep_queue, &pcb_lock);
 }
 
-void do_block(list_node_t *pcb_node, list_head *queue)
+void do_block(list_node_t *pcb_node, list_head *queue, spin_lock_t *lock)
 {
+    // for [p3]
+    if(lock!=&pcb_lock){
+        // todo: once add pcb lock logic, uncomment this
+        // spin_lock_acquire(&pcb_lock);
+        spin_lock_release(lock);
+    }
+
     // TODO: [p2-task2] block the pcb task into the block queue
     list_push(queue, pcb_node);
     LIST2PCB(pcb_node)->status = TASK_BLOCKED;
@@ -105,6 +117,13 @@ void do_block(list_node_t *pcb_node, list_head *queue)
     // pcb_list_print(&ready_queue);
     do_scheduler();
     // printl("!!!after do_scheduler\n\r");
+
+    // for [p3]
+    if(lock!=&pcb_lock){
+        // todo: once add pcb lock logic, uncomment this
+        // spin_lock_release(&pcb_lock);
+        spin_lock_acquire(lock);
+    }
 }
 
 void do_unblock(list_node_t *pcb_node)
@@ -329,11 +348,13 @@ pid_t do_exec(char *name, int argc, char *argv[]){
 }
 
 void do_exit(void){
-    current_running->status=TASK_EXITED;
-    list_node_t *node;
-    while(node=list_pop(&current_running->wait_list)){
-        do_unblock(node);
-    }
+    // current_running->status=TASK_EXITED;
+    // list_node_t *node;
+    // while(node=list_pop(&current_running->wait_list)){
+    //     do_unblock(node);
+    // }
+
+    do_kill(current_running->pid);
 }
 
 int do_kill(pid_t pid){
@@ -345,11 +366,18 @@ int do_kill(pid_t pid){
 
                 // wakeup all the node blocked on wait_list
                 list_node_t *node;
-                while(node=list_pop(&current_running->wait_list)){
+                while((node=list_pop(&pcb[i].wait_list))){
                     do_unblock(node);
                 }
 
                 // todo: release occupied resources (such as locks)
+                for(int j=0;j<LOCK_NUM;j++){
+                    spin_lock_acquire(&mlocks[j].lock);
+                    if(mlocks[j].owner==pid){
+                        do_mutex_lock_release_compulsorily(j);
+                    }
+                    spin_lock_release(&mlocks[j].lock);
+                }
 
                 return 1;
             }
@@ -363,7 +391,7 @@ int do_waitpid(pid_t pid){
         if(pcb[i].status!=TASK_UNUSED){
             if(pcb[i].pid==pid){
                 if(pcb[i].status!=TASK_EXITED){
-                    do_block(&current_running->list, &pcb[i].wait_list);
+                    do_block(&current_running->list, &pcb[i].wait_list, &pcb_lock);
                 }
                 return pid;
             }

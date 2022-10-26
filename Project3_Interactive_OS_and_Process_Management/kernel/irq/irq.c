@@ -33,7 +33,6 @@ void handle_irq_timer(regs_context_t *regs, uint64_t stval, uint64_t scause)
     // printl("handle_irq_timer pid %d\n", ((pcb_t *)regs->regs[4])->pid);
     bios_set_timer(get_ticks() + TIMER_INTERVAL);
     do_scheduler();
-    screen_reflush();
 }
 
 void init_exception()

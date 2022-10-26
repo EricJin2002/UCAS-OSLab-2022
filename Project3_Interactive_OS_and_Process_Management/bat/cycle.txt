@@ -1,5 +1,0 @@
-auipc
-bss
-data
-pause
-cycle
