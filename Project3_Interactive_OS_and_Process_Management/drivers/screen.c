@@ -6,7 +6,9 @@
 #include <os/kernel.h>
 
 #define SCREEN_WIDTH    80
-#define SCREEN_HEIGHT   50
+// modified in [p3-task1]
+// #define SCREEN_HEIGHT   50
+#define SCREEN_HEIGHT   40
 #define SCREEN_LOC(x, y) ((y) * SCREEN_WIDTH + (x))
 
 /* screen buffer */

@@ -147,7 +147,7 @@ void thread_create(tid_t *tidptr, uint64_t entrypoint, long a0, long a1, long a2
 void thread_exit(void *retval);
 int thread_join(tid_t tid, void **retvalptr);
 
-#define S_CORE
+// #define S_CORE
 
 /* TODO [P3-TASK1] exec exit kill waitpid ps*/
 #ifdef S_CORE
@@ -165,6 +165,6 @@ extern pid_t do_getpid();
 extern void do_task_show();
 
 // for [p3-task1]
-extern pid_t init_pcb_via_name(int i, uint64_t entrypoint, char *taskname, reg_t a0, reg_t a1, reg_t a2, reg_t a3);
+extern regs_context_t *init_pcb_via_name(int i, uint64_t entrypoint, char *taskname);
 
 #endif

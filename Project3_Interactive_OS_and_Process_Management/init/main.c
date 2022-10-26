@@ -112,8 +112,7 @@ static void init_pcb(void)
     char needed_task_name[][32] = {"shell"};
 
     for(int i=1; i<=sizeof(needed_task_name)/32; i++){
-        init_pcb_via_name(i, load_task_img_via_name(needed_task_name[i-1]), needed_task_name[i-1], 
-            (uint64_t)0, (uint64_t)0, (uint64_t)0, (uint64_t)0);
+        init_pcb_via_name(i, load_task_img_via_name(needed_task_name[i-1]), needed_task_name[i-1]);
     }
     pcb[0]=pid0_pcb;
 

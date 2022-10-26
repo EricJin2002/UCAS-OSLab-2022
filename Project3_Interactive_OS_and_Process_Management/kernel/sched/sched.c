@@ -196,9 +196,9 @@ int thread_join(tid_t tid, void **retvalptr){
 }
 
 // for main.c
-void init_pcb_stack(
+regs_context_t *init_pcb_stack(
     ptr_t kernel_stack, ptr_t user_stack, ptr_t entry_point,
-    pcb_t *pcb, reg_t a0, reg_t a1, reg_t a2, reg_t a3)
+    pcb_t *pcb)
 {
     // for [p3-task1]
     pcb->kernel_stack_base  = kernel_stack;
@@ -216,10 +216,6 @@ void init_pcb_stack(
     pt_regs->sstatus    = (reg_t) (SR_SPIE & ~SR_SPP);
     pt_regs->regs[2]    = (reg_t) user_stack;   //sp
     pt_regs->regs[4]    = (reg_t) pcb;          //tp
-    pt_regs->regs[10]   = a0;                   //a0
-    pt_regs->regs[11]   = a1;                   //a1
-    pt_regs->regs[12]   = a2;                   //a2
-    pt_regs->regs[13]   = a3;                   //a3
 
     /* TODO: [p2-task1] set sp to simulate just returning from switch_to
      * NOTE: you should prepare a stack, and push some values to
@@ -236,11 +232,11 @@ void init_pcb_stack(
     pcb->kernel_sp = (reg_t) pt_switchto;
     pcb->user_sp = user_stack;
 
+    return pt_regs;
 }
 
 // init pcb[i] by loading task named name
-// on success, return pid; else, return 0
-pid_t init_pcb_via_name(int i, uint64_t entrypoint, char *taskname, reg_t a0, reg_t a1, reg_t a2, reg_t a3){
+regs_context_t *init_pcb_via_name(int i, uint64_t entrypoint, char *taskname){
     assert(pcb[i].status==TASK_UNUSED);
 
     strncpy(pcb[i].name,taskname,32);
@@ -257,16 +253,15 @@ pid_t init_pcb_via_name(int i, uint64_t entrypoint, char *taskname, reg_t a0, re
     pcb[i].tcb_list.prev = &pcb[i].tcb_list;
     pcb[i].tcb_list.next = &pcb[i].tcb_list;
 
-    init_pcb_stack(
+    regs_context_t *pt_regs = init_pcb_stack(
         allocKernelPage(1) + PAGE_SIZE,
         allocUserPage(1) + PAGE_SIZE,
         entrypoint,
-        pcb+i,
-        a0,a1,a2,a3
+        pcb+i
     );
     list_push(&ready_queue, &pcb[i].list);
 
-    return pcb[i].pid;
+    return pt_regs;
 }
 
 #ifdef S_CORE
@@ -289,17 +284,40 @@ pid_t do_exec(char *name, int argc, char *argv[]){
             }
 
 #ifdef S_CORE
-            if(!init_pcb_via_name(i, entrypoint, tasks[id].name, argc, arg0, arg1, arg2)){
+            regs_context_t *pt_regs = init_pcb_via_name(i, entrypoint, tasks[id].name);
+            pt_regs->regs[10] = argc;   //a0
+            pt_regs->regs[11] = arg0;   //a1
+            pt_regs->regs[12] = arg1;   //a2
+            pt_regs->regs[13] = arg2;   //a3
 #else
-            if(!init_pcb_via_name(i, entrypoint, name, argc, argv, 0, 0)){
-#endif
-                // failed to init pcb
-                return 0;
+            regs_context_t *pt_regs = init_pcb_via_name(i, entrypoint, name);
+            ptr_t user_sp_origin = pcb[i].user_sp;
+            uint64_t *argv_base = (uint64_t *)(user_sp_origin-8*(argc+1));
+            ptr_t user_sp_now = (ptr_t)argv_base;
+            for(int i=0;i<argc;i++){
+                user_sp_now -= strlen(argv[i])+1;
+                strcpy(user_sp_now, argv[i]);
+                argv_base[i] = user_sp_now;
+            }
+            argv_base[argc] = (uint64_t)0;
+
+            // alignment
+            while((user_sp_origin-user_sp_now)%128){
+                user_sp_now--;
             }
 
-#ifndef S_CORE
-            // todo: pass argument
+            // choose a place to save user_sp
+            // according to entry.S
+            // we now load user_sp from pcb
+            pcb[i].user_sp = user_sp_now;
+            pt_regs->regs[2] = user_sp_now; // so this line is not necessary
 
+            pt_regs->regs[10] = argc;
+            pt_regs->regs[11] = argv_base;
+
+            // for(int i=0;i<argc;i++){
+            //     printk("argv[%d]: %s\n", i, argv_base[i]);
+            // }
 #endif
 
             return pcb[i].pid;

@@ -66,7 +66,7 @@ DIR_KERNEL      = ./kernel
 DIR_LIBS        = ./libs
 DIR_TINYLIBC    = ./tiny_libc
 DIR_TEST        = ./test
-DIR_TEST_PROJ   = $(DIR_TEST)/test_project$(PROJECT_IDX)/S_CORE
+DIR_TEST_PROJ   = $(DIR_TEST)/test_project$(PROJECT_IDX)#/S_CORE
 
 BOOTLOADER_ENTRYPOINT   = 0x50200000
 KERNEL_ENTRYPOINT       = 0x50201000

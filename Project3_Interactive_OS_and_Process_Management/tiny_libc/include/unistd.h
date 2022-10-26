@@ -4,7 +4,7 @@
 #include <stdint.h>
 typedef int32_t pid_t;
 
-#define S_CORE
+// #define S_CORE
 
 void sys_sleep(uint32_t time);
 void sys_yield(void);

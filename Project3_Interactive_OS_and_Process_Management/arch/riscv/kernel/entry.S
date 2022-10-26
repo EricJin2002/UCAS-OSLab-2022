@@ -5,6 +5,14 @@
 .macro SAVE_CONTEXT // return sp at pt_regs
   /* TODO: [p2-task3] save all general purpose registers here! */
   /* HINT: Pay attention to the function of tp and sp, and save them carefully! */
+
+  // modified in [p3-task1]
+  // where to save user stack pointer ?
+  
+  // save to pcb->user_sp
+  sd sp, PCB_USER_SP(tp)
+
+  // save to pt_regs->sp
   // sd t0, -8(sp)
   csrw CSR_SSCRATCH, t0
   ld t0, PCB_KERNEL_SP(tp)
@@ -82,7 +90,7 @@
   ld   ra, OFFSET_REG_RA   (sp)
 //ld   sp, OFFSET_REG_SP   (sp)
   ld   gp, OFFSET_REG_GP   (sp)
-//ld   tp, OFFSET_REG_TP   (sp)
+  ld   tp, OFFSET_REG_TP   (sp)
   ld   t0, OFFSET_REG_T0   (sp)
   ld   t1, OFFSET_REG_T1   (sp)
   ld   t2, OFFSET_REG_T2   (sp)
@@ -113,8 +121,11 @@
 
   addi sp, sp, OFFSET_SIZE
   sd sp, PCB_KERNEL_SP(tp)
-  ld tp, OFFSET_REG_TP-OFFSET_SIZE(sp)
-  ld sp, OFFSET_REG_SP-OFFSET_SIZE(sp)
+
+  // modified in [p3-task1]
+  // where to read user stack pointer ?
+  ld sp, OFFSET_REG_SP-OFFSET_SIZE(sp)  // read from pt_regs->sp
+  ld sp, PCB_USER_SP(tp)                // read from pcb->user_sp
 .endm
 
 ENTRY(enable_preempt)
