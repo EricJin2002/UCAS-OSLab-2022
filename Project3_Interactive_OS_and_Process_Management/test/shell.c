@@ -42,7 +42,7 @@ int main(void)
     sys_move_cursor(0, SHELL_BEGIN);
     printf("------------------- COMMAND -------------------\n");
 
-    char history[TASK_NAME_MAXLEN+1][HISTORY_SIZE];
+    char history[HISTORY_SIZE][TASK_NAME_MAXLEN+1];
     int hist_curr=0;
     int hist_head=0;
     memset(history, 0, sizeof(history));
@@ -50,71 +50,66 @@ int main(void)
     while (1)
     {
         printf("> root@UCAS_OS: ");
+        // printf("%d ",hist_curr);
 
         // TODO [P3-task1]: call syscall to read UART port
         char cache[TASK_NAME_MAXLEN+1];
         int tail=0;
         int ch;
-        while((ch=sys_getchar())){
-            if(ch!=-1){
-                if(ch==27){
-                    //printf("111");
-                    while((ch=sys_getchar())){
-                        if(ch!=-1){
-                            if(ch=='['){
-                                //printf("222");
-                                while((ch=sys_getchar())){
-                                    if(ch!=-1){
-                                        //printf("333");
-                                        if(ch=='A'){
-                                            hist_head--;
-                                            hist_head%=HISTORY_SIZE;
-                                        }else if(ch=='B'){
-                                            hist_head++;
-                                            hist_head%=HISTORY_SIZE;
-                                        }else{
-                                            break;
-                                        }
-                                        while(tail){
-                                            sys_backspace();
-                                            tail--;
-                                        }
-                                        // printf("%d\n",hist_head);
-                                        assert(tail==0);
-                                        for(;history[hist_head][tail];tail++){
-                                            cache[tail]=history[hist_head][tail];
-                                            printf("%c",history[hist_head][tail]);
-                                        }
-                                        break;
-                                    }
-                                }
+        while((ch=sys_getchar())){if(ch!=-1){
+            if(ch==27){
+                //printf("111");
+                while((ch=sys_getchar())){if(ch!=-1){
+                    if(ch=='['){
+                        //printf("222");
+                        while((ch=sys_getchar())){if(ch!=-1){
+                            //printf("333");
+                            if(ch=='A'){
+                                hist_head--;
+                                hist_head%=HISTORY_SIZE;
+                            }else if(ch=='B'){
+                                hist_head++;
+                                hist_head%=HISTORY_SIZE;
+                            }else{
+                                break;
+                            }
+                            while(tail){
+                                sys_backspace();
+                                tail--;
+                            }
+                            // printf("%d\n",hist_head);
+                            assert(tail==0);
+                            for(;history[hist_head][tail];tail++){
+                                cache[tail]=history[hist_head][tail];
+                                printf("%c",history[hist_head][tail]);
                             }
                             break;
-                        }
+                        }}
                     }
-                    continue;
-                }
+                    break;  
+                }}
+                continue;
+            }
 
-                if(ch=='\r'){// \r for Carriage Return and \n for Line Feed
-                    printf("\n");
-                    cache[tail]='\0';
-                    break;
-                }if(ch==127||ch=='\b'){
-                    if(tail){
-                        sys_backspace();
-                        tail--;
-                    }
+            if(ch=='\r'){// \r for Carriage Return and \n for Line Feed
+                printf("\n");
+                cache[tail]='\0';
+                break;
+            }if(ch==127||ch=='\b'){
+                if(tail){
+                    sys_backspace();
+                    tail--;
+                }
+            }else{
+                if(tail<TASK_NAME_MAXLEN){
+                    printf("%c",ch);
+                    cache[tail++]=ch;
                 }else{
-                    if(tail<TASK_NAME_MAXLEN){
-                        printf("%c",ch);
-                        cache[tail++]=ch;
-                    }else{
-                        printf("\nError: Maximal input reached!\n> root@UCAS_OS: ");
-                        tail=0;
-                    }
+                    printf("\nError: Maximal input reached!\n> root@UCAS_OS: ");
+                    tail=0;
                 }
             }
-        }
+        }}
 
         strcpy(history[hist_curr], cache);
         hist_curr++;
@@ -178,7 +173,7 @@ int main(void)
 #endif
 
             if(!pid){
-                printf("Error: No such task!\n");
+                printf("Error: No such APP! (Perhaps you've run a BAT)\n");
                 err=1;
             }else{
                 printf("Info: Process pid %d is launched.\n", pid);
@@ -188,7 +183,7 @@ int main(void)
                 sys_waitpid(pid);
             }
         }else if(!strcmp(argv[0],"exit")){
-            sys_exit();
+            return 0;
         }else if(!strcmp(argv[0],"kill")){
             if(!sys_kill(atol(argv[1]))){
                 printf("Error: No such pid!\n");

@@ -3,6 +3,7 @@
 #include <os/kernel.h>
 #include <os/loader.h>
 #include <type.h>
+#include <os/sched.h> // for [p3-task1]
 
 // return entrypoint for app and 0 for bat
 uint64_t load_task_img(int taskid)
@@ -35,7 +36,7 @@ uint64_t load_task_img(int taskid)
     } else { // tasks[taskid].type == bat
         // load and excute batch for [p1-task5]
 
-        bios_putstr("\n\r===Reading batch from image...===\n\r");
+        printk("\n===Reading batch from image...===\n");
 
         // read batch content
         char bat_cache[1024]; //TODO: what if bat.txt is too big
@@ -45,27 +46,31 @@ uint64_t load_task_img(int taskid)
         uint16_t bat_block_num = NBYTES2SEC(bat_off%SECTOR_SIZE + bat_size);
         bios_sdread(bat_cache, bat_block_num, bat_block_id);
         memcpy((uint8_t *)bat_cache, (uint8_t *)(uint64_t)(bat_cache + bat_off%SECTOR_SIZE), bat_size);
-        bios_putstr(bat_cache);
-        bios_putstr("\n\r===Finish reading!===\n\r");
+        printk(bat_cache);
+        printk("\n===Finish reading!===\n");
 
-        bios_putstr("\n\r");
+        printk("\n");
 
         //excute batch
-        bios_putstr("\n\r===Now excute batch!===\n\r");
+        printk("\n===Now excute batch!===\n");
         int bat_iter = 0;
         int bat_iter_his = 0;
         while(bat_cache[bat_iter]){
             if(bat_cache[bat_iter]=='\n'){
                 bat_cache[bat_iter]='\0';
-                excute_task_img_via_name(bat_cache + bat_iter_his);
+                // excute_task_img_via_name(bat_cache + bat_iter_his);
+                // for [p3-task1]
+                do_exec(bat_cache + bat_iter_his, 0, 0);
                 bat_iter_his=bat_iter+1;
             }
             bat_iter++;
         }
-        excute_task_img_via_name(bat_cache + bat_iter_his);
-        bios_putstr("===All tasks in batch are excuted!===\n\r");
+        // excute_task_img_via_name(bat_cache + bat_iter_his);
+        // for [p3-task1]
+        do_exec(bat_cache + bat_iter_his, 0, 0);
+        printk("===All tasks in batch are excuted!===\n");
 
-        bios_putstr("\n\r");
+        printk("\n");
     }
     
     return 0;
@@ -81,11 +86,11 @@ uint64_t load_task_img_via_name(char *taskname){
     }
     if(task_iter==task_num){
         if(*taskname=='\0'){
-            bios_putstr("Task name empty!\n\r");
+            printk("Task name empty!\n");
         }else{
-            bios_putstr("No task named ");
-            bios_putstr(taskname);
-            bios_putstr("!\n\r");
+            printk("No task named ");
+            printk(taskname);
+            printk("!\n");
         }
     }
     return 0;
