@@ -86,24 +86,25 @@ void do_mutex_lock_acquire(int mlock_idx)
         do_block(&current_running->list, &mlocks[mlock_idx].block_queue, &mlocks[mlock_idx].lock);
         // printl("!!!after do_block\n\r");
     }else{
-        // printl("mlock_idx %d locked\n\r", mlock_idx);
+        // printl("mlock_idx %d owner changed from %d to %d\n",mlock_idx,0,current_running->pid);
+        mlocks[mlock_idx].owner=current_running->pid;
     }
 
-    mlocks[mlock_idx].owner=current_running->pid;
     spin_lock_release(&mlocks[mlock_idx].lock);
 }
 
 // not about to check if is owener
-// requires mlocks[mlock_idx].lock holding
+// calling requires mlocks[mlock_idx].lock holding
 void do_mutex_lock_release_compulsorily(int mlock_idx){
-    mlocks[mlock_idx].owner=0;
-
     list_node_t *node_to_be_unblocked = list_pop(&mlocks[mlock_idx].block_queue);
     if(node_to_be_unblocked){
+        // printl("mlock_idx %d owner changed from %d to %d\n",mlock_idx,mlocks[mlock_idx].owner,LIST2PCB(node_to_be_unblocked)->pid);
+        mlocks[mlock_idx].owner=LIST2PCB(node_to_be_unblocked)->pid;
         do_unblock(node_to_be_unblocked);
     }else{
+        // printl("mlock_idx %d owner changed from %d to %d\n",mlock_idx,mlocks[mlock_idx].owner,0);
+        mlocks[mlock_idx].owner=0;
         mlocks[mlock_idx].status = UNLOCKED;
-        // printl("mlock_idx %d unlocked\n\r", mlock_idx);
     }
 }
 

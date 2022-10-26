@@ -66,7 +66,7 @@ int main(void)
                             //printf("333");
                             if(ch=='A'){
                                 hist_head--;
-                                hist_head%=HISTORY_SIZE;
+                                hist_head=(hist_head+HISTORY_SIZE)%HISTORY_SIZE;
                             }else if(ch=='B'){
                                 hist_head++;
                                 hist_head%=HISTORY_SIZE;
