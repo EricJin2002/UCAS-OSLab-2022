@@ -59,13 +59,14 @@ void do_scheduler(void)
         prev_running->status = TASK_READY;
     }
     
-    list_node_t *next_node;
-    if(list_is_empty(&ready_queue)) {
-        do_scheduler(); // nothing to do 
-        return;
-    }else{
-        next_node = list_pop(&ready_queue);
+    while(list_is_empty(&ready_queue)) {
+        // even current_running doesn't want to work anymore
+        // fine.. continuously check sleeping
+        check_sleeping();
     }
+    
+    list_node_t *next_node;
+    next_node = list_pop(&ready_queue);
 
     current_running = LIST2PCB(next_node);
     current_running->status = TASK_RUNNING;

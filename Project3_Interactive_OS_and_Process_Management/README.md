@@ -222,3 +222,36 @@ unblock 10 due to lock release
 第二点是为了防止阻塞队列队首进程被`kill`后，该队列其他进程始终不被唤醒。
 
 但这样会带来不同进程对锁的竞争，无法保证“先到先得”。在最终实现中，我延续了先前“传递锁”而非“归还锁再借用锁”的逻辑。我将锁主人的更换挪到了原主人释放锁的时刻，从而彻底避免了锁在传递过程中丢失的情况。
+
+### 实现barrier
+
+类似互斥锁的实现，不再赘述。
+
+### 使用迭代代替递归
+
+在`do_scheduler`函数中，我们需要`check_sleeping`，并从`ready_queue`中选择待调度的任务。此时有可能会遇到`ready_queue`为空的情况。
+
+在最初的实现中，当`ready_queue`为空时，将会递归地执行`ready_queue`。
+
+```c
+void do_scheduler(void){
+  check_sleeping();
+  ...
+  if(list_is_empty(&ready_queue)){
+    return do_scheduler();
+  }
+  ...
+}
+```
+
+注意到`sleep`输入的时间量级一般为秒级，由此将导致内核在这秒级的时间内不断循环递归，进而造成过栈溢出。
+
+这个问题通过在shell中执行`exit`命令或`exce barrier`（有waitpid版本）得以暴露。
+
+通过将递归改为迭代解决了问题。
+
+```c
+while(list_is_empty(&ready_queue)) {
+  check_sleeping();
+}
+```

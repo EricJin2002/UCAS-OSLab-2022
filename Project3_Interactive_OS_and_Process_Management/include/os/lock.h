@@ -71,6 +71,12 @@ void do_mutex_lock_release(int mlock_idx);
 typedef struct barrier
 {
     // TODO [P3-TASK2 barrier]
+    spin_lock_t lock;
+    list_head block_queue;
+    int key;
+    int handle_num;
+    int goal;
+    int count;
 } barrier_t;
 
 #define BARRIER_NUM 16

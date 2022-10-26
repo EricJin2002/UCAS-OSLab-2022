@@ -184,6 +184,11 @@ int main(void)
     init_locks();
     printk("> [INIT] Lock mechanism initialization succeeded.\n");
 
+    // for [p3-task2]
+    // Init barrier mechanism
+    init_barriers();
+    printk("> [INIT] Barrier mechanism initialization succeeded.\n");
+
     // Init interrupt (^_^)
     init_exception();
     printk("> [INIT] Interrupt processing initialization succeeded.\n");
