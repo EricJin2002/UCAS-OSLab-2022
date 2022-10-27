@@ -109,6 +109,13 @@ void do_condition_destroy(int cond_idx);
 typedef struct mailbox
 {
     // TODO [P3-TASK2 mailbox]
+    spin_lock_t lock;
+    list_head block_queue;
+    char name[32];
+    int handle_num;
+    char buff[MAX_MBOX_LENGTH+1];
+    int head; // always point to next available pos
+    int tail;
 } mailbox_t;
 
 #define MBOX_NUM 16
