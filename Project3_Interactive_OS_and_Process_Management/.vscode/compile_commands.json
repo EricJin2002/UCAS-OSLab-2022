@@ -10,15 +10,199 @@
             "-Wall",
             "-mcmodel=medany",
             "-ggdb3",
+            "-I./tiny_libc/include",
+            "./build/crt0.o",
+            "-o",
+            "build/waitpid",
+            "test/test_project3/waitpid.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
+        "file": "test/test_project3/waitpid.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./tiny_libc/include",
+            "./build/crt0.o",
+            "-o",
+            "build/barrier",
+            "test/test_project3/barrier.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
+        "file": "test/test_project3/barrier.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
             "-I./arch/riscv/include",
             "-Iinclude",
             "-Idrivers",
             "-o",
             "build/main",
-            "kernel/locking/cond.c"
+            "kernel/locking/lock.c"
         ],
         "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
-        "file": "kernel/locking/cond.c"
+        "file": "kernel/locking/lock.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./tiny_libc/include",
+            "./build/crt0.o",
+            "-o",
+            "build/consumer",
+            "test/test_project3/consumer.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
+        "file": "test/test_project3/consumer.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./arch/riscv/include",
+            "-Iinclude",
+            "-Idrivers",
+            "-o",
+            "build/main",
+            "arch/riscv/kernel/entry.S"
+        ],
+        "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
+        "file": "arch/riscv/kernel/entry.S"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./arch/riscv/include",
+            "-Iinclude",
+            "-Idrivers",
+            "-o",
+            "build/main",
+            "arch/riscv/kernel/trap.S"
+        ],
+        "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
+        "file": "arch/riscv/kernel/trap.S"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./tiny_libc/include",
+            "./build/crt0.o",
+            "-o",
+            "build/mbox_server",
+            "test/test_project3/mbox_server.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
+        "file": "test/test_project3/mbox_server.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./tiny_libc/include",
+            "./build/crt0.o",
+            "-o",
+            "build/mbox_client",
+            "test/test_project3/mbox_client.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
+        "file": "test/test_project3/mbox_client.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./arch/riscv/include",
+            "-Iinclude",
+            "-Idrivers",
+            "-o",
+            "build/main",
+            "arch/riscv/kernel/smp.S"
+        ],
+        "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
+        "file": "arch/riscv/kernel/smp.S"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./arch/riscv/include",
+            "-Iinclude",
+            "-Idrivers",
+            "-o",
+            "build/main",
+            "kernel/locking/barr.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
+        "file": "kernel/locking/barr.c"
     },
     {
         "arguments": [
@@ -57,10 +241,10 @@
             "-Idrivers",
             "-o",
             "build/main",
-            "kernel/loader/loader.c"
+            "kernel/sched/thread.c"
         ],
         "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
-        "file": "kernel/loader/loader.c"
+        "file": "kernel/sched/thread.c"
     },
     {
         "arguments": [
@@ -78,10 +262,31 @@
             "-Idrivers",
             "-o",
             "build/main",
-            "arch/riscv/kernel/head.S"
+            "kernel/mm/mm.c"
         ],
         "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
-        "file": "arch/riscv/kernel/head.S"
+        "file": "kernel/mm/mm.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./arch/riscv/include",
+            "-e",
+            "main",
+            "-o",
+            "build/bootblock",
+            "arch/riscv/boot/bootblock.S"
+        ],
+        "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
+        "file": "arch/riscv/boot/bootblock.S"
     },
     {
         "arguments": [
@@ -95,13 +300,46 @@
             "-mcmodel=medany",
             "-ggdb3",
             "-I./tiny_libc/include",
-            "./build/crt0.o",
             "-o",
-            "build/consumer",
-            "test/test_project3/consumer.c"
+            "build/time.o",
+            "tiny_libc/time.c"
         ],
         "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
-        "file": "test/test_project3/consumer.c"
+        "file": "tiny_libc/time.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./arch/riscv/include",
+            "-Iinclude",
+            "-Idrivers",
+            "-o",
+            "build/main",
+            "drivers/screen.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
+        "file": "drivers/screen.c"
+    },
+    {
+        "arguments": [
+            "gcc",
+            "-c",
+            "-ggdb",
+            "-Wall",
+            "-o",
+            "build/createimage",
+            "tools/createimage.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
+        "file": "tools/createimage.c"
     },
     {
         "arguments": [
@@ -134,12 +372,13 @@
             "-mcmodel=medany",
             "-ggdb3",
             "-I./tiny_libc/include",
+            "./build/crt0.o",
             "-o",
-            "build/syscall.o",
-            "tiny_libc/syscall.c"
+            "build/test_barrier",
+            "test/test_project3/test_barrier.c"
         ],
         "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
-        "file": "tiny_libc/syscall.c"
+        "file": "test/test_project3/test_barrier.c"
     },
     {
         "arguments": [
@@ -157,10 +396,10 @@
             "-Idrivers",
             "-o",
             "build/main",
-            "kernel/smp/smp.c"
+            "kernel/locking/mbox.c"
         ],
         "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
-        "file": "kernel/smp/smp.c"
+        "file": "kernel/locking/mbox.c"
     },
     {
         "arguments": [
@@ -174,12 +413,13 @@
             "-mcmodel=medany",
             "-ggdb3",
             "-I./tiny_libc/include",
+            "./build/crt0.o",
             "-o",
-            "build/mailbox.o",
-            "tiny_libc/mailbox.c"
+            "build/add",
+            "test/test_project3/add.c"
         ],
         "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
-        "file": "tiny_libc/mailbox.c"
+        "file": "test/test_project3/add.c"
     },
     {
         "arguments": [
@@ -234,33 +474,12 @@
             "-mcmodel=medany",
             "-ggdb3",
             "-I./tiny_libc/include",
-            "./build/crt0.o",
             "-o",
-            "build/test_barrier",
-            "test/test_project3/test_barrier.c"
+            "build/rand.o",
+            "tiny_libc/rand.c"
         ],
         "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
-        "file": "test/test_project3/test_barrier.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./tiny_libc/include",
-            "./build/crt0.o",
-            "-o",
-            "build/affinity",
-            "test/test_project3/affinity.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
-        "file": "test/test_project3/affinity.c"
+        "file": "tiny_libc/rand.c"
     },
     {
         "arguments": [
@@ -275,11 +494,30 @@
             "-ggdb3",
             "-I./tiny_libc/include",
             "-o",
-            "build/time.o",
-            "tiny_libc/time.c"
+            "build/syscall.o",
+            "tiny_libc/syscall.c"
         ],
         "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
-        "file": "tiny_libc/time.c"
+        "file": "tiny_libc/syscall.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./tiny_libc/include",
+            "-o",
+            "build/string.o",
+            "tiny_libc/string.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
+        "file": "tiny_libc/string.c"
     },
     {
         "arguments": [
@@ -317,70 +555,10 @@
             "-Idrivers",
             "-o",
             "build/main",
-            "kernel/locking/lock.c"
+            "libs/printk.c"
         ],
         "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
-        "file": "kernel/locking/lock.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./tiny_libc/include",
-            "./build/crt0.o",
-            "-o",
-            "build/shell",
-            "test/shell.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
-        "file": "test/shell.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./tiny_libc/include",
-            "./build/crt0.o",
-            "-o",
-            "build/mbox_server",
-            "test/test_project3/mbox_server.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
-        "file": "test/test_project3/mbox_server.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./tiny_libc/include",
-            "./build/crt0.o",
-            "-o",
-            "build/barrier",
-            "test/test_project3/barrier.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
-        "file": "test/test_project3/barrier.c"
+        "file": "libs/printk.c"
     },
     {
         "arguments": [
@@ -401,201 +579,6 @@
         ],
         "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
         "file": "test/test_project3/producer.c"
-    },
-    {
-        "arguments": [
-            "gcc",
-            "-c",
-            "-ggdb",
-            "-Wall",
-            "-o",
-            "build/createimage",
-            "tools/createimage.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
-        "file": "tools/createimage.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./arch/riscv/include",
-            "-Iinclude",
-            "-Idrivers",
-            "-o",
-            "build/main",
-            "kernel/locking/mbox.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
-        "file": "kernel/locking/mbox.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./tiny_libc/include",
-            "-o",
-            "build/string.o",
-            "tiny_libc/string.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
-        "file": "tiny_libc/string.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./arch/riscv/include",
-            "-Iinclude",
-            "-Idrivers",
-            "-o",
-            "build/main",
-            "kernel/sched/thread.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
-        "file": "kernel/sched/thread.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./arch/riscv/include",
-            "-Iinclude",
-            "-Idrivers",
-            "-o",
-            "build/main",
-            "arch/riscv/kernel/entry.S"
-        ],
-        "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
-        "file": "arch/riscv/kernel/entry.S"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./tiny_libc/include",
-            "./build/crt0.o",
-            "-o",
-            "build/waitpid",
-            "test/test_project3/waitpid.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
-        "file": "test/test_project3/waitpid.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./arch/riscv/include",
-            "-Iinclude",
-            "-Idrivers",
-            "-o",
-            "build/main",
-            "kernel/mm/mm.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
-        "file": "kernel/mm/mm.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./tiny_libc/include",
-            "-o",
-            "build/rand.o",
-            "tiny_libc/rand.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
-        "file": "tiny_libc/rand.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./tiny_libc/include",
-            "-o",
-            "build/printf.o",
-            "tiny_libc/printf.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
-        "file": "tiny_libc/printf.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./arch/riscv/include",
-            "-Iinclude",
-            "-Idrivers",
-            "-o",
-            "build/main",
-            "drivers/screen.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
-        "file": "drivers/screen.c"
     },
     {
         "arguments": [
@@ -633,10 +616,10 @@
             "-Idrivers",
             "-o",
             "build/main",
-            "libs/string.c"
+            "kernel/smp/smp.c"
         ],
         "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
-        "file": "libs/string.c"
+        "file": "kernel/smp/smp.c"
     },
     {
         "arguments": [
@@ -650,115 +633,12 @@
             "-mcmodel=medany",
             "-ggdb3",
             "-I./tiny_libc/include",
-            "./build/crt0.o",
             "-o",
-            "build/ready_to_exit",
-            "test/test_project3/ready_to_exit.c"
+            "build/atoi.o",
+            "tiny_libc/atoi.c"
         ],
         "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
-        "file": "test/test_project3/ready_to_exit.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./tiny_libc/include",
-            "./build/crt0.o",
-            "-o",
-            "build/mbox_client",
-            "test/test_project3/mbox_client.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
-        "file": "test/test_project3/mbox_client.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./arch/riscv/include",
-            "-Iinclude",
-            "-Idrivers",
-            "-o",
-            "build/main",
-            "init/main.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
-        "file": "init/main.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./arch/riscv/include",
-            "-Iinclude",
-            "-Idrivers",
-            "-o",
-            "build/main",
-            "libs/printk.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
-        "file": "libs/printk.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./tiny_libc/include",
-            "./build/crt0.o",
-            "-o",
-            "build/condition",
-            "test/test_project3/condition.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
-        "file": "test/test_project3/condition.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./tiny_libc/include",
-            "./build/crt0.o",
-            "-o",
-            "build/add",
-            "test/test_project3/add.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
-        "file": "test/test_project3/add.c"
+        "file": "tiny_libc/atoi.c"
     },
     {
         "arguments": [
@@ -797,10 +677,10 @@
             "-Idrivers",
             "-o",
             "build/main",
-            "arch/riscv/kernel/trap.S"
+            "libs/string.c"
         ],
         "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
-        "file": "arch/riscv/kernel/trap.S"
+        "file": "libs/string.c"
     },
     {
         "arguments": [
@@ -814,14 +694,14 @@
             "-mcmodel=medany",
             "-ggdb3",
             "-I./arch/riscv/include",
-            "-e",
-            "main",
+            "-Iinclude",
+            "-Idrivers",
             "-o",
-            "build/bootblock",
-            "arch/riscv/boot/bootblock.S"
+            "build/main",
+            "kernel/loader/loader.c"
         ],
         "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
-        "file": "arch/riscv/boot/bootblock.S"
+        "file": "kernel/loader/loader.c"
     },
     {
         "arguments": [
@@ -836,11 +716,72 @@
             "-ggdb3",
             "-I./tiny_libc/include",
             "-o",
-            "build/atoi.o",
-            "tiny_libc/atoi.c"
+            "build/printf.o",
+            "tiny_libc/printf.c"
         ],
         "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
-        "file": "tiny_libc/atoi.c"
+        "file": "tiny_libc/printf.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./tiny_libc/include",
+            "./build/crt0.o",
+            "-o",
+            "build/ready_to_exit",
+            "test/test_project3/ready_to_exit.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
+        "file": "test/test_project3/ready_to_exit.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./arch/riscv/include",
+            "-Iinclude",
+            "-Idrivers",
+            "-o",
+            "build/main",
+            "kernel/locking/cond.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
+        "file": "kernel/locking/cond.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./tiny_libc/include",
+            "./build/crt0.o",
+            "-o",
+            "build/affinity",
+            "test/test_project3/affinity.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
+        "file": "test/test_project3/affinity.c"
     },
     {
         "arguments": [
@@ -879,10 +820,111 @@
             "-Idrivers",
             "-o",
             "build/main",
+            "init/main.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
+        "file": "init/main.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./arch/riscv/include",
+            "-Iinclude",
+            "-Idrivers",
+            "-o",
+            "build/main",
+            "arch/riscv/kernel/head.S"
+        ],
+        "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
+        "file": "arch/riscv/kernel/head.S"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./tiny_libc/include",
+            "./build/crt0.o",
+            "-o",
+            "build/condition",
+            "test/test_project3/condition.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
+        "file": "test/test_project3/condition.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./arch/riscv/include",
+            "-Iinclude",
+            "-Idrivers",
+            "-o",
+            "build/main",
             "kernel/irq/irq.c"
         ],
         "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
         "file": "kernel/irq/irq.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./tiny_libc/include",
+            "-o",
+            "build/mailbox.o",
+            "tiny_libc/mailbox.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
+        "file": "tiny_libc/mailbox.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./tiny_libc/include",
+            "./build/crt0.o",
+            "-o",
+            "build/shell",
+            "test/shell.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
+        "file": "test/shell.c"
     },
     {
         "arguments": [
@@ -903,47 +945,5 @@
         ],
         "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
         "file": "test/test_project3/wait_locks.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./arch/riscv/include",
-            "-Iinclude",
-            "-Idrivers",
-            "-o",
-            "build/main",
-            "kernel/locking/barr.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
-        "file": "kernel/locking/barr.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./arch/riscv/include",
-            "-Iinclude",
-            "-Idrivers",
-            "-o",
-            "build/main",
-            "arch/riscv/kernel/smp.S"
-        ],
-        "directory": "/home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management",
-        "file": "arch/riscv/kernel/smp.S"
     }
 ]

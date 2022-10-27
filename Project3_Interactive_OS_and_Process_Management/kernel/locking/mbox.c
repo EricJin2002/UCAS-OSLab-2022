@@ -74,6 +74,7 @@ int do_mbox_send(int mbox_idx, void * msg, int msg_length){
     }
 
     spin_lock_release(&mboxs[mbox_idx].lock);
+    // todo: what should I return?
     return 1;
 }
 
@@ -96,5 +97,6 @@ int do_mbox_recv(int mbox_idx, void * msg, int msg_length){
     }
 
     spin_lock_release(&mboxs[mbox_idx].lock);
+    // todo: what should I return?
     return 1;
 }

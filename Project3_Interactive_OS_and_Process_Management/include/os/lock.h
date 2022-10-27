@@ -40,6 +40,7 @@ typedef enum {
 typedef struct spin_lock
 {
     volatile lock_status_t status;
+    pid_t owner;    // for [p3] debug
 } spin_lock_t;
 
 typedef struct mutex_lock
