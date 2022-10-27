@@ -5,6 +5,65 @@
 #include <type.h>
 #include <os/sched.h> // for [p3-task1]
 
+// for [p3-task1]
+// copied from shell.c
+#define TASK_NAME_MAXLEN    50
+static inline int isspace(int ch){
+    return ch == ' '  || ch == '\t' || ch == '\n' ||
+           ch == '\v' || ch == '\f' || ch == '\r';
+}
+void parse_args(char *cache, int *argc, char *(*argv)[TASK_NAME_MAXLEN+1]){
+    *argc=0;
+    int parsing=0;
+    for(int head=0;cache[head];head++){
+        if(isspace(cache[head])){
+            parsing=0;
+            cache[head]='\0';
+            continue;
+        }
+        if(!parsing){
+            (*argv)[(*argc)++]=cache+head;
+            parsing=1;
+        }
+    }
+    (*argv)[*argc]=(char *)0;
+}
+pcb_t *do_parse_and_exec_and_wait(char *cache, pcb_t *waiton){
+    int argc;
+    char *argv[TASK_NAME_MAXLEN+1];
+    parse_args(cache, &argc, &argv);
+    
+    if(!argc){
+        return waiton;
+    }
+
+    int wait_end = 1;
+    if(!strcmp(argv[argc-1],"&")){
+        wait_end = 0;
+    }
+    
+    pid_t pid=do_exec(argv[0], argc, argv);
+    
+    if(!pid){
+        return waiton;
+    }
+
+    pcb_t *ret;
+    for(int i=1;i<process_id;i++){
+        if(pcb[i].pid==pid){
+            ret=pcb+i;
+            break;
+        }
+    }
+    if(waiton){
+        list_delete(&ret->list);
+        list_push(&waiton->wait_list, &ret->list);
+        ret->status = TASK_BLOCKED;
+    }
+
+    return wait_end ? ret : 0;
+}
+
 // return entrypoint for app and 0 for bat
 uint64_t load_task_img(int taskid)
 {
@@ -55,19 +114,20 @@ uint64_t load_task_img(int taskid)
         printk("\n===Now excute batch!===\n");
         int bat_iter = 0;
         int bat_iter_his = 0;
+        pcb_t *pcb_hist = 0;
         while(bat_cache[bat_iter]){
             if(bat_cache[bat_iter]=='\n'){
                 bat_cache[bat_iter]='\0';
                 // excute_task_img_via_name(bat_cache + bat_iter_his);
                 // for [p3-task1]
-                do_exec(bat_cache + bat_iter_his, 0, 0);
+                pcb_hist = do_parse_and_exec_and_wait(bat_cache+bat_iter_his, pcb_hist);
                 bat_iter_his=bat_iter+1;
             }
             bat_iter++;
         }
         // excute_task_img_via_name(bat_cache + bat_iter_his);
         // for [p3-task1]
-        do_exec(bat_cache + bat_iter_his, 0, 0);
+        do_parse_and_exec_and_wait(bat_cache+bat_iter_his, pcb_hist);
         printk("===All tasks in batch are excuted!===\n");
 
         printk("\n");

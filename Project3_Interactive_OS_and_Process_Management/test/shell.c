@@ -209,9 +209,9 @@ int main(void)
             sys_show_task();
         }else if(!strcmp(argv[0],"history")){
             printf("[History Table]\n");
-            printf("IDX COMMAND\n");
+            printf(" IDX COMMAND\n");
             for(int i=0;i<HISTORY_SIZE;i++){
-                printf("[%d] %s\n",i,history[i]);
+                printf("[%02d] %s\n",i,history[i]);
             }
         }else{
             printf("Error: Unknown command %s!\n",argv[0]);

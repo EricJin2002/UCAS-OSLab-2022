@@ -371,7 +371,7 @@ int do_kill(pid_t pid){
                     do_unblock(node);
                 }
 
-                // todo: release occupied resources (such as locks)
+                // todo: release occupied resources (such as threads)
                 for(int j=0;j<LOCK_NUM;j++){
                     spin_lock_acquire(&mlocks[j].lock);
                     if(mlocks[j].owner==pid){
@@ -407,10 +407,10 @@ pid_t do_getpid(){
 
 void do_process_show(){
     printk("[Process Table]\n");
-    printk("IDX PID STATUS TASK_NAME\n");
+    printk(" IDX PID STATUS TASK_NAME\n");
     for(int i=0;i<process_id;i++){
         if(pcb[i].status!=TASK_UNUSED){
-            printk("[%d]  %d %s %s\n", 
+            printk("[%02d]  %d %s %s\n", 
                 i, pcb[i].pid, task_status_str[pcb[i].status], pcb[i].name);
         }
     }
@@ -418,9 +418,9 @@ void do_process_show(){
 
 void do_task_show(){
     printk("[Task Table]\n");
-    printk("IDX TYPE NAME\n");
+    printk(" IDX TYPE NAME\n");
     for(int i=0;i<task_num;i++){
-        printk("[%d]  %s %s\n", 
+        printk("[%02d]  %s %s\n", 
             i, tasks[i].type==app?"APP":"BAT", tasks[i].name);
     }
     printk("Note: Not supported to run tasks with type BAT yet!\n");
