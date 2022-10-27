@@ -52,7 +52,7 @@ typedef struct mutex_lock
     pid_t owner;                    // for [p3]
 } mutex_lock_t;
 
-mutex_lock_t mlocks[LOCK_NUM];      // for [p3]
+extern mutex_lock_t mlocks[LOCK_NUM];      // for [p3]
 
 void init_locks(void);
 
