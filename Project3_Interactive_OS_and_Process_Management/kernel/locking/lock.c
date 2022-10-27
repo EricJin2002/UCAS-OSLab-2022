@@ -43,7 +43,7 @@ void spin_lock_acquire(spin_lock_t *lock)
 void spin_lock_release(spin_lock_t *lock)
 {
     /* TODO: [p2-task2] release spin lock */
-    atomic_swap(UNLOCKED, (ptr_t)&lock->status);
+    assert(atomic_swap(UNLOCKED, (ptr_t)&lock->status));
 }
 
 int do_mutex_lock_init(int key)

@@ -162,6 +162,12 @@ static void init_syscall(void)
     syscall[SYSCALL_BARR_INIT]      = (long (*)())do_barrier_init;
     syscall[SYSCALL_BARR_WAIT]      = (long (*)())do_barrier_wait;
     syscall[SYSCALL_BARR_DESTROY]   = (long (*)())do_barrier_destroy;
+
+    syscall[SYSCALL_COND_INIT]      = (long (*)())do_condition_init;
+    syscall[SYSCALL_COND_WAIT]      = (long (*)())do_condition_wait;
+    syscall[SYSCALL_COND_SIGNAL]    = (long (*)())do_condition_signal;
+    syscall[SYSCALL_COND_BROADCAST] = (long (*)())do_condition_broadcast;
+    syscall[SYSCALL_COND_DESTROY]   = (long (*)())do_condition_destroy;
 }
 
 int main(void)
@@ -188,6 +194,11 @@ int main(void)
     // Init barrier mechanism
     init_barriers();
     printk("> [INIT] Barrier mechanism initialization succeeded.\n");
+
+    // for [p3-task2]
+    // Init condition mechanism
+    init_conditions();
+    printk("> [INIT] Condition mechanism initialization succeeded.\n");
 
     // Init interrupt (^_^)
     init_exception();

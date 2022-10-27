@@ -89,6 +89,10 @@ void do_barrier_destroy(int bar_idx);
 typedef struct condition
 {
     // TODO [P3-TASK2 condition]
+    spin_lock_t lock;
+    list_head block_queue;
+    int key;
+    int handle_num;
 } condition_t;
 
 #define CONDITION_NUM 16
