@@ -42,6 +42,7 @@
 #include <assert.h>
 #include <type.h>
 #include <csr.h>
+#include <os/smp.h>
 
 extern void ret_from_exception();
 
@@ -104,7 +105,7 @@ static void init_pcb(void)
 
     // for [p3-task1]
     // `ps` won't print exited pcb
-    for(int i=1;i<NUM_MAX_TASK;i++){
+    for(int i=0;i<NUM_MAX_TASK;i++){
         pcb[i].status=TASK_UNUSED;
     }
 
@@ -114,13 +115,12 @@ static void init_pcb(void)
     for(int i=1; i<=sizeof(needed_task_name)/32; i++){
         init_pcb_via_name(i, load_task_img_via_name(needed_task_name[i-1]), needed_task_name[i-1]);
     }
-    pcb[0]=pid0_pcb;
 
     printl("initial ready_queue ");
     pcb_list_print(&ready_queue);
 
     /* TODO: [p2-task1] remember to initialize 'current_running' */
-    current_running=pcb+0;
+    current_running=&pid0_pcb;
     current_running->status=TASK_BLOCKED; // to stop pcb0 from being pushed into ready_queue
 
     // for [p2-task4]
@@ -177,6 +177,42 @@ static void init_syscall(void)
 
 int main(void)
 {
+    if(get_current_cpu_id()!=0){
+
+        lock_kernel();
+        printk("Successfully enter handle_ipi (sub core)!\n");
+
+        // todo: remember to allocate a new pcb for subcore here
+        ptr_t kernel_stack = allocKernelPage(1)+PAGE_SIZE;
+        unlock_kernel();
+
+        pcb_t *pcb_for_new_core = (pcb_t *)kernel_stack;
+        kernel_stack-=sizeof(pcb_t);
+        // 128 bit aligned
+        while(kernel_stack%16){
+            kernel_stack--;
+        }
+
+        pcb_for_new_core->pid=0;
+        char name[]="core0";
+        name[4]+=get_current_cpu_id(); // note: it implies core number < 10
+        strcpy(pcb_for_new_core->name,name);
+        pcb_for_new_core->kernel_sp=kernel_stack;
+        pcb_for_new_core->user_sp=kernel_stack;
+
+        asm volatile("mv tp, %0":"=r"(pcb_for_new_core));
+
+        setup_exception();
+
+        bios_set_timer(get_ticks() + TIMER_INTERVAL);
+        enable_interrupt();
+
+        while(1){
+            enable_preempt();
+            asm volatile("wfi");
+        }
+    }
+
     // Init jump table provided by kernel and bios(ΦωΦ)
     init_jmptab();
 
@@ -221,6 +257,10 @@ int main(void)
     // Init screen (QAQ)
     init_screen();
     printk("> [INIT] SCREEN initialization succeeded.\n");
+
+    // for [p3-task3]
+    smp_init();
+    wakeup_other_hart();
 
     // TODO: [p2-task4] Setup timer interrupt and enable all interrupt globally
     // NOTE: The function of sstatus.sie is different from sie's

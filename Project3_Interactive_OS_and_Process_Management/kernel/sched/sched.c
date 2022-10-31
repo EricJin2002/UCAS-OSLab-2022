@@ -10,6 +10,7 @@
 #include <os/loader.h>  // for [p3-task1]
 #include <os/string.h>  // for [p3-task1]
 #include <os/task.h>    // for [p3-task1]
+#include <os/smp.h>     // for [p3-task3]
 
 pcb_t pcb[NUM_MAX_TASK];
 const ptr_t pid0_stack = INIT_KERNEL_STACK + PAGE_SIZE;
@@ -17,7 +18,7 @@ pcb_t pid0_pcb = {
     .pid = 0,
     .kernel_sp = (ptr_t)pid0_stack,
     .user_sp = (ptr_t)pid0_stack,
-    .name = "kernel"
+    .name = "core0"
 };
 
 // for [p3]
@@ -29,6 +30,8 @@ LIST_HEAD(sleep_queue);
 
 /* current running task PCB */
 pcb_t * volatile current_running;
+// register pcb_t * volatile current_running asm("tp"); // not working
+// todo: create two current_running
 
 /* global process id */
 pid_t process_id = 1;
@@ -62,6 +65,9 @@ void do_scheduler(void)
     while(list_is_empty(&ready_queue)) {
         // even current_running doesn't want to work anymore
         // fine.. continuously check sleeping
+
+        // fix: if one cpu holds kernel lock and keeps looping, others will be also blocked...
+        // that's why we need two current_running
         check_sleeping();
     }
     
@@ -77,9 +83,20 @@ void do_scheduler(void)
     // printl("current sleep_queue ");
     // pcb_list_print(&sleep_queue);
 
+    // for [p3-task3]
+    // if(/*how to judge this task is first scheded?*/){
+    //     // first sched, realse kernel lock
+    //     unlock_kernel();
+    // }
+
+    unlock_kernel();
+
     // TODO: [p2-task1] switch_to current_running
     // printl("switching from %d to %d\n\r", prev_running->pid, current_running->pid);
     switch_to(prev_running, current_running);
+
+    lock_kernel();
+
     screen_reflush();
 }
 
@@ -245,7 +262,7 @@ pid_t do_exec(char *name, int argc, char *argv[]){
             argv_base[argc] = (uint64_t)0;
 
             // alignment
-            while((user_sp_origin-user_sp_now)%128){
+            while(user_sp_now%16){
                 user_sp_now--;
             }
 

@@ -6,12 +6,18 @@
 #include <printk.h>
 #include <assert.h>
 #include <screen.h>
+#include <os/smp.h> // for [p3-task3]
 
 handler_t irq_table[IRQC_COUNT];
 handler_t exc_table[EXCC_COUNT];
 
 void interrupt_helper(regs_context_t *regs, uint64_t stval, uint64_t scause)
 {
+    // for [p3-task3]
+    // printk("enter %d\n",get_current_cpu_id());
+    lock_kernel();
+    asm volatile("mv %0, tp":"=r"(current_running));
+
     // TODO: [p2-task3] & [p2-task4] interrupt handler.
     // call corresponding handler by the value of `scause`
     // printl("enter interrupt_helper ");
@@ -24,6 +30,10 @@ void interrupt_helper(regs_context_t *regs, uint64_t stval, uint64_t scause)
     }
     // printl("leave interrupt_helper\n");
     // printl("\n\r");
+    
+    // for [p3-task3]
+    unlock_kernel();
+    // printk("leave %d\n",get_current_cpu_id());
 }
 
 void handle_irq_timer(regs_context_t *regs, uint64_t stval, uint64_t scause)
@@ -33,6 +43,15 @@ void handle_irq_timer(regs_context_t *regs, uint64_t stval, uint64_t scause)
     // printl("handle_irq_timer pid %d\n", ((pcb_t *)regs->regs[4])->pid);
     bios_set_timer(get_ticks() + TIMER_INTERVAL);
     do_scheduler();
+}
+
+extern void disable_IRQ_S_SOFT();
+void handle_ipi(regs_context_t *regs, uint64_t stval, uint64_t scause){
+    // it seems that even main core itself will receive ipi sent by itself
+    // so we do nothing
+    // subcore won't enter execption_handler_entry and will handle ipi in main.c
+    printk("Successfully enter handle_ipi (main core)!\n");
+    disable_IRQ_S_SOFT();
 }
 
 void init_exception()
@@ -58,7 +77,7 @@ void init_exception()
         irq_table[i] = handle_other;
     }
     // irq_table[IRQC_U_SOFT]  = handle_other;
-    // irq_table[IRQC_S_SOFT]  = handle_other;
+    irq_table[IRQC_S_SOFT]  = handle_ipi;
     // irq_table[IRQC_M_SOFT]  = handle_other;
     // irq_table[IRQC_U_TIMER] = handle_other;
     irq_table[IRQC_S_TIMER] = handle_irq_timer;

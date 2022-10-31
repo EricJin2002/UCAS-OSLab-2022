@@ -19,7 +19,7 @@ void thread_create(tid_t *tidptr, uint64_t entrypoint, long a0, long a1, long a2
     ptr_t user_stack = allocUserPage(1) + PAGE_SIZE;
 
     tcb_t *tcb = (tcb_t *)kernel_stack;
-    kernel_stack -= sizeof(tcb_t);
+    kernel_stack -= sizeof(tcb_t); // todo: stack pointer should be 128 bit aligned
     tcb->pid = current_running->pid;
     list_node_t *father_node = &current_running->tcb_list;
     while(TCBLIST2TCB(father_node)->tid){

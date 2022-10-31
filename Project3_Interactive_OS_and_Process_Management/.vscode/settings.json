@@ -25,6 +25,7 @@
         "task.h": "c",
         "typeinfo": "c",
         "ctype.h": "c",
-        "atomic.h": "c"
+        "atomic.h": "c",
+        "smp.h": "c"
     }
 }

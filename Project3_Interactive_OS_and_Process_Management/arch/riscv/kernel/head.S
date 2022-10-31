@@ -7,12 +7,18 @@
 #include <csr.h>
 
 #define KERNEL_STACK		0x50500000
+#define PAGE_SIZE       4096
 
 .section ".entry_function","ax"
 ENTRY(_start)
   /* Mask all interrupts */
   csrw CSR_SIE, zero
   csrw CSR_SIP, zero
+
+  // for [p3-task3]
+  // only main core will clear BSS
+  csrr t0, CSR_MHARTID
+  bnez t0, clear_bss_done
 
   /* TODO: [p1-task2] clear BSS for flat non-ELF images */
   la s0, __bss_start
@@ -26,6 +32,17 @@ clear_bss_done:
 
   /* TODO: [p1-task2] setup C environment */
   la sp, KERNEL_STACK
+
+  // for [p3-task3]
+  csrr t0, CSR_MHARTID
+  beq t0, zero, init_sp_done
+  li t1, -PAGE_SIZE
+init_sp:
+  add sp, sp, t1
+  addi t0, t0, -1
+  bnez t0, init_sp
+init_sp_done:
+
   j main
 
 loop:

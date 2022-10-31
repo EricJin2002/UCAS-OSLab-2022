@@ -73,7 +73,7 @@ typedef struct pcb
     // NOTE: this order must be preserved, which is defined in regs.h!!
     reg_t kernel_sp;
     reg_t user_sp;
-    ptr_t kernel_stack_base;
+    ptr_t kernel_stack_base; // todo: add pcb-reuse logic
     ptr_t user_stack_base;
 
     /* previous, next pointer */

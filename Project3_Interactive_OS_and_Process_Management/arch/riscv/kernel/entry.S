@@ -225,3 +225,9 @@ ENTRY(exception_handler_entry)
   la ra, ret_from_exception
   jr ra
 ENDPROC(exception_handler_entry)
+
+// for [p3-task3]
+ENTRY(disable_IRQ_S_SOFT)
+  csrrc zero, CSR_SIE, SIE_SSIE
+  jr ra
+ENDPROC(disable_IRQ_S_SOFT)

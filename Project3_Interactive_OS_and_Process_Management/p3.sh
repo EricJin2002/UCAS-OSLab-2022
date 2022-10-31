@@ -12,7 +12,7 @@ do
     echo $prefix$temp_file >> $out
 done
 
-make debug
+make debug-smp
 
 
 # if not work, try this:
