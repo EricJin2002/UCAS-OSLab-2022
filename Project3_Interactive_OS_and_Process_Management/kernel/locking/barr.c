@@ -3,6 +3,7 @@
 #include <os/list.h>
 #include <atomic.h>
 #include <assert.h> // for [p3]
+#include <os/smp.h> // for [p3]
 
 barrier_t barrs[BARRIER_NUM];
 
@@ -55,7 +56,7 @@ void do_barrier_wait(int bar_idx){
         }
         barrs[bar_idx].count=0;
     }else{
-        do_block(&current_running->list, &barrs[bar_idx].block_queue, &barrs[bar_idx].lock);
+        do_block(&current_running_of[get_current_cpu_id()]->list, &barrs[bar_idx].block_queue, &barrs[bar_idx].lock);
     }
     spin_lock_release(&barrs[bar_idx].lock);
 }

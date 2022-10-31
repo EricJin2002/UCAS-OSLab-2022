@@ -84,15 +84,26 @@ uint64_t load_task_img(int taskid)
     }
 
     if(tasks[taskid].type == app){
-        // for [p1-task4]
-        uint32_t block_id = tasks[taskid].offset/SECTOR_SIZE;
-        uint32_t block_num = NBYTES2SEC(tasks[taskid].offset%SECTOR_SIZE + tasks[taskid].size);
-        uint64_t mem_addr = tasks[taskid].entrypoint; //0x52000000 + 0x10000 * taskid;
-        bios_sdread(mem_addr, block_num, block_id);
-        // shift task entrypoint to the right address
-        memcpy((uint8_t *)mem_addr, (uint8_t *)(mem_addr + tasks[taskid].offset%SECTOR_SIZE), tasks[taskid].size);
-        return mem_addr;
+        if (!tasks[taskid].loaded){
+            tasks[taskid].loaded = 1;
+            // for [p1-task4]
+            uint32_t block_id = tasks[taskid].offset/SECTOR_SIZE;
+            uint32_t block_num = NBYTES2SEC(tasks[taskid].offset%SECTOR_SIZE + tasks[taskid].size);
+            uint64_t mem_addr = tasks[taskid].entrypoint; //0x52000000 + 0x10000 * taskid;
+            bios_sdread(mem_addr, block_num, block_id);
+            // shift task entrypoint to the right address
+            memcpy((uint8_t *)mem_addr, (uint8_t *)(mem_addr + tasks[taskid].offset%SECTOR_SIZE), tasks[taskid].size);
+            return mem_addr;
+        } else {
+            // for [p3-task3]
+            // if already loaded, don't load again
+            return tasks[taskid].entrypoint;
+        }
     } else { // tasks[taskid].type == bat
+        // for [p3-task3]
+        // todo: considering the bug that subcore cannot sd_read, we must ensure only the main core can exec bat
+        // currently, it has possibility of malfunctioning if bat calls bat
+
         // load and excute batch for [p1-task5]
 
         printk("\n===Reading batch from image...===\n");

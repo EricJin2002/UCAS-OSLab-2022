@@ -29,7 +29,7 @@ LIST_HEAD(ready_queue);
 LIST_HEAD(sleep_queue);
 
 /* current running task PCB */
-pcb_t * volatile current_running;
+// pcb_t * volatile current_running;
 // register pcb_t * volatile current_running asm("tp"); // not working
 // todo: create two current_running
 
@@ -54,7 +54,7 @@ void do_scheduler(void)
     // TODO: [p2-task1] Modify the current_running pointer.
     //pcb_list_print(&ready_queue);
 
-    pcb_t *prev_running = current_running;
+    pcb_t *prev_running = current_running_of[get_current_cpu_id()];
     if(prev_running->status==TASK_RUNNING){
         // else, the task is blocked, don't push it to ready_queue
         // or is exited, don't push it to ready_queue (for [p2-task5])
@@ -66,16 +66,19 @@ void do_scheduler(void)
         // even current_running doesn't want to work anymore
         // fine.. continuously check sleeping
 
-        // fix: if one cpu holds kernel lock and keeps looping, others will be also blocked...
+        // fixme: if one cpu holds kernel lock and keeps looping, others will be also blocked...
         // that's why we need two current_running
         check_sleeping();
+        unlock_kernel();
+        
+        lock_kernel();
     }
     
     list_node_t *next_node;
     next_node = list_pop(&ready_queue);
 
-    current_running = LIST2PCB(next_node);
-    current_running->status = TASK_RUNNING;
+    current_running_of[get_current_cpu_id()] = LIST2PCB(next_node);
+    current_running_of[get_current_cpu_id()]->status = TASK_RUNNING;
 
     // printl("current ready_queue ");
     // pcb_list_print(&ready_queue);
@@ -93,7 +96,7 @@ void do_scheduler(void)
 
     // TODO: [p2-task1] switch_to current_running
     // printl("switching from %d to %d\n\r", prev_running->pid, current_running->pid);
-    switch_to(prev_running, current_running);
+    switch_to(prev_running, current_running_of[get_current_cpu_id()]);
 
     lock_kernel();
 
@@ -115,8 +118,8 @@ void do_sleep(uint32_t sleep_time)
     // do_scheduler();
 
     // modified in [p3-task1]
-    current_running->wakeup_time = get_timer() + sleep_time;
-    do_block(&current_running->list, &sleep_queue, &pcb_lock);
+    current_running_of[get_current_cpu_id()]->wakeup_time = get_timer() + sleep_time;
+    do_block(&current_running_of[get_current_cpu_id()]->list, &sleep_queue, &pcb_lock);
 }
 
 void do_block(list_node_t *pcb_node, list_head *queue, spin_lock_t *lock)
@@ -295,7 +298,7 @@ void do_exit(void){
     //     do_unblock(node);
     // }
 
-    do_kill(current_running->pid);
+    do_kill(current_running_of[get_current_cpu_id()]->pid);
 }
 
 int do_kill(pid_t pid){
@@ -332,7 +335,7 @@ int do_waitpid(pid_t pid){
         if(pcb[i].status!=TASK_UNUSED){
             if(pcb[i].pid==pid){
                 if(pcb[i].status!=TASK_EXITED){
-                    do_block(&current_running->list, &pcb[i].wait_list, &pcb_lock);
+                    do_block(&current_running_of[get_current_cpu_id()]->list, &pcb[i].wait_list, &pcb_lock);
                 }
                 return pid;
             }
@@ -342,7 +345,7 @@ int do_waitpid(pid_t pid){
 }
 
 pid_t do_getpid(){
-    return current_running->pid;
+    return current_running_of[get_current_cpu_id()]->pid;
 }
 
 void do_process_show(){
@@ -358,10 +361,11 @@ void do_process_show(){
 
 void do_task_show(){
     printk("[Task Table]\n");
-    printk(" IDX TYPE NAME\n");
+    printk(" IDX TYPE LOADED NAME\n");
     for(int i=0;i<task_num;i++){
-        printk("[%02d]  %s %s\n", 
-            i, tasks[i].type==app?"APP":"BAT", tasks[i].name);
+        printk("[%02d]  %s %s %s\n", 
+            i, tasks[i].type==app?"APP":"BAT", tasks[i].loaded?"LOADED":"NOTYET", tasks[i].name);
     }
-    printk("Note: Not supported to run tasks with type BAT yet!\n");
+    // printk("Note: Not supported to run tasks with type BAT yet!\n");
+    printk("Note: due to the bug that sub core cannot read sd, \n      there is possibility of malfunctioning if BAT calls BAT\n");
 }

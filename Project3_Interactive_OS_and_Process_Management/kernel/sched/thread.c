@@ -7,6 +7,7 @@
 #include <printk.h>
 #include <assert.h>
 #include <csr.h>        // for [p2-task5]
+#include <os/smp.h>     // for [p3]
 
 // for [p2-task5]
 extern void ret_from_exception();
@@ -20,8 +21,8 @@ void thread_create(tid_t *tidptr, uint64_t entrypoint, long a0, long a1, long a2
 
     tcb_t *tcb = (tcb_t *)kernel_stack;
     kernel_stack -= sizeof(tcb_t); // todo: stack pointer should be 128 bit aligned
-    tcb->pid = current_running->pid;
-    list_node_t *father_node = &current_running->tcb_list;
+    tcb->pid = current_running_of[get_current_cpu_id()]->pid;
+    list_node_t *father_node = &current_running_of[get_current_cpu_id()]->tcb_list;
     while(TCBLIST2TCB(father_node)->tid){
         father_node = father_node->next;
     }
@@ -58,17 +59,17 @@ void thread_create(tid_t *tidptr, uint64_t entrypoint, long a0, long a1, long a2
 }
 
 void thread_exit(void *retval){
-    current_running->status = TASK_EXITED;
-    current_running->retval = retval;
+    current_running_of[get_current_cpu_id()]->status = TASK_EXITED;
+    current_running_of[get_current_cpu_id()]->retval = retval;
     do_scheduler();
 }
 
 // on success, return 0; on error, return -1
 int thread_join(tid_t tid, void **retvalptr){
-    list_node_t *joining_node = &current_running->tcb_list;
+    list_node_t *joining_node = &current_running_of[get_current_cpu_id()]->tcb_list;
     do{
         joining_node = joining_node->next;
-        if(joining_node==&current_running->tcb_list){
+        if(joining_node==&current_running_of[get_current_cpu_id()]->tcb_list){
             return -1;
         }
     }while(TCBLIST2TCB(joining_node)->tid!=tid);

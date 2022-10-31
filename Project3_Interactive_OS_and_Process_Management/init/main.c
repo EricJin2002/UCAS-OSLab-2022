@@ -119,12 +119,12 @@ static void init_pcb(void)
     printl("initial ready_queue ");
     pcb_list_print(&ready_queue);
 
-    /* TODO: [p2-task1] remember to initialize 'current_running' */
-    current_running=&pid0_pcb;
-    current_running->status=TASK_BLOCKED; // to stop pcb0 from being pushed into ready_queue
+    /* TODO: [p2-task1] remember to initialize 'current_running_of[0]' */
+    current_running_of[0]=&pid0_pcb;
+    current_running_of[0]->status=TASK_BLOCKED; // to stop pcb0 from being pushed into ready_queue
 
     // for [p2-task4]
-    asm volatile("mv tp, %0":"=r"(current_running));
+    asm volatile("mv tp, %0":"=r"(current_running_of[0]));
 
 }
 
@@ -175,12 +175,24 @@ static void init_syscall(void)
     syscall[SYSCALL_MBOX_SEND]      = (long (*)())do_mbox_send;
 }
 
+// for [p3-task3]
+static load_all_tasks_in_advance(void){
+    // due to the bug that subcore cannot sd_read
+    // we let main core to load all tasks in advance
+
+    for(int i=0;i<task_num;i++){
+        if(tasks[i].type==app){
+            // bat will be executed once loaded, thus we only load app here
+            load_task_img(i);
+        }
+    }
+}
+
 int main(void)
 {
     if(get_current_cpu_id()!=0){
 
         lock_kernel();
-        printk("Successfully enter handle_ipi (sub core)!\n");
 
         // todo: remember to allocate a new pcb for subcore here
         ptr_t kernel_stack = allocKernelPage(1)+PAGE_SIZE;
@@ -199,8 +211,13 @@ int main(void)
         strcpy(pcb_for_new_core->name,name);
         pcb_for_new_core->kernel_sp=kernel_stack;
         pcb_for_new_core->user_sp=kernel_stack;
+        pcb_for_new_core->cursor_x=0;
+        pcb_for_new_core->cursor_y=2;
 
         asm volatile("mv tp, %0":"=r"(pcb_for_new_core));
+        current_running_of[get_current_cpu_id()]=pcb_for_new_core;
+
+        printk("Successfully enter handle_ipi (sub core)!\n");
 
         setup_exception();
 
@@ -218,6 +235,9 @@ int main(void)
 
     // Init task information (〃'▽'〃)
     init_task_info();
+
+    // for [p3-task3]
+    load_all_tasks_in_advance();
 
     // Init Process Control Blocks |•'-'•) ✧
     init_pcb();

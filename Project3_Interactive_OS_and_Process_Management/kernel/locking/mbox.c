@@ -4,6 +4,7 @@
 #include <atomic.h>
 #include <assert.h> // for [p3]
 #include <os/string.h>
+#include <os/smp.h> // for [p3]
 
 mailbox_t mboxs[MBOX_NUM];
 
@@ -59,7 +60,7 @@ int do_mbox_send(int mbox_idx, void * msg, int msg_length){
     spin_lock_acquire(&mboxs[mbox_idx].lock);
     while(mboxs[mbox_idx].head+msg_length>mboxs[mbox_idx].tail+MAX_MBOX_LENGTH){
         // not enough room to store
-        do_block(&current_running->list,&mboxs[mbox_idx].block_queue,&mboxs[mbox_idx].lock);
+        do_block(&current_running_of[get_current_cpu_id()]->list,&mboxs[mbox_idx].block_queue,&mboxs[mbox_idx].lock);
     }
     
     // msg copy
@@ -82,7 +83,7 @@ int do_mbox_recv(int mbox_idx, void * msg, int msg_length){
     spin_lock_acquire(&mboxs[mbox_idx].lock);
     while(mboxs[mbox_idx].tail+msg_length>mboxs[mbox_idx].head){
         // not enough data to load
-        do_block(&current_running->list,&mboxs[mbox_idx].block_queue,&mboxs[mbox_idx].lock);
+        do_block(&current_running_of[get_current_cpu_id()]->list,&mboxs[mbox_idx].block_queue,&mboxs[mbox_idx].lock);
     }
     
     // msg copy

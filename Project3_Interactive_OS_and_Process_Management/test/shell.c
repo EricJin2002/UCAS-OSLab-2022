@@ -174,7 +174,8 @@ int main(void)
 #endif
 
             if(!pid){
-                printf("Error: No such APP! (Perhaps you've run a BAT)\n");
+                printf("Error: Running a BAT / No such APP / No available PCB\n");
+                // printf("Error: No such APP! (Perhaps you've run a BAT)\n");
                 err=1;
             }else{
                 printf("Info: Process pid %d is launched.\n", pid);

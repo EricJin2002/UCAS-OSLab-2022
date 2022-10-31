@@ -3,6 +3,7 @@
 #include <os/list.h>
 #include <atomic.h>
 #include <assert.h> // for [p3]
+#include <os/smp.h> // for [p3]
 
 condition_t conds[CONDITION_NUM];
 
@@ -42,7 +43,7 @@ int do_condition_init(int key){
 void do_condition_wait(int cond_idx, int mutex_idx){
     spin_lock_acquire(&conds[cond_idx].lock);
     do_mutex_lock_release(mutex_idx);
-    do_block(&current_running->list, &conds[cond_idx].block_queue, &conds[cond_idx].lock);
+    do_block(&current_running_of[get_current_cpu_id()]->list, &conds[cond_idx].block_queue, &conds[cond_idx].lock);
     spin_lock_release(&conds[cond_idx].lock);
     do_mutex_lock_acquire(mutex_idx);
 }

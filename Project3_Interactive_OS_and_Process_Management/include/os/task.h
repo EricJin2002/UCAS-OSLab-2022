@@ -18,7 +18,8 @@ typedef struct {
     int offset;
     int size;
     uint64_t entrypoint;
-    TYPE type; // for [p1-task5]
+    TYPE type;  // for [p1-task5]
+    int loaded; // for [p3-task3] // due to the bug that subcore cannot sd_read, we must load all the tasks fisrt
 } task_info_t;
 
 extern task_info_t tasks[TASK_MAXNUM];

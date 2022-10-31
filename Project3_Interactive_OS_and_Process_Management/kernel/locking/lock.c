@@ -3,6 +3,7 @@
 #include <os/list.h>
 #include <atomic.h>
 #include <assert.h> // for [p3]
+#include <os/smp.h> // for [p3]
 
 mutex_lock_t mlocks[LOCK_NUM];
 
@@ -25,7 +26,7 @@ void spin_lock_init(spin_lock_t *lock)
 {
     /* TODO: [p2-task2] initialize spin lock */
     atomic_swap(UNLOCKED, (ptr_t)&lock->status);
-    lock->owner=0;
+    lock->owner=-1;
 }
 
 // on success, return 1; else, return 0
@@ -35,7 +36,7 @@ int spin_lock_try_acquire(spin_lock_t *lock)
     if(atomic_swap(LOCKED, (ptr_t)&lock->status)){
         return 0;
     }else{
-        lock->owner=current_running->pid;
+        lock->owner=get_current_cpu_id();
         return 1;
     }
 }
@@ -44,13 +45,13 @@ void spin_lock_acquire(spin_lock_t *lock)
 {
     /* TODO: [p2-task2] acquire spin lock */
     while(atomic_swap(LOCKED, (ptr_t)&lock->status));
-    lock->owner=current_running->pid;
+    lock->owner=get_current_cpu_id();
 }
 
 void spin_lock_release(spin_lock_t *lock)
 {
     /* TODO: [p2-task2] release spin lock */
-    lock->owner=0;
+    lock->owner=-1;
     assert(atomic_swap(UNLOCKED, (ptr_t)&lock->status));
 }
 
@@ -91,11 +92,11 @@ void do_mutex_lock_acquire(int mlock_idx)
     // not necessary to use atomic here
     // due to the protection of spin lock
     if(atomic_swap(LOCKED, (ptr_t)&mlocks[mlock_idx].status)==LOCKED){
-        do_block(&current_running->list, &mlocks[mlock_idx].block_queue, &mlocks[mlock_idx].lock);
+        do_block(&current_running_of[get_current_cpu_id()]->list, &mlocks[mlock_idx].block_queue, &mlocks[mlock_idx].lock);
         // printl("!!!after do_block\n\r");
     }else{
-        // printl("mlock_idx %d owner changed from %d to %d\n",mlock_idx,0,current_running->pid);
-        mlocks[mlock_idx].owner=current_running->pid;
+        // printl("mlock_idx %d owner changed from %d to %d\n",mlock_idx,0,current_running_of[get_current_cpu_id()]->pid);
+        mlocks[mlock_idx].owner=current_running_of[get_current_cpu_id()]->pid;
     }
 
     spin_lock_release(&mlocks[mlock_idx].lock);
@@ -122,7 +123,7 @@ void do_mutex_lock_release(int mlock_idx)
     spin_lock_acquire(&mlocks[mlock_idx].lock);
     
     // todo: check if holding
-    assert(mlocks[mlock_idx].owner==current_running->pid);
+    assert(mlocks[mlock_idx].owner==current_running_of[get_current_cpu_id()]->pid);
 
     do_mutex_lock_release_compulsorily(mlock_idx);
     spin_lock_release(&mlocks[mlock_idx].lock);

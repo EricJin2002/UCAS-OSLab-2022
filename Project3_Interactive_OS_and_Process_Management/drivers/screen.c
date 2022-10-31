@@ -4,16 +4,19 @@
 #include <os/sched.h>
 #include <os/irq.h>
 #include <os/kernel.h>
+#include <os/smp.h> // for [p3-task3]
 
 #define SCREEN_WIDTH    80
 // modified in [p3-task1]
-// #define SCREEN_HEIGHT   50
-#define SCREEN_HEIGHT   40
+#define SCREEN_HEIGHT   50
+// #define SCREEN_HEIGHT   40
 #define SCREEN_LOC(x, y) ((y) * SCREEN_WIDTH + (x))
 
 /* screen buffer */
 char new_screen[SCREEN_HEIGHT * SCREEN_WIDTH] = {0};
 char old_screen[SCREEN_HEIGHT * SCREEN_WIDTH] = {0};
+
+spin_lock_t screen_lock; // for [p3-task3]
 
 /* cursor position */
 static void vt100_move_cursor(int x, int y)
@@ -39,26 +42,31 @@ static void vt100_hidden_cursor()
 /* write a char */
 static void screen_write_ch(char ch)
 {
+    // spin_lock_acquire(&screen_lock);
     if (ch == '\n')
     {
-        current_running->cursor_x = 0;
-        current_running->cursor_y++;
+        current_running_of[get_current_cpu_id()]->cursor_x = 0;
+        current_running_of[get_current_cpu_id()]->cursor_y++;
 
         // for [p3-task1]
-        if(current_running->cursor_y==SCREEN_HEIGHT-1){
+        if(current_running_of[get_current_cpu_id()]->cursor_y==SCREEN_HEIGHT-1){
             screen_scroll(20); // SHELL_BEGIN is defined in shell.c
-            current_running->cursor_y--;
+            current_running_of[get_current_cpu_id()]->cursor_y--;
         }
     }
     else
     {
-        new_screen[SCREEN_LOC(current_running->cursor_x, current_running->cursor_y)] = ch;
-        current_running->cursor_x++;
+        new_screen[SCREEN_LOC(current_running_of[get_current_cpu_id()]->cursor_x, current_running_of[get_current_cpu_id()]->cursor_y)] = ch;
+        current_running_of[get_current_cpu_id()]->cursor_x++;
     }
+    // spin_lock_release(&screen_lock);
 }
 
 void init_screen(void)
 {
+    // for [p3-task3]
+    spin_lock_init(&screen_lock);
+
     vt100_hidden_cursor();
     vt100_clear();
     screen_clear();
@@ -66,6 +74,7 @@ void init_screen(void)
 
 void screen_clear(void)
 {
+    // spin_lock_acquire(&screen_lock);
     int i, j;
     for (i = 0; i < SCREEN_HEIGHT; i++)
     {
@@ -74,15 +83,17 @@ void screen_clear(void)
             new_screen[SCREEN_LOC(j, i)] = ' ';
         }
     }
-    current_running->cursor_x = 0;
-    current_running->cursor_y = 0;
+    current_running_of[get_current_cpu_id()]->cursor_x = 0;
+    current_running_of[get_current_cpu_id()]->cursor_y = 0;
+    // spin_lock_release(&screen_lock);
+
     screen_reflush();
 }
 
 void screen_move_cursor(int x, int y)
 {
-    current_running->cursor_x = x;
-    current_running->cursor_y = y;
+    current_running_of[get_current_cpu_id()]->cursor_x = x;
+    current_running_of[get_current_cpu_id()]->cursor_y = y;
     vt100_move_cursor(x, y);
 }
 
@@ -105,6 +116,7 @@ void screen_write(char *buff)
  */
 void screen_reflush(void)
 {
+    spin_lock_acquire(&screen_lock);
     int i, j;
 
     /* here to reflush screen buffer to serial port */
@@ -123,14 +135,15 @@ void screen_reflush(void)
     }
 
     /* recover cursor position */
-    vt100_move_cursor(current_running->cursor_x, current_running->cursor_y);
+    vt100_move_cursor(current_running_of[get_current_cpu_id()]->cursor_x, current_running_of[get_current_cpu_id()]->cursor_y);
+    spin_lock_release(&screen_lock);
 }
 
 void screen_backspace(void){
     // \033[1C
-    screen_move_cursor(current_running->cursor_x-1,current_running->cursor_y);
+    screen_move_cursor(current_running_of[get_current_cpu_id()]->cursor_x-1,current_running_of[get_current_cpu_id()]->cursor_y);
     screen_write(" ");
-    screen_move_cursor(current_running->cursor_x-1,current_running->cursor_y);
+    screen_move_cursor(current_running_of[get_current_cpu_id()]->cursor_x-1,current_running_of[get_current_cpu_id()]->cursor_y);
 }
 
 // for [p3-task1]

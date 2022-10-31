@@ -32,6 +32,7 @@
 #include <type.h>
 #include <os/list.h>
 #include <os/lock.h> // for [p3]
+#include <os/smp.h>  // for [p3]
 
 #define NUM_MAX_TASK 30
 
@@ -108,8 +109,11 @@ extern list_head ready_queue;
 /* sleep queue to be blocked in */
 extern list_head sleep_queue;
 
+// for [p3-task3]
+pcb_t * volatile current_running_of[NR_CPUS];
+
 /* current running task PCB */
-extern pcb_t * volatile current_running;
+// extern pcb_t * volatile current_running;
 extern pid_t process_id;
 
 extern pcb_t pcb[NUM_MAX_TASK];
