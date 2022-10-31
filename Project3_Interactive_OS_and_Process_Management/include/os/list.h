@@ -76,4 +76,15 @@ static inline int list_delete(list_node_t *node){
     return list_pop(node->prev)?1:0;
 }
 
+// for [p3-task4]
+// find a node satisfied the given constraint and pop it
+static inline list_node_t *list_find_and_pop(list_head *queue, void *filter){
+    for(list_node_t *node=queue->next;node!=queue;node=node->next){
+        if((*(int (*)(list_node_t *))filter)(node)){
+            return list_pop(node->prev);
+        }
+    }
+    return 0;
+}
+
 #endif

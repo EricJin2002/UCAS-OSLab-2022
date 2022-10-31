@@ -41,4 +41,8 @@
 // for [p3-task1]
 #define SYSCALL_BACKSPACE 63
 
+// for [p3-task4]
+#define SYSCALL_TASKSET_NAME 64
+#define SYSCALL_TASKSET_PID 65
+
 #endif

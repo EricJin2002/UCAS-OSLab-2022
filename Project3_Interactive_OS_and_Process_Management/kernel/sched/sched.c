@@ -11,6 +11,7 @@
 #include <os/string.h>  // for [p3-task1]
 #include <os/task.h>    // for [p3-task1]
 #include <os/smp.h>     // for [p3-task3]
+#include <os/string.h>     // for [p3-task4]
 
 pcb_t pcb[NUM_MAX_TASK];
 const ptr_t pid0_stack = INIT_KERNEL_STACK + PAGE_SIZE;
@@ -18,7 +19,8 @@ pcb_t pid0_pcb = {
     .pid = 0,
     .kernel_sp = (ptr_t)pid0_stack,
     .user_sp = (ptr_t)pid0_stack,
-    .name = "core0"
+    .name = "core0",
+    .mask = 3
 };
 
 // for [p3]
@@ -45,6 +47,10 @@ const char *task_status_str[]={
     "UNUSED "
 };
 
+static int filter_mask(list_node_t *node){
+    return LIST2PCB(node)->mask&(1<<get_current_cpu_id());
+}
+
 void do_scheduler(void)
 {
     // TODO: [p2-task3] Check sleep queue to wake up PCBs
@@ -63,20 +69,25 @@ void do_scheduler(void)
     }
     prev_running->running_core = -1;
     
-    while(list_is_empty(&ready_queue)) {
-        // even current_running doesn't want to work anymore
-        // fine.. continuously check sleeping
-
-        // fixme: if one cpu holds kernel lock and keeps looping, others will be also blocked...
-        // that's why we need two current_running
+    list_node_t *next_node;
+    while(!(next_node=list_find_and_pop(&ready_queue,(void *)filter_mask))){
         check_sleeping();
         unlock_kernel();
-        
         lock_kernel();
     }
-    
-    list_node_t *next_node;
-    next_node = list_pop(&ready_queue);
+
+//    while(list_is_empty(&ready_queue)) {
+//        // even current_running doesn't want to work anymore
+//        // fine.. continuously check sleeping
+//
+//        check_sleeping();
+//        unlock_kernel();
+//        
+//        lock_kernel();
+//    }
+//    
+//    list_node_t *next_node;
+//    next_node = list_pop(&ready_queue);
 
     current_running_of[get_current_cpu_id()] = LIST2PCB(next_node);
     current_running_of[get_current_cpu_id()]->status = TASK_RUNNING;
@@ -209,8 +220,10 @@ regs_context_t *init_pcb_via_name(int i, uint64_t entrypoint, char *taskname){
     pcb[i].pid = process_id++;
     pcb[i].status = TASK_READY;
 
-    // for [p3-task4]
+    // for [p3-task3] & [p3-task4]
     pcb[i].running_core = -1;
+    // inherit mask from its father
+    pcb[i].mask = current_running_of[get_current_cpu_id()]->mask;
 
     // for [p3-task1]
     pcb[i].wait_list.prev = &pcb[i].wait_list;
@@ -353,13 +366,56 @@ pid_t do_getpid(){
     return current_running_of[get_current_cpu_id()]->pid;
 }
 
+// copied from tiny_libc/itoa.c
+static int itoa(int num, char* str, int len, int base)
+{
+	int sum = num;
+	int i = 0;
+	int digit;
+
+	if (len == 0)
+		return -1;
+
+	do
+	{
+		digit = sum % base;
+
+		if (digit < 0xA)
+			str[i++] = '0' + digit;
+		else
+			str[i++] = 'A' + digit - 0xA;
+
+		sum /= base;
+	} while (sum && (i < (len - 1)));
+
+	if (i == (len - 1) && sum)
+		return -1;
+
+	str[i] = '\0';
+
+    int _i, _j;
+    int _len = strlen(str);
+
+    for (_i = 0, _j = _len - 1; _i < _j; _i++, _j--)
+    {
+        char tmp = str[_i];
+        str[_i] = str[_j];
+        str[_j] = tmp;
+    }
+
+	return 0;
+}
+
 void do_process_show(){
     printk("[Process Table]\n");
-    printk(" IDX PID STATUS TASK_NAME\n");
+    printk(" IDX PID STATUS MASK TASK_NAME\n");
     for(int i=0;i<process_id;i++){
         if(pcb[i].status!=TASK_UNUSED){
-            printk("[%02d]  %02d %s %s", 
-                i, pcb[i].pid, task_status_str[pcb[i].status], pcb[i].name);
+            char mask_str[10];
+            itoa(pcb[i].mask, mask_str, 9, 16);
+            printk("[%02d]  %02d %s 0x%s %s", 
+                i, pcb[i].pid, task_status_str[pcb[i].status], 
+                mask_str ,pcb[i].name);
             if(pcb[i].status==TASK_RUNNING){
                 printk(" @ running on core%d",pcb[i].running_core);
             }
@@ -377,4 +433,18 @@ void do_task_show(){
     }
     // printk("Note: Not supported to run tasks with type BAT yet!\n");
     printk("Note: due to the bug that sub core cannot read sd, \n      there is possibility of malfunctioning if BAT calls BAT\n");
+}
+
+int taskset_via_name(int mask, char *name, int argc, char **argv){
+    return taskset_via_pid(mask, do_exec(name, argc, argv));   
+}
+
+int taskset_via_pid(int mask, pid_t pid){
+    for(int i=1;i<NUM_MAX_TASK;i++){
+        if(pcb[i].status!=TASK_UNUSED && pcb[i].pid==pid){
+            pcb[i].mask=mask;
+            return 1;
+        }
+    }
+    return 0;
 }

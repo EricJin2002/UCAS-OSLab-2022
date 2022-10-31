@@ -87,8 +87,9 @@ typedef struct pcb
     // for [p3-task1]
     char name[32];
 
-    // for [p3-task3]
+    // for [p3-task3] & [p3-task4]
     int running_core;
+    int mask;
 
     // for [p2-task5]
     tid_t tid; // 0 indicates main thread
@@ -177,5 +178,9 @@ extern void do_task_show();
 
 // for [p3-task1]
 extern regs_context_t *init_pcb_via_name(int i, uint64_t entrypoint, char *taskname);
+
+// for [p3-task3]
+extern int taskset_via_name(int mask, char *name, int argc, char **argv);
+extern int taskset_via_pid(int mask, pid_t pid);
 
 #endif

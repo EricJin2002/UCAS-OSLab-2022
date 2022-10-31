@@ -63,4 +63,8 @@ void sys_mbox_close(int mbox_id);
 int sys_mbox_send(int mbox_idx, void *msg, int msg_length);
 int sys_mbox_recv(int mbox_idx, void *msg, int msg_length);
 
+// for [p3-task4]
+int sys_taskset_name(int mask, char *name, int argc, char **argv);
+int sys_taskset_pid(int mask, pid_t pid);
+
 #endif

@@ -174,7 +174,7 @@ int main(void)
 #endif
 
             if(!pid){
-                printf("Error: Running a BAT / No such APP / No available PCB\n");
+                printf("Error: Running a BAT / No such APP / No available PCB!\n");
                 // printf("Error: No such APP! (Perhaps you've run a BAT)\n");
                 err=1;
             }else{
@@ -213,6 +213,24 @@ int main(void)
             printf(" IDX COMMAND\n");
             for(int i=0;i<HISTORY_SIZE;i++){
                 printf("[%02d] %s\n",i,history[i]);
+            }
+        }else if(!strcmp(argv[0],"taskset")){
+            if(!strcmp(argv[1],"-p")){
+                // taskset -p mask pid
+                if(argc<4){
+                    printf("Error: Not enough args!\n");
+                }
+                if(!sys_taskset_pid(atoi(argv[2]),atoi(argv[3]))){
+                    printf("Error: No such pid!\n");
+                }
+            }else{
+                // taskset mask name
+                if(argc<3){
+                    printf("Error: Not enough args!\n");
+                }
+                if(!sys_taskset_name(atoi(argv[1]),argv[2],argc-2,argv+2)){
+                    printf("Error: Running a BAT / No such APP / No available PCB!\n");
+                }
             }
         }else{
             printf("Error: Unknown command %s!\n",argv[0]);

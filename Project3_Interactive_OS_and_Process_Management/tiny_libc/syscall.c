@@ -234,3 +234,12 @@ int sys_mbox_recv(int mbox_idx, void *msg, int msg_length)
     /* TODO: [p3-task2] call invoke_syscall to implement sys_mbox_recv */
     return invoke_syscall(SYSCALL_MBOX_RECV, (long)mbox_idx, (long)msg, (long)msg_length, IGNORE, IGNORE);
 }
+
+// for [p3-task4]
+int sys_taskset_name(int mask, char *name, int argc, char **argv){
+    return invoke_syscall(SYSCALL_TASKSET_NAME, (long)mask, (long)name, (long)argc, (long)argv, IGNORE);
+}
+
+int sys_taskset_pid(int mask, pid_t pid){
+    return invoke_syscall(SYSCALL_TASKSET_PID, (long)mask, (long)pid, IGNORE, IGNORE, IGNORE);
+}

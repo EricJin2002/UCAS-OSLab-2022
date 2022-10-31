@@ -109,6 +109,13 @@ static void init_pcb(void)
         pcb[i].status=TASK_UNUSED;
     }
 
+    /* TODO: [p2-task1] remember to initialize 'current_running_of[0]' */
+    current_running_of[0]=&pid0_pcb;
+    current_running_of[0]->status=TASK_BLOCKED; // to stop pcb0 from being pushed into ready_queue
+
+    // for [p2-task4]
+    asm volatile("mv tp, %0":"=r"(current_running_of[0]));
+
     // for [p3-task1]
     char needed_task_name[][32] = {"shell"};
 
@@ -118,14 +125,6 @@ static void init_pcb(void)
 
     printl("initial ready_queue ");
     pcb_list_print(&ready_queue);
-
-    /* TODO: [p2-task1] remember to initialize 'current_running_of[0]' */
-    current_running_of[0]=&pid0_pcb;
-    current_running_of[0]->status=TASK_BLOCKED; // to stop pcb0 from being pushed into ready_queue
-
-    // for [p2-task4]
-    asm volatile("mv tp, %0":"=r"(current_running_of[0]));
-
 }
 
 static void init_syscall(void)
@@ -173,6 +172,9 @@ static void init_syscall(void)
     syscall[SYSCALL_MBOX_CLOSE]     = (long (*)())do_mbox_close;
     syscall[SYSCALL_MBOX_RECV]      = (long (*)())do_mbox_recv;
     syscall[SYSCALL_MBOX_SEND]      = (long (*)())do_mbox_send;
+    
+    syscall[SYSCALL_TASKSET_NAME]   = (long (*)())taskset_via_name;
+    syscall[SYSCALL_TASKSET_PID]    = (long (*)())taskset_via_pid;
 }
 
 // for [p3-task3]
