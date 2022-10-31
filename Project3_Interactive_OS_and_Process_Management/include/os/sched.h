@@ -87,6 +87,9 @@ typedef struct pcb
     // for [p3-task1]
     char name[32];
 
+    // for [p3-task3]
+    int running_core;
+
     // for [p2-task5]
     tid_t tid; // 0 indicates main thread
     list_node_t tcb_list;

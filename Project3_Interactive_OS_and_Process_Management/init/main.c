@@ -176,7 +176,7 @@ static void init_syscall(void)
 }
 
 // for [p3-task3]
-static load_all_tasks_in_advance(void){
+static void load_all_tasks_in_advance(void){
     // due to the bug that subcore cannot sd_read
     // we let main core to load all tasks in advance
 
@@ -212,12 +212,12 @@ int main(void)
         pcb_for_new_core->kernel_sp=kernel_stack;
         pcb_for_new_core->user_sp=kernel_stack;
         pcb_for_new_core->cursor_x=0;
-        pcb_for_new_core->cursor_y=2;
+        pcb_for_new_core->cursor_y=4+get_current_cpu_id();
 
         asm volatile("mv tp, %0":"=r"(pcb_for_new_core));
         current_running_of[get_current_cpu_id()]=pcb_for_new_core;
 
-        printk("Successfully enter handle_ipi (sub core)!\n");
+        printk("Successfully aroused (sub core)! [%s]\n",name);
 
         setup_exception();
 

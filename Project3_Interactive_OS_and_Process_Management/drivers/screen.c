@@ -8,8 +8,8 @@
 
 #define SCREEN_WIDTH    80
 // modified in [p3-task1]
-#define SCREEN_HEIGHT   50
-// #define SCREEN_HEIGHT   40
+// #define SCREEN_HEIGHT   50
+#define SCREEN_HEIGHT   40
 #define SCREEN_LOC(x, y) ((y) * SCREEN_WIDTH + (x))
 
 /* screen buffer */
@@ -42,7 +42,7 @@ static void vt100_hidden_cursor()
 /* write a char */
 static void screen_write_ch(char ch)
 {
-    // spin_lock_acquire(&screen_lock);
+    spin_lock_acquire(&screen_lock);
     if (ch == '\n')
     {
         current_running_of[get_current_cpu_id()]->cursor_x = 0;
@@ -59,7 +59,7 @@ static void screen_write_ch(char ch)
         new_screen[SCREEN_LOC(current_running_of[get_current_cpu_id()]->cursor_x, current_running_of[get_current_cpu_id()]->cursor_y)] = ch;
         current_running_of[get_current_cpu_id()]->cursor_x++;
     }
-    // spin_lock_release(&screen_lock);
+    spin_lock_release(&screen_lock);
 }
 
 void init_screen(void)
@@ -74,7 +74,7 @@ void init_screen(void)
 
 void screen_clear(void)
 {
-    // spin_lock_acquire(&screen_lock);
+    spin_lock_acquire(&screen_lock);
     int i, j;
     for (i = 0; i < SCREEN_HEIGHT; i++)
     {
@@ -85,7 +85,7 @@ void screen_clear(void)
     }
     current_running_of[get_current_cpu_id()]->cursor_x = 0;
     current_running_of[get_current_cpu_id()]->cursor_y = 0;
-    // spin_lock_release(&screen_lock);
+    spin_lock_release(&screen_lock);
 
     screen_reflush();
 }

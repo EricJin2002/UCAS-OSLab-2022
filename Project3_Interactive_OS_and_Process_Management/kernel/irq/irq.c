@@ -50,7 +50,8 @@ void handle_ipi(regs_context_t *regs, uint64_t stval, uint64_t scause){
     // it seems that even main core itself will receive ipi sent by itself
     // so we do nothing
     // subcore won't enter execption_handler_entry and will handle ipi in main.c
-    printk("Successfully enter handle_ipi (main core)!\n");
+    printk("Successfully enter handle_ipi (main core)! [%s]\n",current_running_of[get_current_cpu_id()]->name);
+    printk("%s aroused!\n",current_running_of[1]?current_running_of[1]->name:"Sub core hasn't");
     disable_IRQ_S_SOFT();
 }
 

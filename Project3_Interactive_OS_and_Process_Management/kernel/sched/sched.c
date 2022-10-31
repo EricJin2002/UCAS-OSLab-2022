@@ -61,6 +61,7 @@ void do_scheduler(void)
         list_push(&ready_queue, &prev_running->list);
         prev_running->status = TASK_READY;
     }
+    prev_running->running_core = -1;
     
     while(list_is_empty(&ready_queue)) {
         // even current_running doesn't want to work anymore
@@ -79,6 +80,7 @@ void do_scheduler(void)
 
     current_running_of[get_current_cpu_id()] = LIST2PCB(next_node);
     current_running_of[get_current_cpu_id()]->status = TASK_RUNNING;
+    current_running_of[get_current_cpu_id()]->running_core = get_current_cpu_id();
 
     // printl("current ready_queue ");
     // pcb_list_print(&ready_queue);
@@ -206,6 +208,9 @@ regs_context_t *init_pcb_via_name(int i, uint64_t entrypoint, char *taskname){
 
     pcb[i].pid = process_id++;
     pcb[i].status = TASK_READY;
+
+    // for [p3-task4]
+    pcb[i].running_core = -1;
 
     // for [p3-task1]
     pcb[i].wait_list.prev = &pcb[i].wait_list;
@@ -353,8 +358,12 @@ void do_process_show(){
     printk(" IDX PID STATUS TASK_NAME\n");
     for(int i=0;i<process_id;i++){
         if(pcb[i].status!=TASK_UNUSED){
-            printk("[%02d]  %d %s %s\n", 
+            printk("[%02d]  %02d %s %s", 
                 i, pcb[i].pid, task_status_str[pcb[i].status], pcb[i].name);
+            if(pcb[i].status==TASK_RUNNING){
+                printk(" @ running on core%d",pcb[i].running_core);
+            }
+            printk("\n");
         }
     }
 }
