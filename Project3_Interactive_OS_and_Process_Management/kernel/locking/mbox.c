@@ -70,7 +70,10 @@ int do_mbox_send(int mbox_idx, void * msg, int msg_length){
     }
     
     list_node_t *node;
-    if((node=list_pop(&mboxs[mbox_idx].block_queue))){
+    // we cannot use if here
+    // because the poped receiver might still not be satisfied
+    // broadcast instead of signal
+    while((node=list_pop(&mboxs[mbox_idx].block_queue))){
         do_unblock(node);
     }
 
@@ -93,7 +96,10 @@ int do_mbox_recv(int mbox_idx, void * msg, int msg_length){
     }
     
     list_node_t *node;
-    if((node=list_pop(&mboxs[mbox_idx].block_queue))){
+    // we cannot use if here
+    // because the poped sender might still not have enough space
+    // broadcast instead of signal
+    while((node=list_pop(&mboxs[mbox_idx].block_queue))){
         do_unblock(node);
     }
 
