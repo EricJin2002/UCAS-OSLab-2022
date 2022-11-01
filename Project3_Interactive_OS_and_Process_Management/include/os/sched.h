@@ -115,6 +115,7 @@ extern list_head sleep_queue;
 
 // for [p3-task3]
 pcb_t * volatile current_running_of[NR_CPUS];
+pcb_t * volatile kernel_pcb_of[NR_CPUS];
 
 /* current running task PCB */
 // extern pcb_t * volatile current_running;

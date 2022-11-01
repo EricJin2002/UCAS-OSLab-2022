@@ -15,13 +15,7 @@
 
 pcb_t pcb[NUM_MAX_TASK];
 const ptr_t pid0_stack = INIT_KERNEL_STACK + PAGE_SIZE;
-pcb_t pid0_pcb = {
-    .pid = 0,
-    .kernel_sp = (ptr_t)pid0_stack,
-    .user_sp = (ptr_t)pid0_stack,
-    .name = "core0",
-    .mask = 3
-};
+pcb_t pid0_pcb;
 
 // for [p3]
 // todo: add pcb lock logic
@@ -58,9 +52,16 @@ void do_scheduler(void)
     check_sleeping();
 
     // TODO: [p2-task1] Modify the current_running pointer.
-    //pcb_list_print(&ready_queue);
+    printl("[core %d] before scheduler: ",get_current_cpu_id());pcb_list_print(&ready_queue);
+    printl("[core %d] enter with pcb [status %s]\n",get_current_cpu_id(),task_status_str[current_running_of[get_current_cpu_id()]->status]);
+
+    // fixme: push into ready_queue before switching may cause the other core occupies the pcb just pushed in
 
     pcb_t *prev_running = current_running_of[get_current_cpu_id()];
+    if(!prev_running->pid){
+        // if kernel, don't push it to ready_queue
+        prev_running->status=TASK_BLOCKED;
+    }
     if(prev_running->status==TASK_RUNNING){
         // else, the task is blocked, don't push it to ready_queue
         // or is exited, don't push it to ready_queue (for [p2-task5])
@@ -70,10 +71,20 @@ void do_scheduler(void)
     prev_running->running_core = -1;
     
     list_node_t *next_node;
-    while(!(next_node=list_find_and_pop(&ready_queue,(void *)filter_mask))){
-        check_sleeping();
-        unlock_kernel();
-        lock_kernel();
+
+    // note: the below logic may encounter error, (thus we have abandoned this)
+    // when the other core switch to this process 
+    // (which is already blocked, looping to find an available task from ready_queue),
+    // because there's NO switchto_context on the kernel stack!!
+
+    // while(!(next_node=list_find_and_pop(&ready_queue,(void *)filter_mask))){
+    //     unlock_kernel();
+    //     lock_kernel();
+    //     check_sleeping();
+    // }
+
+    if(!(next_node=list_find_and_pop(&ready_queue,(void *)filter_mask))){
+        next_node=&kernel_pcb_of[get_current_cpu_id()]->list;
     }
 
 //    while(list_is_empty(&ready_queue)) {
@@ -105,13 +116,23 @@ void do_scheduler(void)
     //     unlock_kernel();
     // }
 
-    unlock_kernel();
+    printl("[core %d] switching from [pid %d name %s] to [pid %d name %s]\n",
+        get_current_cpu_id(),
+        prev_running->pid,
+        prev_running->name,
+        current_running_of[get_current_cpu_id()]->pid,
+        current_running_of[get_current_cpu_id()]->name
+    );
+    printl("[core %d] after  scheduler: ",get_current_cpu_id());pcb_list_print(&ready_queue);
+    printl("\n");
+
+    // unlock_kernel();
 
     // TODO: [p2-task1] switch_to current_running
     // printl("switching from %d to %d\n\r", prev_running->pid, current_running->pid);
     switch_to(prev_running, current_running_of[get_current_cpu_id()]);
 
-    lock_kernel();
+    // lock_kernel();
 
     screen_reflush();
 }
@@ -165,8 +186,8 @@ void do_unblock(list_node_t *pcb_node)
     // TODO: [p2-task2] unblock the `pcb` from the block queue
     list_push(&ready_queue, pcb_node);
     LIST2PCB(pcb_node)->status = TASK_READY;
-    // printl("do_unblock pid %d\n\r",LIST2PCB(pcb_node)->pid);
-    // pcb_list_print(&ready_queue);
+    printl("do_unblock pid %d\n\r",LIST2PCB(pcb_node)->pid);
+    pcb_list_print(&ready_queue);
 }
 
 extern void ret_from_exception();
@@ -234,12 +255,22 @@ regs_context_t *init_pcb_via_name(int i, uint64_t entrypoint, char *taskname){
     pcb[i].tcb_list.prev = &pcb[i].tcb_list;
     pcb[i].tcb_list.next = &pcb[i].tcb_list;
 
-    regs_context_t *pt_regs = init_pcb_stack(
-        allocKernelPage(1) + PAGE_SIZE,
-        allocUserPage(1) + PAGE_SIZE,
-        entrypoint,
-        pcb+i
-    );
+    regs_context_t *pt_regs;
+    if(!strcmp(taskname,"shell")){
+        pt_regs = init_pcb_stack(
+            allocKernelPage(2) + 2*PAGE_SIZE,
+            allocUserPage(2) + 2*PAGE_SIZE,
+            entrypoint,
+            pcb+i
+        );   
+    }else{
+        pt_regs = init_pcb_stack(
+            allocKernelPage(1) + PAGE_SIZE,
+            allocUserPage(1) + PAGE_SIZE,
+            entrypoint,
+            pcb+i
+        );
+    }
     list_push(&ready_queue, &pcb[i].list);
 
     return pt_regs;
@@ -263,6 +294,8 @@ pid_t do_exec(char *name, int argc, char *argv[]){
                 // is bat or no such task
                 return 0;
             }
+
+            printl("exec %s\n",name);
 
 #ifdef S_CORE
             regs_context_t *pt_regs = init_pcb_via_name(i, entrypoint, tasks[id].name);
@@ -317,6 +350,7 @@ void do_exit(void){
     // }
 
     do_kill(current_running_of[get_current_cpu_id()]->pid);
+    do_scheduler();
 }
 
 int do_kill(pid_t pid){
@@ -422,6 +456,13 @@ void do_process_show(){
             printk("\n");
         }
     }
+    printk("current ready_queue: ");
+    // copied from sched.h
+    list_node_t *next=&ready_queue;
+    while((next=next->next)!=&ready_queue){
+        printk("%d ",LIST2PCB(next)->pid);
+    }
+    printk("\n");
 }
 
 void do_task_show(){
@@ -432,7 +473,7 @@ void do_task_show(){
             i, tasks[i].type==app?"APP":"BAT", tasks[i].loaded?"LOADED":"NOTYET", tasks[i].name);
     }
     // printk("Note: Not supported to run tasks with type BAT yet!\n");
-    printk("Note: due to the bug that sub core cannot read sd, \n      there is possibility of malfunctioning if BAT calls BAT\n");
+    printk("Note: due to the bug that sub core cannot read sd, \n      there is possibility of malfunctioning if sub core calls BAT\n");
 }
 
 int taskset_via_name(int mask, char *name, int argc, char **argv){

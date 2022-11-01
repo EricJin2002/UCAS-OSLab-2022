@@ -15,7 +15,7 @@ void interrupt_helper(regs_context_t *regs, uint64_t stval, uint64_t scause)
 {
     // for [p3-task3]
     // printk("enter %d\n",get_current_cpu_id());
-    lock_kernel();
+    // lock_kernel();
     asm volatile("mv %0, tp":"=r"(current_running_of[get_current_cpu_id()]));
 
     // TODO: [p2-task3] & [p2-task4] interrupt handler.
@@ -32,7 +32,7 @@ void interrupt_helper(regs_context_t *regs, uint64_t stval, uint64_t scause)
     // printl("\n\r");
     
     // for [p3-task3]
-    unlock_kernel();
+    // unlock_kernel();
     // printk("leave %d\n",get_current_cpu_id());
 }
 

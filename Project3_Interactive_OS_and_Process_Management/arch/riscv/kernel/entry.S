@@ -201,6 +201,10 @@ ENDPROC(switch_to)
 ENTRY(ret_from_exception)
   /* TODO: [p2-task3] restore context via provided macro and return to sepc */
   /* HINT: remember to check your sp, does it point to the right address? */
+  
+  // for [p3]
+  call unlock_kernel
+  
   RESTORE_CONTEXT
   sret
 
@@ -210,6 +214,9 @@ ENTRY(exception_handler_entry)
 
   /* TODO: [p2-task3] save context via the provided macro */
   SAVE_CONTEXT
+
+  // for [p3]
+  call lock_kernel
 
   /* TODO: [p2-task3] call interrupt_helper
    * NOTE: don't forget to pass parameters for it.
@@ -231,3 +238,9 @@ ENTRY(disable_IRQ_S_SOFT)
   csrrc zero, CSR_SIE, SIE_SSIE
   jr ra
 ENDPROC(disable_IRQ_S_SOFT)
+
+// for [p3-task4]
+ENTRY(clear_SIP)
+  csrw CSR_SIP, zero
+  jr ra
+ENDPROC(clear_SIP)

@@ -261,3 +261,49 @@ while(list_is_empty(&ready_queue)) {
 然而，这样实践起来还是遇到了问题。这是因为，两个核中的一个可能会长期处于内核态（例如等待就绪队列非空时）。如果只有一个`current_running`变量，则另一个核将无法进入内核态。由此造成了整个系统的阻塞。
 
 由此可见，这里的双核操作系统**需要满足两个核上的应用能同时处于内核态**。我们不能简单粗暴地使用大锁并共用所有内核态变量。
+
+### 多核运行时遇到的部分问题
+
+在设计多核逻辑时，因为不清楚`send_ipi`函数的参数与功能，实验进度停滞了很久。期间也曾尝试通过屏蔽主核的核间中断来避免主核多次收到自身发出的核间中断问题。在老师的提示下，我最终改用了“发核间中断-清除`SIP`-打开中断使能”的逻辑来唤醒从核，从而解决了主核被自身的核间中断信号中断的问题。
+
+此外，在实现了多核运行逻辑后，我发现在主核与从核均等待正`sleep`的进程的情况下，当进程结束睡眠后被调度时，将出错。具体描述如下所示：
+
+```
+[core 0] before scheduler: 
+[core 0] enter with pcb [status RUNNING]
+[core 0] switching from [pid 3 name test_barrier] to [pid 3 name test_barrier]
+[core 0] after  scheduler: 
+
+[core 1] before scheduler: 
+[core 1] enter with pcb [status RUNNING]
+[core 1] switching from [pid 4 name test_barrier] to [pid 4 name test_barrier]
+[core 1] after  scheduler: 
+
+[core 0] before scheduler: 
+[core 0] enter with pcb [status BLOCKED]
+[core 1] before scheduler: 
+[core 1] enter with pcb [status BLOCKED]
+do_unblock pid 3
+3 
+[core 1] switching from [pid 4 name test_barrier] to [pid 3 name test_barrier]
+[core 1] after  scheduler: 
+```
+
+如上所示，主核进入`do_scheduler`时，需要完成从`ready_queue`中选择任务替换当前被`blocked`的进程3——但此时`ready_queue`队列为空。根据我先前的逻辑，它将处于`unlock_kernel-lock_kernel-check_sleeping`的循环中，直至`ready_queue`非空。
+
+此时，从核进入了`do_scheduler`，也同样需要完成从`ready_queue`中选择任务替换当前被`blocked`的进程4——此时`ready_queue`队列同样为空。
+
+最终，进程3被`check_sleeping`操作唤醒，进而被从核调度。然而，由于此时主核尚未完成`switch_to`的操作，进程3的`switch_to context`并未保存在其内核栈空间上，从而导致从核`switch_to`时出错。
+
+解决错误的思路有以下两种：
+
+- 通过保留初始kernel进程等方法来确保`ready_queue`始终非空。
+- 在`unlock_kernel`前保存`switch_to context`。
+
+这里采用第二种方法。当`ready_queue`为空时，将`kernel`作为换出的进程。`switch_to`时将保存之前进程的上下文信息，并返回`kernel`内的低功耗循环，直至接下来的时钟中断时通过`check_sleeping`发现`ready_queue`非空。
+
+为了提升调度的效率，`kernel`（`pid`为0的进程）永远不会进入`ready_queue`，因此也不会被调度。
+
+### shell运行过程中栈溢出
+
+当shell调用BAT任务时，由于设置的sd_read缓冲区有1KB，当BAT循环嵌套时容易导致栈溢出。这里采取为shell进程分配更多内核栈空间的方式解决。

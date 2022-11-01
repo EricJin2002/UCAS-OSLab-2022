@@ -109,6 +109,7 @@ uint64_t load_task_img(int taskid)
         printk("\n===Reading batch from image...===\n");
 
         // read batch content
+        // fixme: the buffer is too big that shell's stack ~~may~~ overflow
         char bat_cache[1024]; //TODO: what if bat.txt is too big
         uint32_t bat_size = tasks[taskid].size;
         uint32_t bat_off = tasks[taskid].offset;

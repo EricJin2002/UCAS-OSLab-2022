@@ -110,11 +110,28 @@ static void init_pcb(void)
     }
 
     /* TODO: [p2-task1] remember to initialize 'current_running_of[0]' */
+
+    pid0_pcb.pid = 0;
+    pid0_pcb.kernel_sp = (ptr_t)pid0_stack;
+    pid0_pcb.user_sp = (ptr_t)pid0_stack;
+    strcpy(pid0_pcb.name,"core0");
+    pid0_pcb.mask = 3;
+    pid0_pcb.list.prev=&pid0_pcb.list;
+    pid0_pcb.list.next=&pid0_pcb.list;
+    pid0_pcb.wait_list.prev=&pid0_pcb.wait_list;
+    pid0_pcb.wait_list.next=&pid0_pcb.wait_list;
+    
+    // current_running_of[0]->status=TASK_BLOCKED; // to stop pcb0 from being pushed into ready_queue
+    pid0_pcb.status=TASK_RUNNING; // the logic above is moved into do_scheduler in [p3-task4]
+    pid0_pcb.running_core=0;
+
     current_running_of[0]=&pid0_pcb;
-    current_running_of[0]->status=TASK_BLOCKED; // to stop pcb0 from being pushed into ready_queue
 
     // for [p2-task4]
     asm volatile("mv tp, %0":"=r"(current_running_of[0]));
+
+    // for [p3]
+    kernel_pcb_of[0]=&pid0_pcb;
 
     // for [p3-task1]
     char needed_task_name[][32] = {"shell"};
@@ -190,6 +207,7 @@ static void load_all_tasks_in_advance(void){
     }
 }
 
+extern void clear_SIP();
 int main(void)
 {
     if(get_current_cpu_id()!=0){
@@ -215,9 +233,17 @@ int main(void)
         pcb_for_new_core->user_sp=kernel_stack;
         pcb_for_new_core->cursor_x=0;
         pcb_for_new_core->cursor_y=4+get_current_cpu_id();
+        pcb_for_new_core->status=TASK_RUNNING;
+        pcb_for_new_core->list.prev=&pcb_for_new_core->list;
+        pcb_for_new_core->list.next=&pcb_for_new_core->list;
+        pcb_for_new_core->wait_list.prev=&pcb_for_new_core->wait_list;
+        pcb_for_new_core->wait_list.next=&pcb_for_new_core->wait_list;
+        pcb_for_new_core->mask=3;
+        pcb_for_new_core->running_core=get_current_cpu_id();
 
         asm volatile("mv tp, %0":"=r"(pcb_for_new_core));
         current_running_of[get_current_cpu_id()]=pcb_for_new_core;
+        kernel_pcb_of[get_current_cpu_id()]=pcb_for_new_core;
 
         printk("Successfully aroused (sub core)! [%s]\n",name);
 
@@ -228,6 +254,7 @@ int main(void)
 
         while(1){
             enable_preempt();
+            // printl("core%d waiting for tasks!\n",get_current_cpu_id());
             asm volatile("wfi");
         }
     }
@@ -283,6 +310,7 @@ int main(void)
     // for [p3-task3]
     smp_init();
     wakeup_other_hart();
+    clear_SIP(); // main core will also receive ipi, thus we clear sip here
 
     // TODO: [p2-task4] Setup timer interrupt and enable all interrupt globally
     // NOTE: The function of sstatus.sie is different from sie's
@@ -405,6 +433,7 @@ int main(void)
 
         // If you do preemptive scheduling, they're used to enable CSR_SIE and wfi
         enable_preempt();
+        printl("core0 waiting for tasks!\n");
         asm volatile("wfi");
     }
 

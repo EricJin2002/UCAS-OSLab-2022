@@ -24,12 +24,12 @@ void lock_kernel()
 {
     /* TODO: P3-TASK3 multicore*/
     spin_lock_acquire(&kernel_lock);
-    printl("core%d has acquired lock\n", get_current_cpu_id());
+    // printl("core%d has acquired lock\n", get_current_cpu_id());
 }
 
 void unlock_kernel()
 {
     /* TODO: P3-TASK3 multicore*/
-    printl("core%d has released lock\n", get_current_cpu_id());
+    // printl("core%d has released lock\n", get_current_cpu_id());
     spin_lock_release(&kernel_lock);
 }
