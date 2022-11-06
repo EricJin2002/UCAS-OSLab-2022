@@ -1,0 +1,10 @@
+auipc
+bss
+auipc
+bss
+bss
+
+auipc
+data
+qwerty
+data

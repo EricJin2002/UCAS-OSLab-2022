@@ -58,8 +58,10 @@ void do_mbox_close(int mbox_idx){
 
 int do_mbox_send(int mbox_idx, void * msg, int msg_length){
     spin_lock_acquire(&mboxs[mbox_idx].lock);
+    int ret = 0;
     while(mboxs[mbox_idx].head+msg_length>mboxs[mbox_idx].tail+MAX_MBOX_LENGTH){
         // not enough room to store
+        ret++;
         do_block(&current_running_of[get_current_cpu_id()]->list,&mboxs[mbox_idx].block_queue,&mboxs[mbox_idx].lock);
     }
     
@@ -78,14 +80,15 @@ int do_mbox_send(int mbox_idx, void * msg, int msg_length){
     }
 
     spin_lock_release(&mboxs[mbox_idx].lock);
-    // todo: what should I return?
-    return 1;
+    return ret;
 }
 
 int do_mbox_recv(int mbox_idx, void * msg, int msg_length){
     spin_lock_acquire(&mboxs[mbox_idx].lock);
+    int ret = 0;
     while(mboxs[mbox_idx].tail+msg_length>mboxs[mbox_idx].head){
         // not enough data to load
+        ret++;
         do_block(&current_running_of[get_current_cpu_id()]->list,&mboxs[mbox_idx].block_queue,&mboxs[mbox_idx].lock);
     }
     
@@ -104,6 +107,5 @@ int do_mbox_recv(int mbox_idx, void * msg, int msg_length){
     }
 
     spin_lock_release(&mboxs[mbox_idx].lock);
-    // todo: what should I return?
-    return 1;
+    return ret;
 }

@@ -2,170 +2,240 @@
 
 ## 实验任务
 
-本实验包括五个任务，其中前两个为S-core，前四个为A-core，前五个为C-core.
-
-前两个为PART-Ⅰ内容，后三个为PART-Ⅱ内容。
+本实验包括四个任务。
 
 具体如下：
 
-- 任务1：任务启动与非抢占式调度（C,A,S-core）
-- 任务2：互斥锁的实现（C,A,S-core）
-- 任务3：系统调用（C,A-core）
-- 任务4：时钟中断、抢占式调度（C,A-core）
-- 任务5：实现线程的创建 thread_create（C-core）
+- 任务1：终端和终端命令的实现（C,A,S-core）
+- 任务1续：exec、kill、exit、waitpid方法的实现（C,A,S-core）
+- 任务2：实现同步原语：barriers、condition variables（C,A,S-core）
+- 任务2续：进程间的通信——mailbox实现（C,A-core）
+- 任务3：开启双核并行运行（C,A-core）
+- 任务4：shell命令taskset——将进程绑定在指定的核上（C-core）
 
 ## 运行说明
 
 ```sh
 make all        # 编译，制作镜像
 make run        # 启动QEMU，模拟运行
+make run-smp    # 启动QEMU，模拟双核运行
 # 进一步上板测试
 make floppy     # 将镜像写入SD卡
 make minicom    # 监视串口
 ```
 
-修改```init/main.c```中```init_pcb```函数内的```needed_task_name```变量来选择```test/test_project2/```目录下待执行的应用程序。
+进入BBL界面后，输入`loadbootd`命令来启动单核。输入`loadbootm`命令来启动双核。
 
-进入BBL界面后，输入```loadbootd```命令来启动bootloader。运行时的界面如下：
+### `shell`界面
+将进入如下所示的`shell`界面。
+```
+> [INIT] SCREEN initialization succeeded.                                       
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+Successfully aroused (sub core)! [core1]                                        
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+------------------- COMMAND -------------------                                 
+> root@UCAS_OS:                                                                 
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                 
+```
+
+### `taskinfo`命令
+输入`taskinfo`命令查看可执行的task列表。
 
 ```
-> [TASK] This task is to test scheduler. (35)                                   
-> [TASK] This task is to test scheduler. (33)                                   
-> [TASK] Applying for a lock.                                                   
-> [TASK] Has acquired lock and running.(4)                                      
-> [TASK] This task is to test sleep. (1)                                        
-> [TASK] This is a thread to timing! (5/58454045 seconds).                      
-                                                                                
-                                                                                
-                                                                                
-                                                                                
-                     _                                                          
-                   -=\`\                                                        
-               |\ ____\_\__                                                     
-             -=\`""""""" "`)                                                    
-               `~~~~~/ /~~`                                                     
-                 -==/ /                                                         
-                   '-'                                           
+------------------- COMMAND -------------------                                 
+> root@UCAS_OS: taskinfo                                                        
+[Task Table]                                                                    
+ IDX TYPE LOADED NAME                                                           
+[00]  APP LOADED shell                                                          
+[01]  APP LOADED mbox_client                                                    
+[02]  APP LOADED multicore                                                      
+[03]  APP LOADED test_barrier                                                   
+[04]  APP LOADED consumer                                                       
+[05]  APP LOADED affinity                                                       
+[06]  APP LOADED waitpid                                                        
+[07]  APP LOADED ready_to_exit                                                  
+[08]  APP LOADED mbox_server                                                    
+[09]  APP LOADED condition                                                      
+[10]  APP LOADED add                                                            
+[11]  APP LOADED wait_locks                                                     
+[12]  APP LOADED producer                                                       
+[13]  APP LOADED barrier                                                        
+[14]  APP LOADED test_affinity                                                  
+[15]  BAT NOTYET p1_example                                                     
+[16]  BAT NOTYET p1_cycle                                                       
+[17]  BAT NOTYET p2                                                             
+[18]  BAT NOTYET p3_mbox                                                        
+[19]  BAT NOTYET p3                                                             
+Note: due to the bug that sub core cannot read sd,                              
+      there is possibility of malfunctioning if sub core calls BAT              
+> root@UCAS_OS:                                 
 ```
+
+由于QEMU上从核调用`sd_read`存在bug，因此在初始化时我将所有`APP`类型的task预加载到了内存。这也是上述TYPE为APP的task的LOADED项一进`shell`便显示为LOADED的原因。
+
+### `APP`相关
+
+`exec`，`kill`，`waitpid`，`exit`，`taskset`，`ps`等命令的使用方法与讲义一致，此处不再赘述。
+
+### `BAT`相关
+
+除此之外，我还更新了对BAT类task的支持。所有BAT文件以`.txt`结尾，位于`bat/`文件夹下。这里以`p3`为例（`p1`以及`p2`开头的`BAT`需要用到前几个实验`test`文件夹下内容，因此本实验不支持）。该文件（`bat/p3.txt`）内容如下所示：
+
+```
+waitpid 1 &
+barrier 4 &
+condition 7 &
+p3_mbox
+```
+
+包含了三个`APP`类型的task，以及一个`BAT`类型的task（`p3_mbox`）。
+
+（是的，`BAT`内甚至可以调用其他`BAT`！）
+
+被调用的`p3_mbox.txt`文件内容如下所示：
+
+```
+mbox_server 11 &
+mbox_client &
+mbox_client &
+mbox_client &
+mbox_client &
+```
+
+这里每行末尾的`&`表示非阻塞地运行着一系列任务。如果想要某个`APP`（以及之后的所有`APP`）在前一个`APP`执行退出后才被唤醒执行，可以把对应的`&`去掉。
+
+和`APP`一样，使用`exec`命令运行`BAT`。上述`BAT`文件的执行效果如下所示：
+
+```
+> [INIT] SCREEN initialization succeeded.                                       
+> [TASK] I want to wait task (pid=12) to exit.                                  
+> [TASK] I am task with pid 12, I have acquired two mutex locks. (3257)         
+> [TASK] I want to acquire mutex lock1 (handle=0).                              
+> [TASK] Exited barrier (7).(sleep 3 s)                                         
+> [TASK] Exited barrier (7).(sleep 1 s)                                         
+> [TASK] Exited barrier (7).(sleep 3 s)                                         
+> [TASK] Total produced 21 products. (next in 3 seconds)                        
+> [TASK] Total consumed 7 products. (Sleep 1 seconds)                           
+> [TASK] Total consumed 7 products. (Sleep 1 seconds)                           
+> [TASK] Total consumed 7 products. (Sleep 2 seconds)                           
+[Server]: recved msg from 8 (blocked: 38, correctBytes: 234, errorBytes: 0)     
+[Client] send bytes: 94, blocked: 9                                             
+[Client] send bytes: 42, blocked: 3                                             
+[Client] send bytes: 32, blocked: 2                                             
+[Client] send bytes: 44, blocked: 3                                             
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+------------------- COMMAND -------------------                                 
+> root@UCAS_OS: exec p3                                                         
+                                                                                
+===Reading batch from image...===                                               
+waitpid 1 &                                                                     
+barrier 4 &                                                                     
+condition 7 &                                                                   
+p3_mbox                                                                         
+===Finish reading!===                                                           
+                                                                                
+                                                                                
+===Now excute batch!===                                                         
+                                                                                
+===Reading batch from image...===                                               
+mbox_server 11 &                                                                
+mbox_client &                                                                   
+mbox_client &                                                                   
+mbox_client &                                                                   
+mbox_client &                                                                   
+===Finish reading!===                                                           
+                                                                                
+                                                                                
+===Now excute batch!===                                                         
+===All tasks in batch are excuted!===                                           
+                                                                                
+===All tasks in batch are excuted!===                                           
+                                                                                
+Error: Running a BAT / No such APP / No available PCB!                          
+> root@UCAS_OS:                                                      
+```
+
+值得注意的是，因为`BAT`类task本身不会孵化自身为一个进程，因此`exec`函数的返回值为`0`。这也是为什么所有`BAT`类task最后一定会输出一条`Error`信息的原因。
+
+### `history`命令
+
+**shell支持使用上下键快速恢复历史命令。**
+
+这通过在`test/hell.c`这个用户程序内增加历史记录数组来实现。目前支持存储最近十条命令，并循环更新覆盖旧历史记录。
+
+如果想要存储更多的历史指令，可以修改`test/shell.c`文件内的`HISTORY_SIZE`宏定义。
+
+如果想要查看最近若干条的历史命令，可以使用`history`命令。执行示例如下：
+
+```
+------------------- COMMAND -------------------                             
+> root@UCAS_OS: getpid                                                      
+1                                                                           
+> root@UCAS_OS: ps                                                          
+[Process Table]                                                             
+ IDX PID STATUS MASK TASK_NAME                                              
+[01]  01 RUNNING 0x3 shell @ running on core0                               
+current ready_queue:                                                        
+> root@UCAS_OS: history                                                     
+[History Table]                                                             
+ IDX COMMAND                                                                
+[00] getpid                                                                 
+[01] ps                                                                     
+[02] history                                                                
+[03]                                                                        
+[04]                                                                        
+[05]                                                                        
+[06]                                                                        
+[07]                                                                        
+[08]                                                                        
+[09]                                                                        
+> root@UCAS_OS:              
+```
+
+### 屏幕更新相关
+
+使用`clear`命令来清屏。不过，由于我魔改了`drivers/screen.c`文件，使得实现的**shell具有“到达屏幕底端时，自动向上滚一行”的特性**，我们无需经常使用该命令。
+
+（如果没有自动滚屏，可能是因为当前终端窗口太小了。默认的终端高度有50行，见`drivers/screen.c`文件中的`SCREEN_HEIGHT`宏定义。可适当调小这个值。）
 
 ## 运作流程
 
-### 初始化内核
 
-内核的初始化包括以下操作：
-
-- `init_jmptab`用于将kernel与bios提供的函数记录在跳转表中
-- `init_task_info`用于保存loadboot时预存的task-info信息
-- `init_pcb`具体包括下述功能：
-  - 加载用户程序到内存
-  - 为用户程序分配用户栈与内核栈空间
-  - 修改栈内数据及栈顶指针来模拟“刚受到中断、将从`switch_to`返回”
-  - 在PCB中记录用户程序的pid，栈指针等信息
-  - 将用户程序的状态标记为ready，并添加到ready队列
-  - 令第零号PCB为`pid0_pcb`，并设置`current_running`
-  - 设置`tp`寄存器的值为`current_running`（这是为了当发生第一次抢占时，`SAVE_CONTEXT`能找到PCB地址）
-- `bios_read_fdt`用于读取CPU频率，设置`time_base`以供`kernel/sched/time.c`使用
-- `init_locks`用于将所有锁标记为未使用
-- `init_exception`用于初始化例外表（及中断表），并设置中断处理入口地址`stvec`，打开中断
-- `init_syscall`用于初始化系统调用表
-- `init_screen`用于初始化屏幕
-- `bios_set_timer`，`enable_interrupt`，`enable_preempt`等用于开启抢占式调度
-
-### 例外的触发与处理
-
-当发生例外时（例如当触发时钟中断时），内核依次完成下述操作：
-- `ecall`指令进入内核态
-- 进入`exception_handler_entry`
-- 进入`SAVE_CONTEXT`，保存上下文到内核栈，并令`sp`指向内核栈
-- 进入`interrupt_helper`，根据`scause`调用相应例外处理函数
-
-对于例外，目前仅支持处理系统调用与时钟中断：
-- 对于系统调用，将进入`handle_syscall`，根据`a7`寄存器内存储的值调用系统调用表内函数，随后令`sepc`加4
-- 对于时钟中断，将进入`handle_irq_timer`，更新抢占时刻，并进行下一次调度
-
-### 任务的调度与切换
-
-当例外类型为时钟中断或系统调用`yield`函数时，将进入`do_scheduler`进行下一次调度：
-
-- `check_sleeping`用于从sleep队列中唤醒正处于blocked状态的任务（修改其状态为ready，将其添加至ready队列）
-- 若当前任务尚处于running状态，同样修改其状态为ready，将其添加至ready队列
-- 让ready队列中处于队头的进程出队
-- 调用`switch_to`，完成进程间的切换
-
-### 例外的返回
-
-- 从`interrupt_helper`返回，进入`ret_from_exception`
-- 进入`RESTORE_CONTEXT`，恢复先前保存的上下文变量，并令`sp`指向用户栈
-- `sret`返回用户态
-
-## 设计细节
-
-### 部分PART-Ⅰ设计细节（摘自 PART-Ⅰ REVIEW 时制作的PPT）
-
-- When a process is blocked, how does the kernel handle the blocked process?
-- When someone acquire a lock . . .
-  - If the lock LOCKED, 
-    - Do_block
-      - Push pcb_node to block_queue & Set its status to TASK_BLOCKED
-      - Do_scheduler
-  - Else if the lock UNLOCKED, 
-    - Set lock status to LOCKED
-- When someone release a lock . . . 
-  - If block_queue not empty,
-    - Pop a pcb_node from block_queue
-    - Do_unblock
-      - Push pcb_node to ready_queue & Set its status to TASK_READY
-  - Else if block_queue empty,
-    - Set lock status to UNLOCKED
-- Where to place the PCB when the process is blocked/unblocked?
-  - Place those blocked PCBs in the block_queue of mutex locks
-  - Place those unblocked PCBs in the ready_queue or current_running
-
-### 线程的创建、退出与回收
-
-### 线程的创建（thread_create）
-
-thread_create函数接收五个参数，其中：
-- 第一个参数为一个tid指针，用于返回创建的新线程tid
-- 第二个参数为新线程的函数入口地址
-- 后三个参数用于向新线程传递函数调用参数
-
-在内核态，线程的创建包含以下操作：
-- 为新线程分配内核栈与用户栈空间
-- 在新分配的内核栈上创建tcb
-- 为新线程分配tid
-- 初始化tcb
-- 初始化内核栈
-- 将新线程加入ready队列以待调度
-
-其中，这里的tcb复用了pcb的逻辑，并在原来的pcb结构体中增添了以下内容：
-- tid，该项用于记录线程的tid；对于进程而言，此项为0（子线程的pid与父进程的pid一致）
-- tcb_list，该项用于连接pid相同的所有线程（进程）
-- retval，该项用于存储线程的返回值
-
-在为新线程分配tid时，将遍历tcb_list，以避免同一tid已经被分配给拥有相同pid的线程。
-
-### 线程的退出（thread_exit）
-
-thread_exit函数接收一个参数，为线程的返回值。
-
-在内核态，线程的退出包含以下操作：
-- 将线程的状态设置为TASK_EXITED
-- 在tcb中记录线程的返回值，以待回收
-- 运行新调度
-
-### 线程的回收（thread_join）
-
-thread_join函数接收两个参数，其中：
-- 第一个参数为待回收的线程tid
-- 第二个参数为该线程退出时的返回值
-
-若成功回收线程，thread_join函数将返回0；反之，将返回-1。
-
-在内核态，线程的回收包含以下操作：
-- 等待线程退出
-- 传递线程退出时的返回值
-- 将线程从对应的tcb_list中删去，以避免重复回收同一线程
 
 ## 实验过程
 
@@ -250,9 +320,7 @@ while(list_is_empty(&ready_queue)) {
 }
 ```
 
-### mailbox相关返回值返回值不明
-
-`test`文件中曾使用了mailbox的send和recv操作的返回值，然而单凭讲义或代码无法猜测其含义。
+不过在运行多核时，上述逻辑又遇到了新的问题。因此，最终的实现中没有采用上述逻辑。
 
 ### 为什么需要两个`current_running`变量？
 
