@@ -15,8 +15,6 @@ void smp_init()
 void wakeup_other_hart()
 {
     /* TODO: P3-TASK3 multicore*/
-    // todo: it seems that the main core will also receive ipi... how to mask itself?
-    // currently, disable_IRQ_S_SOFT while handle_ipi
     send_ipi(0);
 }
 

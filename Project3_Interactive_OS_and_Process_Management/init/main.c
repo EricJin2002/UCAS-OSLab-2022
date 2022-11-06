@@ -214,7 +214,6 @@ int main(void)
 
         lock_kernel();
 
-        // todo: remember to allocate a new pcb for subcore here
         ptr_t kernel_stack = allocKernelPage(1)+PAGE_SIZE;
         unlock_kernel();
 

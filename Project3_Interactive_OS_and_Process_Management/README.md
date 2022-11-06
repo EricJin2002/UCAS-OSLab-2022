@@ -229,13 +229,74 @@ current ready_queue:
 
 ### 屏幕更新相关
 
-使用`clear`命令来清屏。不过，由于我魔改了`drivers/screen.c`文件，使得实现的**shell具有“到达屏幕底端时，自动向上滚一行”的特性**，我们无需经常使用该命令。
+使用`clear`命令来清屏。不过，由于我魔改了`drivers/screen.c`文件，使得实现的**shell支持“到达屏幕底端时，自动向上滚一行”**，我们无需经常使用该命令。
 
 （如果没有自动滚屏，可能是因为当前终端窗口太小了。默认的终端高度有50行，见`drivers/screen.c`文件中的`SCREEN_HEIGHT`宏定义。可适当调小这个值。）
 
 ## 运作流程
 
+这里仅简单介绍双核是如何启动的。
 
+对于主核：
+- 像前几个实验一样正常地进入`init/main.c`
+- 完成各逻辑的初始化
+- 通过发核间中断唤醒从核
+- 清除自身SIP寄存器
+- 开中断
+
+对于从核：
+- `bootblock.S`中令中断入口地址指向kernel
+- 只开启软件中断（核间中断）
+- 低功耗等待来自主核的唤醒
+- `head.S`中跳过bss段清空（以避免之前由主核初始化的jump table等变量被清空）
+- `head.S`中分配与主核不同的栈空间，用于执行kernel
+- 进入`init/main.c`
+- 为自己再分配一块内核栈空间，用于处理中断（保存上下文等）
+- 在新的内核栈空间内创建一个新的PCB
+- 初始化该PCB，并保存其地址到自身tp寄存器
+- 重新设置中断入口地址，设置时钟中断
+- 开中断
+
+## 设计细节
+
+### drivers/screen.c 内自动滚屏的实现
+
+该文件内我实现了一个滚屏函数，用于将第`shell_begin`行下的所有行向上移动一行。
+
+```c
+void screen_scroll(int shell_begin);
+```
+
+除此之外，我魔改了`screen_write_ch`函数。每次输出`\n`时，将判断当前行是否为最后一行；若是，将调用滚屏函数。
+
+由此，我实现了前文中“shell到达屏幕底端时，自动向上滚一行”的功能。
+
+### mutex lock / barrier / condition / mailbox
+
+这四类操作的实现使用了相似的逻辑。各自对应的结构体内大都包含了
+- `key/name`：用于区分不同的对象。
+- `handle_num`：用于记录曾对当前`key/name`调用过`init`并分配的`handle`数目。
+- `block_queue`：用于记录正因当前对象未满足条件而被阻塞的进程。
+- `lock`：一个自旋锁，用于保护操作的原子性。
+
+
+每次调用`init`时，会先遍历当前结构体数组，查找是否有`key`值相同且`handle_num`非空（标记已被分配）的对象。如果有，则返回相应的`handle`值，并令`handle_num`自增；如果无，则再次遍历结构体数组，分配一个`handle_num`为空的对象，并令`handle_num`自增。
+
+每次调用`destroy`时，会令`handle_num`自减，并释放`block_queue`内被阻塞的所有进程。
+
+### taskset
+
+为了实现绑核相关逻辑，我在PCB结构体内增加一个`mask`域。对于初始时运行的进程，其值为`0x3`，表示可以在两个核中的任意一个上运行。通过`taskset`命令为进程绑核。
+
+两个核具有独立的`current_running`变量。（实际上由一个`current_running_of[2]`数组实现，用`current_running_of[get_current_cpu_id()]`代替`current_running`）
+
+两个核共享同个`ready_queue`。每次调度时，将通过`include/os/list.h`文件内的下述函数从`ready_queue`中寻找一个满足`filter`函数返回值条件的进程节点。这里的`filter`即要求PCB域内的`mask`值允许进程在当前核上运行。
+
+```c
+static inline list_node_t *list_find_and_pop(list_head *queue, void *filter)；
+```
+
+如果未找到符合条件的进程，将调度回kernel，而非留在内核态忙等待。其原因见下述“实验过程”中“多核运行时遇到的部分问题”。
 
 ## 实验过程
 

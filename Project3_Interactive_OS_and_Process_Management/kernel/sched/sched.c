@@ -27,7 +27,6 @@ LIST_HEAD(sleep_queue);
 /* current running task PCB */
 // pcb_t * volatile current_running;
 // register pcb_t * volatile current_running asm("tp"); // not working
-// todo: create two current_running
 
 /* global process id */
 pid_t process_id = 1;
@@ -54,8 +53,6 @@ void do_scheduler(void)
     // TODO: [p2-task1] Modify the current_running pointer.
     printl("[core %d] before scheduler: ",get_current_cpu_id());pcb_list_print(&ready_queue);
     printl("[core %d] enter with pcb [status %s]\n",get_current_cpu_id(),task_status_str[current_running_of[get_current_cpu_id()]->status]);
-
-    // fixme: push into ready_queue before switching may cause the other core occupies the pcb just pushed in
 
     pcb_t *prev_running = current_running_of[get_current_cpu_id()];
     if(!prev_running->pid){

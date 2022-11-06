@@ -122,7 +122,7 @@ void do_mutex_lock_release(int mlock_idx)
     /* TODO: [p2-task2] release mutex lock */
     spin_lock_acquire(&mlocks[mlock_idx].lock);
     
-    // todo: check if holding
+    // check if holding
     assert(mlocks[mlock_idx].owner==current_running_of[get_current_cpu_id()]->pid);
 
     do_mutex_lock_release_compulsorily(mlock_idx);
