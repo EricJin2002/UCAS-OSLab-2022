@@ -1,3 +1,4 @@
+add-symbol-file ~/jinyang20/Project2_Simple_Kernel/build/add2
 add-symbol-file ~/jinyang20/Project2_Simple_Kernel/build/add
 add-symbol-file ~/jinyang20/Project2_Simple_Kernel/build/fly
 add-symbol-file ~/jinyang20/Project2_Simple_Kernel/build/lock1

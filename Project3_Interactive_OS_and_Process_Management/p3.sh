@@ -13,6 +13,7 @@ do
 done
 
 make debug-smp
+# make debug
 
 
 # if not work, try this:

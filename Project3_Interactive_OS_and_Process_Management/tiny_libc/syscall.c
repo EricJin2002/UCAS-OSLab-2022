@@ -8,17 +8,34 @@ static long invoke_syscall(long sysno, long arg0, long arg1, long arg2,
                            long arg3, long arg4)
 {
     /* TODO: [p2-task3] implement invoke_syscall via inline assembly */    
+
+// abandoned due to O2 failed !
+//    long ret;
+//    asm volatile(
+//        "mv a7, a0\n"
+//        "mv a0, a1\n"
+//        "mv a1, a2\n"
+//        "mv a2, a3\n"
+//        "mv a3, a4\n"
+//        "mv a4, a5\n"
+//        "ecall\n"
+//        "mv %0, a0\n"
+//        :"=r"(ret)
+//    );
+
     long ret;
     asm volatile(
-        "mv a7, a0\n"
-        "mv a0, a1\n"
-        "mv a1, a2\n"
-        "mv a2, a3\n"
-        "mv a3, a4\n"
-        "mv a4, a5\n"
+        "mv a7, %1\n"
+        "mv a0, %2\n"
+        "mv a1, %3\n"
+        "mv a2, %4\n"
+        "mv a3, %5\n"
+        "mv a4, %6\n"
         "ecall\n"
         "mv %0, a0\n"
         :"=r"(ret)
+        :"r"(sysno), "r"(arg0), "r"(arg1), "r"(arg2), "r"(arg3), "r"(arg4)
+        :"a0","a1","a2","a3","a4","a7"
     );
 
     return ret;

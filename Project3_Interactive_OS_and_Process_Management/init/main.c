@@ -128,7 +128,7 @@ static void init_pcb(void)
     current_running_of[0]=&pid0_pcb;
 
     // for [p2-task4]
-    asm volatile("mv tp, %0":"=r"(current_running_of[0]));
+    asm volatile("mv tp, %0"::"r"(current_running_of[0]));
 
     // for [p3]
     kernel_pcb_of[0]=&pid0_pcb;
