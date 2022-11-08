@@ -43,6 +43,7 @@
 #include <type.h>
 #include <csr.h>
 #include <os/smp.h>
+#include <pgtable.h>    // for [p4-task1]
 
 extern void ret_from_exception();
 
@@ -78,15 +79,15 @@ static void init_task_info(void)
 {
     // TODO: [p1-task4] Init 'tasks' array via reading app-info sector
     // NOTE: You need to get some related arguments from bootblock first
-    uint64_t task_info_off = *(uint32_t *)(0x50200200 - 0xc);
-    task_info_t *tasks_mem_ptr = (task_info_t *)(0x52000000 + task_info_off%0x200);
+    uint64_t task_info_off = *(uint32_t *)(pa2kva(0x50200200 - 0xc));
+    task_info_t *tasks_mem_ptr = (task_info_t *)(pa2kva(0x52000000 + task_info_off%0x200));
     // copy task_info from mem to bss
     // since mem will be overwritten by the first app
     memcpy((uint8_t *)tasks, (uint8_t *)tasks_mem_ptr, TASK_MAXNUM * sizeof(task_info_t));
 
     // for [p1-task3] & [p1-task4]
     // read task_num
-    task_num = *(uint16_t *)0x502001fe;
+    task_num = *(uint16_t *)(pa2kva(0x502001fe));
 
     for(int i=0; i<task_num; i++){
         printl("task name %s entrypoint %lx\n", tasks[i].name, tasks[i].entrypoint);

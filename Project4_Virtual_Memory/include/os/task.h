@@ -20,6 +20,7 @@ typedef struct {
     uint64_t entrypoint;
     TYPE type;  // for [p1-task5]
     int loaded; // for [p3-task3] // due to the bug that subcore cannot sd_read, we must load all the tasks fisrt
+    int memsz;  // for [p4-task1]
 } task_info_t;
 
 extern task_info_t tasks[TASK_MAXNUM];

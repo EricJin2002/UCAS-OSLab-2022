@@ -32,6 +32,7 @@ typedef struct {
     uint64_t entrypoint;
     TYPE type; // used to judge app or bat for [p1-task5]
     int loaded; // for [p3-task3] // due to the bug that subcore cannot sd_read, we must load all the tasks fisrt
+    int memsz;  // for [p4-task1]
 } task_info_t;
 
 #define TASK_MAXNUM 30
@@ -122,7 +123,8 @@ static void create_image(int nfiles, char *files[])
             strcpy(taskinfo[taskidx].name, *files);
             taskinfo[taskidx].entrypoint = get_entrypoint(ehdr);
             taskinfo[taskidx].type = app;
-            taskinfo[taskidx].loaded = 0; // for [p3-task3]
+            taskinfo[taskidx].loaded = 0;   // for [p3-task3]
+            taskinfo[taskidx].memsz = 0;    // for [p4-task1]
         }
 
         /* for each program header */
@@ -138,13 +140,19 @@ static void create_image(int nfiles, char *files[])
             if (strcmp(*files, "main") == 0) {
                 nbytes_kernel += get_filesz(phdr);
             }
+
+            // for [p4-task1]
+            taskinfo[taskidx].memsz += phdr.p_memsz;
         }
 
         // for [p1-task4]
         // record task size
         if(taskidx >= 0){
             taskinfo[taskidx].size = phyaddr - taskinfo[taskidx].offset;
-            printf("taskidx %d\tname %s\toffset %#x\tsize %#x\n", taskidx, taskinfo[taskidx].name, taskinfo[taskidx].offset, taskinfo[taskidx].size);
+            printf("taskidx %d\tname %s\toffset %#x\tsize %#x\t memsz %#x\n", 
+                taskidx, taskinfo[taskidx].name, taskinfo[taskidx].offset, 
+                taskinfo[taskidx].size, taskinfo[taskidx].memsz
+            );
         }
 
         /* write padding bytes */

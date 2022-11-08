@@ -1,17 +1,8 @@
-add-symbol-file /home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management/build/add
-add-symbol-file /home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management/build/affinity
-add-symbol-file /home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management/build/barrier
-add-symbol-file /home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management/build/bootblock
-add-symbol-file /home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management/build/condition
-add-symbol-file /home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management/build/consumer
-add-symbol-file /home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management/build/main
-add-symbol-file /home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management/build/mbox_client
-add-symbol-file /home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management/build/mbox_server
-add-symbol-file /home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management/build/multicore
-add-symbol-file /home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management/build/producer
-add-symbol-file /home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management/build/ready_to_exit
-add-symbol-file /home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management/build/shell
-add-symbol-file /home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management/build/test_affinity
-add-symbol-file /home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management/build/test_barrier
-add-symbol-file /home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management/build/wait_locks
-add-symbol-file /home/stu/jinyang20/Project3_Interactive_OS_and_Process_Management/build/waitpid
+add-symbol-file /home/stu/jinyang20/Project4_Virtual_Memory/build/main 0x50202000
+add-symbol-file /home/stu/jinyang20/Project4_Virtual_Memory/build/bootblock
+add-symbol-file /home/stu/jinyang20/Project4_Virtual_Memory/build/consensus
+add-symbol-file /home/stu/jinyang20/Project4_Virtual_Memory/build/fly
+add-symbol-file /home/stu/jinyang20/Project4_Virtual_Memory/build/lock
+add-symbol-file /home/stu/jinyang20/Project4_Virtual_Memory/build/mailbox
+add-symbol-file /home/stu/jinyang20/Project4_Virtual_Memory/build/rw
+add-symbol-file /home/stu/jinyang20/Project4_Virtual_Memory/build/shell

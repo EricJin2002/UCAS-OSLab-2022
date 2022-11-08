@@ -33,7 +33,7 @@ MINICOM         = minicom
 # Build/Debug Flags and Variables
 # -----------------------------------------------------------------------
 
-CFLAGS          = -O2 -fno-builtin -nostdlib -nostdinc -Wall -mcmodel=medany -ggdb3
+CFLAGS          = -O0 -fno-builtin -nostdlib -nostdinc -Wall -mcmodel=medany -ggdb3
 
 BOOT_INCLUDE    = -I$(DIR_ARCH)/include
 BOOT_CFLAGS     = $(CFLAGS) $(BOOT_INCLUDE) -Wl,--defsym=TEXT_START=$(BOOTLOADER_ENTRYPOINT) -T riscv.lds
@@ -70,7 +70,8 @@ DIR_TEST_PROJ   = $(DIR_TEST)/test_project$(PROJECT_IDX)#/S_CORE
 
 BOOTLOADER_ENTRYPOINT   = 0x50200000
 KERNEL_ENTRYPOINT       = 0xffffffc050202000
-USER_ENTRYPOINT         = 0x200000
+# USER_ENTRYPOINT         = 0x200000
+USER_ENTRYPOINT			= 0x10000
 
 # -----------------------------------------------------------------------
 # UCAS-OS Kernel Source Files

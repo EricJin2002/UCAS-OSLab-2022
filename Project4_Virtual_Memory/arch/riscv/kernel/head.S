@@ -6,7 +6,7 @@
 #include <asm.h>
 #include <csr.h>
 
-#define KERNEL_STACK		0x50500000
+#define KERNEL_STACK		0x50500000 // + 0xffffffc000000000
 #define PAGE_SIZE       4096
 
 ENTRY(_start)
@@ -31,6 +31,9 @@ clear_bss_done:
 
   /* TODO: [p1-task2] setup C environment */
   la sp, KERNEL_STACK
+  li t0, 0xffffffc0
+  slli t0, t0, 32
+  add sp, sp, t0
 
   // for [p3-task3]
   csrr t0, CSR_MHARTID
