@@ -260,3 +260,13 @@ int sys_taskset_name(int mask, char *name, int argc, char **argv){
 int sys_taskset_pid(int mask, pid_t pid){
     return invoke_syscall(SYSCALL_TASKSET_PID, (long)mask, (long)pid, IGNORE, IGNORE, IGNORE);
 }
+
+void* sys_shmpageget(int key)
+{
+    /* TODO: [p4-task5] call invoke_syscall to implement sys_shmpageget */
+}
+
+void sys_shmpagedt(void *addr)
+{
+    /* TODO: [p4-task5] call invoke_syscall to implement sys_shmpagedt */
+}

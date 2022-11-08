@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 typedef int32_t pid_t;
+typedef pid_t pthread_t;
 
 // #define S_CORE
 
@@ -66,5 +67,10 @@ int sys_mbox_recv(int mbox_idx, void *msg, int msg_length);
 // for [p3-task4]
 int sys_taskset_name(int mask, char *name, int argc, char **argv);
 int sys_taskset_pid(int mask, pid_t pid);
+
+/* TODO: [P4-task5] shmpageget/dt */
+/* shmpageget/dt */
+void* sys_shmpageget(int key);
+void sys_shmpagedt(void *addr);
 
 #endif

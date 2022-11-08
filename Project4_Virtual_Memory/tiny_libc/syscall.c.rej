@@ -1,0 +1,16 @@
+--- tiny_libc/syscall.c	2022-11-07 13:24:40.393103453 +0800
++++ tiny_libc/syscall.c	2022-11-07 13:24:40.405103742 +0800
+@@ -168,3 +168,13 @@ int sys_mbox_recv(int mbox_idx, void *ms
+ {
+     /* TODO: [p3-task2] call invoke_syscall to implement sys_mbox_recv */
+ }
++
++void* sys_shmpageget(int key)
++{
++    /* TODO: [p4-task5] call invoke_syscall to implement sys_shmpageget */
++}
++
++void sys_shmpagedt(void *addr)
++{
++    /* TODO: [p4-task5] call invoke_syscall to implement sys_shmpagedt */
++}

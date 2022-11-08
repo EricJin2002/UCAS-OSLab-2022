@@ -69,6 +69,10 @@ int port_read_ch(void);
 // use bios bios_sdread function
 int sd_read(unsigned mem_address, unsigned num_of_blocks, unsigned block_id);
 
+// write blocks to sd card
+// use bios bios_sdwrite function
+int sd_write(unsigned mem_address, unsigned num_of_blocks, unsigned block_id);
+
 // set timer
 // use bios set_timer function
 void set_timer(uint64_t stime_value);

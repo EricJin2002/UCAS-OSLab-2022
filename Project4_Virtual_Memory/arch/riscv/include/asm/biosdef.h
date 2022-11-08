@@ -6,6 +6,7 @@
 #define BIOS_GETCHAR 2
 #define BIOS_SEND_IPI 4
 #define BIOS_PUTSTR 9
+#define BIOS_SDWRITE 10
 #define BIOS_SDREAD 11
 #define BIOS_FDTREAD 12
 #define BIOS_LOGGING 14
