@@ -1,0 +1,9 @@
+print1 &
+print2 &
+fly &
+lock1 &
+lock2 &
+timer &
+sleep &
+add2 &
+lock3 &
