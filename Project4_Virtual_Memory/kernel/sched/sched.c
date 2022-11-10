@@ -333,7 +333,8 @@ pid_t do_exec(char *name, int argc, char *argv[]){
                 return 0;
             }
             if(tasks[taskid].type==bat){
-                printk("[kernel] Not support to run BAT yet!\n");
+                // printk("[kernel] Not support to run BAT yet!\n");
+                load_bat_img(taskid);
                 return 0;
             }
 

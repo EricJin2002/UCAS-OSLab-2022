@@ -45,6 +45,11 @@ static pcb_t *do_parse_and_exec_and_wait(char *cache, pcb_t *waiton){
         wait_end = 0;
     }
     
+    // allow comment
+    if(!strcmp(argv[0],"#")){
+        return waiton;
+    }
+
     pid_t pid=do_exec(argv[0], argc, argv);
     
     if(!pid){
@@ -200,6 +205,7 @@ int load_bat_img(int taskid){ // todo: update this for [p4-task1]
     printk("===All tasks in batch are excuted!===\n");
 
     printk("\n");
+    return 0;
 }
 
 // on fail, return -1
