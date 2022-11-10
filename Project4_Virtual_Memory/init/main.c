@@ -122,6 +122,7 @@ static void init_pcb(void)
     pid0_pcb.list.next=&pid0_pcb.list;
     pid0_pcb.wait_list.prev=&pid0_pcb.wait_list;
     pid0_pcb.wait_list.next=&pid0_pcb.wait_list;
+    pid0_pcb.pgdir=pa2kva(PGDIR_PA);
     
     // current_running_of[0]->status=TASK_BLOCKED; // to stop pcb0 from being pushed into ready_queue
     pid0_pcb.status=TASK_RUNNING; // the logic above is moved into do_scheduler in [p3-task4]
@@ -139,7 +140,7 @@ static void init_pcb(void)
     char needed_task_name[][32] = {"shell"};
 
     for(int i=1; i<=sizeof(needed_task_name)/32; i++){
-        init_pcb_via_name(i, load_task_img_via_name(needed_task_name[i-1]), needed_task_name[i-1]);
+        init_pcb_via_name(i, needed_task_name[i-1]);
     }
 
     printl("initial ready_queue ");
@@ -197,17 +198,17 @@ static void init_syscall(void)
 }
 
 // for [p3-task3]
-static void load_all_tasks_in_advance(void){
-    // due to the bug that subcore cannot sd_read
-    // we let main core to load all tasks in advance
-
-    for(int i=0;i<task_num;i++){
-        if(tasks[i].type==app){
-            // bat will be executed once loaded, thus we only load app here
-            load_task_img(i);
-        }
-    }
-}
+// static void load_all_tasks_in_advance(void){
+//     // due to the bug that subcore cannot sd_read
+//     // we let main core to load all tasks in advance
+// 
+//     for(int i=0;i<task_num;i++){
+//         if(tasks[i].type==app){
+//             // bat will be executed once loaded, thus we only load app here
+//             load_task_img(i);
+//         }
+//     }
+// }
 
 extern void clear_SIP();
 int main(void)
@@ -215,16 +216,15 @@ int main(void)
     if(get_current_cpu_id()!=0){
 
         lock_kernel();
-
-        ptr_t kernel_stack = allocKernelPage(1)+PAGE_SIZE;
+        ptr_t kernel_stack = allocPage(1)+PAGE_SIZE;
         unlock_kernel();
 
-        pcb_t *pcb_for_new_core = (pcb_t *)kernel_stack;
         kernel_stack-=sizeof(pcb_t);
         // 128 bit aligned
         while(kernel_stack%16){
             kernel_stack--;
         }
+        pcb_t *pcb_for_new_core = (pcb_t *)kernel_stack;
 
         pcb_for_new_core->pid=0;
         char name[]="core0";
@@ -241,6 +241,7 @@ int main(void)
         pcb_for_new_core->wait_list.next=&pcb_for_new_core->wait_list;
         pcb_for_new_core->mask=3;
         pcb_for_new_core->running_core=get_current_cpu_id();
+        pcb_for_new_core->pgdir=pa2kva(PGDIR_PA);
 
         asm volatile("mv tp, %0":"=r"(pcb_for_new_core));
         current_running_of[get_current_cpu_id()]=pcb_for_new_core;
@@ -267,7 +268,7 @@ int main(void)
     init_task_info();
 
     // for [p3-task3]
-    load_all_tasks_in_advance();
+    // load_all_tasks_in_advance();
 
     // Init Process Control Blocks |•'-'•) ✧
     init_pcb();

@@ -56,6 +56,7 @@
   sd   t6, OFFSET_REG_T6   (sp)
   sd   sp, PCB_KERNEL_SP   (tp)
 
+  // todo: WHY?
   /*
    * Disable user-mode memory access as it should only be set in the
    * actual user copy routines.
@@ -63,7 +64,7 @@
    * Disable the FPU to detect illegal usage of floating point in kernel
    * space.
    */
-  li t0, SR_SUM | SR_FS
+  li t0, /*SR_SUM |*/ SR_FS
   csrrc t0, CSR_SSTATUS, t0
 
   /* TODO: [p2-task3] save sstatus, sepc, stval and scause on kernel stack */

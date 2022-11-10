@@ -3,7 +3,10 @@
 #include <os/kernel.h>
 #include <os/loader.h>
 #include <type.h>
-#include <os/sched.h> // for [p3-task1]
+#include <os/sched.h>   // for [p3-task1]
+#include <os/mm.h>      // for [p4-task1]
+#include <assert.h>     // for [p4-task1]
+#include <pgtable.h>    // for [p4-task1]
 
 // for [p3-task1]
 // copied from shell.c
@@ -12,7 +15,7 @@ static inline int isspace(int ch){
     return ch == ' '  || ch == '\t' || ch == '\n' ||
            ch == '\v' || ch == '\f' || ch == '\r';
 }
-void parse_args(char *cache, int *argc, char *(*argv)[TASK_NAME_MAXLEN+1]){
+static void parse_args(char *cache, int *argc, char *(*argv)[TASK_NAME_MAXLEN+1]){
     *argc=0;
     int parsing=0;
     for(int head=0;cache[head];head++){
@@ -28,7 +31,7 @@ void parse_args(char *cache, int *argc, char *(*argv)[TASK_NAME_MAXLEN+1]){
     }
     (*argv)[*argc]=(char *)0;
 }
-pcb_t *do_parse_and_exec_and_wait(char *cache, pcb_t *waiton){
+static pcb_t *do_parse_and_exec_and_wait(char *cache, pcb_t *waiton){
     int argc;
     char *argv[TASK_NAME_MAXLEN+1];
     parse_args(cache, &argc, &argv);
@@ -64,112 +67,176 @@ pcb_t *do_parse_and_exec_and_wait(char *cache, pcb_t *waiton){
     return wait_end ? ret : 0;
 }
 
-// return entrypoint for app and 0 for bat
-uint64_t load_task_img(int taskid)
-{
-    /**
-     * TODO:
-     * 1. [p1-task3] load task from image via task id, and return its entrypoint
-     * 2. [p1-task4] load task via task name, thus the arg should be 'char *taskname'
-     */
-    
-    // for [p1-task3]
-    /* bios_sdread(0x52000000 + 0x10000 * taskid, 15, 1 + 15 * (taskid + 1));
-     * return 0x52000000 + 0x10000 * taskid;
-     */
+// return entrypoint(va)
+uint64_t load_app_img(int taskid, uintptr_t pgdir){
+    assert(taskid>=0 && taskid<task_num);
+    assert(tasks[taskid].type==app);
 
-    if(!(taskid>=0&&taskid<task_num)){
-        // no such taskid
-        return 0;
-    }
+    // if (!tasks[taskid].loaded){
+    //     tasks[taskid].loaded = 1;
+    //     // for [p1-task4]
+    //     uint32_t block_id = tasks[taskid].offset/SECTOR_SIZE;
+    //     uint32_t block_num = NBYTES2SEC(tasks[taskid].offset%SECTOR_SIZE + tasks[taskid].size);
+    //     uint64_t mem_addr = tasks[taskid].entrypoint; //0x52000000 + 0x10000 * taskid;
+    //     bios_sdread(mem_addr, block_num, block_id);
+    //     // shift task entrypoint to the right address
+    //     memcpy((uint8_t *)mem_addr, (uint8_t *)(mem_addr + tasks[taskid].offset%SECTOR_SIZE), tasks[taskid].size);
+    //     return mem_addr;
+    // } else {
+    //     // for [p3-task3]
+    //     // if already loaded, don't load again
+    //     return tasks[taskid].entrypoint;
+    // }
 
-    if(tasks[taskid].type == app){
-        if (!tasks[taskid].loaded){
-            tasks[taskid].loaded = 1;
-            // for [p1-task4]
-            uint32_t block_id = tasks[taskid].offset/SECTOR_SIZE;
-            uint32_t block_num = NBYTES2SEC(tasks[taskid].offset%SECTOR_SIZE + tasks[taskid].size);
-            uint64_t mem_addr = tasks[taskid].entrypoint; //0x52000000 + 0x10000 * taskid;
-            bios_sdread(mem_addr, block_num, block_id);
-            // shift task entrypoint to the right address
-            memcpy((uint8_t *)mem_addr, (uint8_t *)(mem_addr + tasks[taskid].offset%SECTOR_SIZE), tasks[taskid].size);
-            return mem_addr;
-        } else {
-            // for [p3-task3]
-            // if already loaded, don't load again
-            return tasks[taskid].entrypoint;
-        }
-    } else { // tasks[taskid].type == bat
-        // for [p3-task3]
-        // todo: considering the bug that subcore cannot sd_read, we must ensure only the main core can exec bat
-        // currently, it has possibility of malfunctioning if bat calls bat
+    // for [p4-task1]
 
-        // load and excute batch for [p1-task5]
+    uint32_t block_id = tasks[taskid].offset/SECTOR_SIZE;
+    uint32_t block_num = NBYTES2SEC(tasks[taskid].offset%SECTOR_SIZE + tasks[taskid].size);
+    uint64_t mem_va = tasks[taskid].entrypoint;
+    int needed_page_num = (tasks[taskid].memsz - 1 + PAGE_SIZE) / PAGE_SIZE;
+    uint64_t offset_in_sector = tasks[taskid].offset%SECTOR_SIZE;
+    uint64_t mem_kva, mem_kva_last=0;
 
-        printk("\n===Reading batch from image...===\n");
+    // the `<=` in the next line MUST be preserved !!
+    // the extra page is used to transfer offseted data
+    // due to the lack of padding / alignment in img
+    for(int i=0;i<=needed_page_num;i++){
+        // alloc a new page
+        mem_kva = alloc_page_helper(mem_va, pgdir);
 
-        // read batch content
-        // fixme: the buffer is too big that shell's stack ~~may~~ overflow
-        char bat_cache[1024]; //TODO: what if bat.txt is too big
-        uint32_t bat_size = tasks[taskid].size;
-        uint32_t bat_off = tasks[taskid].offset;
-        uint16_t bat_block_id = bat_off/SECTOR_SIZE;
-        uint16_t bat_block_num = NBYTES2SEC(bat_off%SECTOR_SIZE + bat_size);
-        bios_sdread((unsigned int)(uint64_t)bat_cache, bat_block_num, bat_block_id);
-        memcpy((uint8_t *)bat_cache, (uint8_t *)(uint64_t)(bat_cache + bat_off%SECTOR_SIZE), bat_size);
-        printk(bat_cache);
-        printk("\n===Finish reading!===\n");
+        // check if to init
+        if(block_num){
+            // read sd
+            unsigned int read_block_num = block_num>PAGE_SIZE/SECTOR_SIZE ? PAGE_SIZE/SECTOR_SIZE : block_num;
+            // print_va_at_pgdir(mem_kva, current_running_of[get_current_cpu_id()]->pgdir);
+            bios_sdread(
+                kva2pa(mem_kva), 
+                read_block_num,
+                block_id
+            );
 
-        printk("\n");
-
-        //excute batch
-        printk("\n===Now excute batch!===\n");
-        int bat_iter = 0;
-        int bat_iter_his = 0;
-        pcb_t *pcb_hist = 0;
-        while(bat_cache[bat_iter]){
-            if(bat_cache[bat_iter]=='\n'){
-                bat_cache[bat_iter]='\0';
-                // excute_task_img_via_name(bat_cache + bat_iter_his);
-                // for [p3-task1]
-                pcb_hist = do_parse_and_exec_and_wait(bat_cache+bat_iter_his, pcb_hist);
-                bat_iter_his=bat_iter+1;
+            // shift the fisrt few bytes of the new page to the last page
+            if(mem_kva_last){
+                memcpy(
+                    (uint8_t *)(mem_kva_last + PAGE_SIZE - offset_in_sector), 
+                    (uint8_t *)(mem_kva),
+                    offset_in_sector
+                );
             }
-            bat_iter++;
-        }
-        // excute_task_img_via_name(bat_cache + bat_iter_his);
-        // for [p3-task1]
-        do_parse_and_exec_and_wait(bat_cache+bat_iter_his, pcb_hist);
-        printk("===All tasks in batch are excuted!===\n");
 
-        printk("\n");
+            // shift task entrypoint to the right address
+            memcpy(
+                (uint8_t *)(mem_kva), 
+                (uint8_t *)(mem_kva + offset_in_sector), 
+                PAGE_SIZE - offset_in_sector
+            );
+
+            // prepare for the next read
+            block_id += read_block_num;
+            block_num -= read_block_num;
+        }
+
+        mem_va += PAGE_SIZE;
+        mem_kva_last = mem_kva;
     }
     
-    return 0;
+    return tasks[taskid].entrypoint;
 }
 
-uint64_t load_task_img_via_name(char *taskname){
+// on success, return entrypoint(va); else, return -1
+uint64_t load_app_img_via_name(char *taskname, uintptr_t pgdir){
+    int taskid = find_task_named(taskname);
+    if(taskid!=-1 && tasks[taskid].type==app){
+        return load_app_img(taskid, pgdir);
+    }else{
+        return -1;
+    }
+}
+
+int load_bat_img(int taskid){ // todo: update this for [p4-task1]
+    assert(taskid>=0 && taskid<task_num);
+    assert(tasks[taskid].type==bat);
+
+    // for [p3-task3]
+    // todo: considering the bug that subcore cannot sd_read, we must ensure only the main core can exec bat
+    // currently, it has possibility of malfunctioning if sub cores call bat
+
+    // load and excute batch for [p1-task5]
+
+    printk("\n===Reading batch from image...===\n");
+
+    // read batch content
+    // fixme: the buffer is too big that shell's stack ~~may~~ overflow
+    char bat_cache[1024]; //TODO: what if bat.txt is too big
+    uint32_t bat_size = tasks[taskid].size;
+    uint32_t bat_off = tasks[taskid].offset;
+    uint16_t bat_block_id = bat_off/SECTOR_SIZE;
+    uint16_t bat_block_num = NBYTES2SEC(bat_off%SECTOR_SIZE + bat_size);
+    bios_sdread((unsigned int)(uint64_t)bat_cache, bat_block_num, bat_block_id);
+    memcpy((uint8_t *)bat_cache, (uint8_t *)(uint64_t)(bat_cache + bat_off%SECTOR_SIZE), bat_size);
+    printk(bat_cache);
+    printk("\n===Finish reading!===\n");
+
+    printk("\n");
+
+    //excute batch
+    printk("\n===Now excute batch!===\n");
+    int bat_iter = 0;
+    int bat_iter_his = 0;
+    pcb_t *pcb_hist = 0;
+    while(bat_cache[bat_iter]){
+        if(bat_cache[bat_iter]=='\n'){
+            bat_cache[bat_iter]='\0';
+            // excute_task_img_via_name(bat_cache + bat_iter_his);
+            // for [p3-task1]
+            pcb_hist = do_parse_and_exec_and_wait(bat_cache+bat_iter_his, pcb_hist);
+            bat_iter_his=bat_iter+1;
+        }
+        bat_iter++;
+    }
+    // excute_task_img_via_name(bat_cache + bat_iter_his);
+    // for [p3-task1]
+    do_parse_and_exec_and_wait(bat_cache+bat_iter_his, pcb_hist);
+    printk("===All tasks in batch are excuted!===\n");
+
+    printk("\n");
+}
+
+// on fail, return -1
+int load_bat_img_via_name(char *taskname){
+    int taskid = find_task_named(taskname);
+    if(taskid!=-1 && tasks[taskid].type==bat){
+        return load_bat_img(taskid);
+    }else{
+        return -1;
+    }
+}
+
+
+// find task named `taskname` in tasks array
+// on found, return taskid; else, return -1
+int find_task_named(char *taskname){
     int task_iter;
     // compare task name one by one
     for(task_iter=0; task_iter<task_num; task_iter++){
         if(strcmp(tasks[task_iter].name, taskname)==0){
-            return load_task_img(task_iter);
+            return task_iter;
         }
     }
     if(task_iter==task_num){
         if(*taskname=='\0'){
-            printk("Task name empty!\n");
+            printk("[kernel] Task name empty!\n");
         }else{
-            printk("No task named ");
+            printk("[kernel] No task named ");
             printk(taskname);
             printk("!\n");
         }
     }
-    return 0;
+    return -1;
 }
 
-void excute_task_img_via_name(char *taskname){
-    uint64_t func;
-    if((func=load_task_img_via_name(taskname)))
-        ((void (*)())func)();
-}
+// void excute_task_img_via_name(char *taskname){
+//     uint64_t func;
+//     if((func=load_task_img_via_name(taskname)))
+//         ((void (*)())func)();
+// }

@@ -16,8 +16,10 @@ void thread_create(tid_t *tidptr, uint64_t entrypoint, long a0, long a1, long a2
     // pcb[i].pid = i;
     // pcb[i].status = TASK_READY;
 
-    ptr_t kernel_stack = allocKernelPage(1) + PAGE_SIZE;
-    ptr_t user_stack = allocUserPage(1) + PAGE_SIZE;
+    // todo: alloc stack page for thread
+
+    ptr_t kernel_stack;// = allocKernelPage(1) + PAGE_SIZE;
+    ptr_t user_stack;// = allocUserPage(1) + PAGE_SIZE;
 
     tcb_t *tcb = (tcb_t *)kernel_stack;
     kernel_stack -= sizeof(tcb_t); // todo: stack pointer should be 128 bit aligned

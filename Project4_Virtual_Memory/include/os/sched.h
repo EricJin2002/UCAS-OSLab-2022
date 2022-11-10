@@ -82,7 +82,7 @@ typedef struct pcb
     list_head wait_list;
 
     /* pgdir */
-    uintptr_t pgdir;
+    uintptr_t pgdir; // stored as kva
 
     /* process id */
     pid_t pid;
@@ -181,7 +181,8 @@ extern pid_t do_getpid();
 extern void do_task_show();
 
 // for [p3-task1]
-extern regs_context_t *init_pcb_via_name(int i, uint64_t entrypoint, char *taskname);
+extern regs_context_t *init_pcb_via_id(int i, int taskid);
+extern regs_context_t *init_pcb_via_name(int i, char *taskname);
 
 // for [p3-task3]
 extern int taskset_via_name(int mask, char *name, int argc, char **argv);

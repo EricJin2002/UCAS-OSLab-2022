@@ -14,6 +14,11 @@ ENTRY(_start)
   csrw CSR_SIE, zero
   csrw CSR_SIP, zero
 
+  // for [p4-task1]
+  // enable SUM
+  li t0, SR_SUM
+  csrrs t0, CSR_SSTATUS, t0
+
   // for [p3-task3]
   // only main core will clear BSS
   csrr t0, CSR_MHARTID

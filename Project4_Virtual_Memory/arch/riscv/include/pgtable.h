@@ -2,6 +2,7 @@
 #define PGTABLE_H
 
 #include <type.h>
+#include <printk.h>
 
 #define SATP_MODE_SV39 8
 #define SATP_MODE_SV48 9
@@ -133,7 +134,89 @@ static inline void clear_pgdir(uintptr_t pgdir_addr)
 static inline uintptr_t get_kva_of(uintptr_t va, uintptr_t pgdir_va)
 {
     // TODO: [P4-task1] (todo if you need)
+    va &= VA_MASK;
+    uint64_t vpn2 = va >> (NORMAL_PAGE_SHIFT + PPN_BITS + PPN_BITS);
+    uint64_t vpn1 = (vpn2 << PPN_BITS) ^ (va >> (NORMAL_PAGE_SHIFT + PPN_BITS));
+    uint64_t vpn0 = (vpn2 << (PPN_BITS + PPN_BITS)) ^ (vpn1 << PPN_BITS) ^ (va >> (NORMAL_PAGE_SHIFT));
+
+    PTE *pgd = (PTE *)pgdir_va;
+    if(!get_attribute(pgd[vpn2], _PAGE_PRESENT)){
+        // no such entry
+        return 0;
+    }else if(get_attribute(pgd[vpn2], _PAGE_READ | _PAGE_WRITE | _PAGE_EXEC)){
+        // pa found
+        return pa2kva(get_pa(pgd[vpn2]) + (va & ((1lu << NORMAL_PAGE_SHIFT) - 1)));
+    }
+
+    PTE *pmd = (PTE *)pa2kva(get_pa(pgd[vpn2]));
+    if(!get_attribute(pmd[vpn1], _PAGE_PRESENT)){
+        // no such entry
+        return 0;
+    }else if(get_attribute(pmd[vpn1], _PAGE_READ | _PAGE_WRITE | _PAGE_EXEC)){
+        // pa found
+        return pa2kva(get_pa(pmd[vpn1]) + (va & ((1lu << NORMAL_PAGE_SHIFT) - 1)));
+    }
+
+    PTE *pte = (PTE *)pa2kva(get_pa(pmd[vpn1]));
+    if(!get_attribute(pte[vpn0], _PAGE_PRESENT)){
+        // no such entry
+        return 0;
+    }else if(get_attribute(pte[vpn0], _PAGE_READ | _PAGE_WRITE | _PAGE_EXEC)){
+        // pa found
+        return pa2kva(get_pa(pte[vpn0]) + (va & ((1lu << NORMAL_PAGE_SHIFT) - 1)));
+    }
+
+    return 0;
 }
 
+static inline void print_va_at_pgdir(uintptr_t va, uintptr_t pgdir_va){
+    va &= VA_MASK;
+    uint64_t vpn2 = va >> (NORMAL_PAGE_SHIFT + PPN_BITS + PPN_BITS);
+    uint64_t vpn1 = (vpn2 << PPN_BITS) ^ (va >> (NORMAL_PAGE_SHIFT + PPN_BITS));
+    uint64_t vpn0 = (vpn2 << (PPN_BITS + PPN_BITS)) ^ (vpn1 << PPN_BITS) ^ (va >> (NORMAL_PAGE_SHIFT));
+
+    printl("va    %lx\n", va);
+    printl("vpn2  %lx\n", vpn2);
+    printl("vpn1  %lx\n", vpn1);
+    printl("vpn0  %lx\n", vpn0);
+
+    PTE *pgd = (PTE *)pgdir_va;
+    if(!get_attribute(pgd[vpn2], _PAGE_PRESENT)){
+        // no such entry
+        printl("pgd[vpn2] invalid!\n");
+        return;
+    }else if(get_attribute(pgd[vpn2], _PAGE_READ | _PAGE_WRITE | _PAGE_EXEC)){
+        // pa found
+        printl("pgd[vpn2] found pa %lx!\n",
+            get_pa(pgd[vpn2]) + (va & ((1lu << NORMAL_PAGE_SHIFT) - 1)));
+        return;
+    }
+
+    PTE *pmd = (PTE *)pa2kva(get_pa(pgd[vpn2]));
+    if(!get_attribute(pmd[vpn1], _PAGE_PRESENT)){
+        // no such entry
+        printl("pmd[vpn1] invalid!\n");
+        return;
+    }else if(get_attribute(pmd[vpn1], _PAGE_READ | _PAGE_WRITE | _PAGE_EXEC)){
+        // pa found
+        printl("pmd[vpn1] found pa %lx!\n",
+            get_pa(pmd[vpn1]) + (va & ((1lu << NORMAL_PAGE_SHIFT) - 1)));
+        return;
+    }
+
+    PTE *pte = (PTE *)pa2kva(get_pa(pmd[vpn1]));
+    if(!get_attribute(pte[vpn0], _PAGE_PRESENT)){
+        // no such entry
+        printl("pte[vpn0] invalid!\n");
+        return;
+    }else if(get_attribute(pte[vpn0], _PAGE_READ | _PAGE_WRITE | _PAGE_EXEC)){
+        // pa found
+        printl("pte[vpn0] found pa %lx!\n",
+            get_pa(pte[vpn0]) + (va & ((1lu << NORMAL_PAGE_SHIFT) - 1)));
+        return;
+    }
+
+    return;
+}
 
 #endif  // PGTABLE_H

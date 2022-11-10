@@ -142,7 +142,9 @@ static void create_image(int nfiles, char *files[])
             }
 
             // for [p4-task1]
-            taskinfo[taskidx].memsz += phdr.p_memsz;
+            if(taskidx >= 0){
+                taskinfo[taskidx].memsz += phdr.p_memsz;
+            }
         }
 
         // for [p1-task4]

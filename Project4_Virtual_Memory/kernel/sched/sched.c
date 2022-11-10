@@ -125,6 +125,18 @@ void do_scheduler(void)
 
     // unlock_kernel();
 
+    printl("[before set_satp]\n");
+    print_va_at_pgdir(0x1001e, current_running_of[get_current_cpu_id()]->pgdir);
+    printl("\n");
+
+    // for [p4-task1]
+    set_satp(
+        SATP_MODE_SV39, 
+        current_running_of[get_current_cpu_id()]->pid,
+        kva2pa(current_running_of[get_current_cpu_id()]->pgdir) >> NORMAL_PAGE_SHIFT
+    );
+    local_flush_tlb_all();
+
     // TODO: [p2-task1] switch_to current_running
     // printl("switching from %d to %d\n\r", prev_running->pid, current_running->pid);
     switch_to(prev_running, current_running_of[get_current_cpu_id()]);
@@ -207,7 +219,7 @@ regs_context_t *init_pcb_stack(
         (regs_context_t *)(kernel_stack - sizeof(regs_context_t));
 
     pt_regs->sepc       = (reg_t) entry_point;
-    pt_regs->sstatus    = (reg_t) (SR_SPIE & ~SR_SPP);
+    pt_regs->sstatus    = (reg_t) ((SR_SPIE & ~SR_SPP) | SR_SUM);
     pt_regs->regs[2]    = (reg_t) user_stack;   //sp
     pt_regs->regs[4]    = (reg_t) pcb;          //tp
 
@@ -229,11 +241,13 @@ regs_context_t *init_pcb_stack(
     return pt_regs;
 }
 
-// init pcb[i] by loading task named name
-regs_context_t *init_pcb_via_name(int i, uint64_t entrypoint, char *taskname){
+// init pcb[i] by loading app with id `taskid`
+regs_context_t *init_pcb_via_id(int i, int taskid){
     assert(pcb[i].status==TASK_UNUSED);
+    assert(taskid>=0 && taskid<task_num);
+    assert(tasks[taskid].type==app);
 
-    strncpy(pcb[i].name,taskname,32);
+    strncpy(pcb[i].name,tasks[taskid].name,32);
 
     pcb[i].pid = process_id++;
     pcb[i].status = TASK_READY;
@@ -252,25 +266,47 @@ regs_context_t *init_pcb_via_name(int i, uint64_t entrypoint, char *taskname){
     pcb[i].tcb_list.prev = &pcb[i].tcb_list;
     pcb[i].tcb_list.next = &pcb[i].tcb_list;
 
-    regs_context_t *pt_regs;
-    if(!strcmp(taskname,"shell")){
-        pt_regs = init_pcb_stack(
-            allocKernelPage(2) + 2*PAGE_SIZE,
-            allocUserPage(2) + 2*PAGE_SIZE,
-            entrypoint,
-            pcb+i
-        );   
+    // for [p4-task1]
+    // alloc a new pgdir
+    pcb[i].pgdir = allocPage(1);
+    clear_pgdir(pcb[i].pgdir);
+    share_pgtable(pcb[i].pgdir, current_running_of[get_current_cpu_id()]->pgdir);
+    
+    printl("[after share_pgtable]\n");
+    print_va_at_pgdir(pa2kva(PGDIR_PA), pcb[i].pgdir);
+    printl("\n");
+
+    // alloc kernel stack
+    ptr_t kernel_stack;
+    if(!strcmp(tasks[taskid].name,"shell")){
+        kernel_stack = allocPage(2) + 2*PAGE_SIZE;
     }else{
-        pt_regs = init_pcb_stack(
-            allocKernelPage(1) + PAGE_SIZE,
-            allocUserPage(1) + PAGE_SIZE,
-            entrypoint,
-            pcb+i
-        );
+        kernel_stack = allocPage(1) + PAGE_SIZE;
     }
+
+    // alloc user stack
+    ptr_t user_stack = USER_STACK_ADDR;
+    alloc_page_helper(USER_STACK_ADDR-PAGE_SIZE, pcb[i].pgdir);
+
+    // alloc and load task by reading sd card
+    ptr_t entrypoint = load_app_img(taskid, pcb[i].pgdir);
+
+    // init pcb stack
+    regs_context_t *pt_regs = init_pcb_stack(
+        kernel_stack,
+        user_stack,
+        entrypoint,
+        pcb+i
+    );
+    
     list_push(&ready_queue, &pcb[i].list);
 
     return pt_regs;
+}
+
+// init pcb[i] by loading app named `taskname`
+regs_context_t *init_pcb_via_name(int i, char *taskname){
+    return init_pcb_via_id(i, find_task_named(taskname));
 }
 
 #ifdef S_CORE
@@ -281,36 +317,47 @@ pid_t do_exec(char *name, int argc, char *argv[]){
     for(int i=1;i<NUM_MAX_TASK;i++){
         if(pcb[i].status==TASK_UNUSED){
 
-#ifdef S_CORE
-            uint64_t entrypoint = load_task_img(id);
-#else
-            uint64_t entrypoint = load_task_img_via_name(name);
-#endif
+// #ifdef S_CORE
+//             uint64_t entrypoint = load_task_img(id);
+// #else
+//             uint64_t entrypoint = load_task_img_via_name(name);
+// #endif
+// 
+//             if(!entrypoint){
+//                 // is bat or no such task
+//                 return 0;
+//             }
 
-            if(!entrypoint){
-                // is bat or no such task
+            int taskid = find_task_named(name);
+            if(taskid==-1){
+                return 0;
+            }
+            if(tasks[taskid].type==bat){
+                printk("[kernel] Not support to run BAT yet!\n");
                 return 0;
             }
 
             printl("exec %s\n",name);
 
 #ifdef S_CORE
-            regs_context_t *pt_regs = init_pcb_via_name(i, entrypoint, tasks[id].name);
+            regs_context_t *pt_regs = init_pcb_via_id(i, taskid);
             pt_regs->regs[10] = argc;   //a0
             pt_regs->regs[11] = arg0;   //a1
             pt_regs->regs[12] = arg1;   //a2
             pt_regs->regs[13] = arg2;   //a3
 #else
-            regs_context_t *pt_regs = init_pcb_via_name(i, entrypoint, name);
+            regs_context_t *pt_regs = init_pcb_via_id(i, taskid);
             ptr_t user_sp_origin = pcb[i].user_sp;
-            uint64_t *argv_base = (uint64_t *)(user_sp_origin-8*(argc+1));
-            ptr_t user_sp_now = (ptr_t)argv_base;
-            for(int i=0;i<argc;i++){
-                user_sp_now -= strlen(argv[i])+1;
-                strcpy((char *)user_sp_now, argv[i]);
-                argv_base[i] = user_sp_now;
+            ptr_t user_sp_now = user_sp_origin-8*(argc+1);
+            ptr_t argv_base = user_sp_now;
+
+            uint64_t *argv_base_kva = (uint64_t *)(get_kva_of(argv_base, pcb[i].pgdir));
+            for(int j=0;j<argc;j++){
+                user_sp_now -= strlen(argv[j])+1;
+                strcpy((char *)get_kva_of(user_sp_now, pcb[i].pgdir), argv[j]);
+                argv_base_kva[j] = user_sp_now;
             }
-            argv_base[argc] = (uint64_t)0;
+            argv_base_kva[argc] = (uint64_t)0;
 
             // alignment
             while(user_sp_now%16){
