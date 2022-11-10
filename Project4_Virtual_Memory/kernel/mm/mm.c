@@ -32,6 +32,34 @@ ptr_t allocPage(int numPage)
     return ret;
 }
 
+// for [p4]
+LIST_HEAD(free_pf_pool);
+pf_t pfs[NUM_MAX_PAGEFRAME];
+
+void init_pageframes(){
+    for(int i=0;i<NUM_MAX_PAGEFRAME;i++){
+        pfs[i].kva = allocPage(1);
+        pfs[i].inv_pte_addr = 0;
+        pfs[i].owner = -1;
+        list_push(&free_pf_pool, &pfs[i].list);
+    }
+}
+
+ptr_t alloc_page_from_pool(PTE *inv_pte_addr, pcb_t *owner_pcb){
+    if(list_is_empty(&free_pf_pool)){
+        // todo: swap out code pages
+
+        assert(0);  // temporarily
+    }
+    pf_t *new_pf = LIST2PF(list_pop(&free_pf_pool));
+    new_pf->inv_pte_addr = inv_pte_addr;
+    new_pf->owner = owner_pcb->pid;
+    list_push(&owner_pcb->pf_list, &new_pf->list);
+    // pf_list_print(&owner_pcb->pf_list);
+    // printl("\n");
+    return new_pf->kva;
+}
+
 // NOTE: Only need for S-core to alloc 2MB large page
 #ifdef S_CORE
 static ptr_t largePageMemCurr = LARGE_PAGE_FREEMEM;
@@ -94,7 +122,7 @@ void share_pgtable(uintptr_t dest_pgdir, uintptr_t src_pgdir)
 /* allocate physical page for `va`, mapping it into `pgdir`,
    return the kernel virtual address for the page
    */
-uintptr_t alloc_page_helper(uintptr_t va, uintptr_t pgdir)
+uintptr_t alloc_page_helper(uintptr_t va, /*uintptr_t pgdir*/pcb_t *owner_pcb)
 {
     // TODO [P4-task1] alloc_page_helper:
     va &= VA_MASK;
@@ -102,11 +130,14 @@ uintptr_t alloc_page_helper(uintptr_t va, uintptr_t pgdir)
     uint64_t vpn1 = (vpn2 << PPN_BITS) ^ (va >> (NORMAL_PAGE_SHIFT + PPN_BITS));
     uint64_t vpn0 = (vpn2 << (PPN_BITS + PPN_BITS)) ^ (vpn1 << PPN_BITS) ^ (va >> (NORMAL_PAGE_SHIFT));
 
-    PTE *pgd = (PTE *)pgdir;
+    PTE *pgd = (PTE *)owner_pcb->pgdir;
     // if(!pgd[vpn2]){
     if(!get_attribute(pgd[vpn2], _PAGE_PRESENT)){
         // alloc a new page directory
-        set_pfn(&pgd[vpn2], kva2pa(allocPage(1))>>NORMAL_PAGE_SHIFT);
+        set_pfn(&pgd[vpn2], kva2pa(
+            // allocPage(1)
+            alloc_page_from_pool(&pgd[vpn2], owner_pcb)
+        )>>NORMAL_PAGE_SHIFT);
         set_attribute(&pgd[vpn2], _PAGE_PRESENT | _PAGE_USER);
         clear_pgdir(pa2kva(get_pa(pgd[vpn2])));
     }
@@ -115,7 +146,10 @@ uintptr_t alloc_page_helper(uintptr_t va, uintptr_t pgdir)
     // if(!pmd[vpn1]){
     if(!get_attribute(pmd[vpn1], _PAGE_PRESENT)){
         // alloc a new page directory
-        set_pfn(&pmd[vpn1], kva2pa(allocPage(1))>>NORMAL_PAGE_SHIFT);
+        set_pfn(&pmd[vpn1], kva2pa(
+            // allocPage(1)
+            alloc_page_from_pool(&pmd[vpn1], owner_pcb)
+        )>>NORMAL_PAGE_SHIFT);
         set_attribute(&pmd[vpn1], _PAGE_PRESENT | _PAGE_USER);
         clear_pgdir(pa2kva(get_pa(pmd[vpn1])));
     }
@@ -124,14 +158,17 @@ uintptr_t alloc_page_helper(uintptr_t va, uintptr_t pgdir)
     // if(!pte[vpn0]){
     if(!get_attribute(pte[vpn0], _PAGE_PRESENT)){
         // alloc a new page directory
-        set_pfn(&pte[vpn0], kva2pa(allocPage(1))>>NORMAL_PAGE_SHIFT);
+        set_pfn(&pte[vpn0], kva2pa(
+            // allocPage(1)
+            alloc_page_from_pool(&pte[vpn0], owner_pcb)
+        )>>NORMAL_PAGE_SHIFT);
         set_attribute(&pte[vpn0], _PAGE_PRESENT | _PAGE_READ | _PAGE_WRITE | _PAGE_EXEC | 
                                     _PAGE_USER | _PAGE_ACCESSED | _PAGE_DIRTY);
         // clear_pgdir(pa2kva(get_pa(pte[vpn0]))); // Must we clear here ?
     }
 
     printl("[in alloc_page_helper]\n");
-    print_va_at_pgdir(va, pgdir);
+    print_va_at_pgdir(va, owner_pcb->pgdir);
     printl("\n");
     return pa2kva(get_pa(pte[vpn0]));
 }

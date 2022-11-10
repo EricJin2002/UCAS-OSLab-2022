@@ -133,7 +133,7 @@ static inline void clear_pgdir(uintptr_t pgdir_addr)
  */
 static inline uintptr_t get_kva_of(uintptr_t va, uintptr_t pgdir_va)
 {
-    // TODO: [P4-task1] (todo if you need)
+    // TODO: [P4-task1]
     va &= VA_MASK;
     uint64_t vpn2 = va >> (NORMAL_PAGE_SHIFT + PPN_BITS + PPN_BITS);
     uint64_t vpn1 = (vpn2 << PPN_BITS) ^ (va >> (NORMAL_PAGE_SHIFT + PPN_BITS));

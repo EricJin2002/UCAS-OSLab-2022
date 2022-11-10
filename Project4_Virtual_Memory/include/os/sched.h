@@ -74,12 +74,15 @@ typedef struct pcb
     // NOTE: this order must be preserved, which is defined in regs.h!!
     reg_t kernel_sp;
     reg_t user_sp;
-    ptr_t kernel_stack_base; // todo: add pcb-reuse logic
+    ptr_t kernel_stack_base;
     ptr_t user_stack_base;
 
     /* previous, next pointer */
     list_node_t list;
     list_head wait_list;
+
+    // for [p4]
+    list_head pf_list;
 
     /* pgdir */
     uintptr_t pgdir; // stored as kva

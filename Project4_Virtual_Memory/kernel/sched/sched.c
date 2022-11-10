@@ -51,8 +51,8 @@ void do_scheduler(void)
     check_sleeping();
 
     // TODO: [p2-task1] Modify the current_running pointer.
-    printl("[core %d] before scheduler: ",get_current_cpu_id());pcb_list_print(&ready_queue);
-    printl("[core %d] enter with pcb [status %s]\n",get_current_cpu_id(),task_status_str[current_running_of[get_current_cpu_id()]->status]);
+    // printl("[core %d] before scheduler: ",get_current_cpu_id());pcb_list_print(&ready_queue);
+    // printl("[core %d] enter with pcb [status %s]\n",get_current_cpu_id(),task_status_str[current_running_of[get_current_cpu_id()]->status]);
 
     pcb_t *prev_running = current_running_of[get_current_cpu_id()];
     if(!prev_running->pid){
@@ -113,21 +113,21 @@ void do_scheduler(void)
     //     unlock_kernel();
     // }
 
-    printl("[core %d] switching from [pid %d name %s] to [pid %d name %s]\n",
-        get_current_cpu_id(),
-        prev_running->pid,
-        prev_running->name,
-        current_running_of[get_current_cpu_id()]->pid,
-        current_running_of[get_current_cpu_id()]->name
-    );
-    printl("[core %d] after  scheduler: ",get_current_cpu_id());pcb_list_print(&ready_queue);
-    printl("\n");
+    // printl("[core %d] switching from [pid %d name %s] to [pid %d name %s]\n",
+    //     get_current_cpu_id(),
+    //     prev_running->pid,
+    //     prev_running->name,
+    //     current_running_of[get_current_cpu_id()]->pid,
+    //     current_running_of[get_current_cpu_id()]->name
+    // );
+    // printl("[core %d] after  scheduler: ",get_current_cpu_id());pcb_list_print(&ready_queue);
+    // printl("\n");
 
     // unlock_kernel();
 
-    printl("[before set_satp]\n");
-    print_va_at_pgdir(0x1001e, current_running_of[get_current_cpu_id()]->pgdir);
-    printl("\n");
+    // printl("[before set_satp]\n");
+    // print_va_at_pgdir(0x1001e, current_running_of[get_current_cpu_id()]->pgdir);
+    // printl("\n");
 
     // for [p4-task1]
     set_satp(
@@ -247,6 +247,12 @@ regs_context_t *init_pcb_via_id(int i, int taskid){
     assert(taskid>=0 && taskid<task_num);
     assert(tasks[taskid].type==app);
 
+    // for [p4-task3]
+    assert(list_is_empty(&pcb[i].pf_list));
+
+    // for [p3-task1]
+    assert(list_is_empty(&pcb[i].wait_list));
+
     strncpy(pcb[i].name,tasks[taskid].name,32);
 
     pcb[i].pid = process_id++;
@@ -256,10 +262,6 @@ regs_context_t *init_pcb_via_id(int i, int taskid){
     pcb[i].running_core = -1;
     // inherit mask from its father
     pcb[i].mask = current_running_of[get_current_cpu_id()]->mask;
-
-    // for [p3-task1]
-    pcb[i].wait_list.prev = &pcb[i].wait_list;
-    pcb[i].wait_list.next = &pcb[i].wait_list;
 
     // for [p2-task5]
     pcb[i].tid = 0;
@@ -281,6 +283,8 @@ regs_context_t *init_pcb_via_id(int i, int taskid){
     print_va_at_pgdir(pa2kva(PGDIR_PA), pcb[i].pgdir);
     printl("\n");
 
+    // note: the init of pcb[i].pid & pcb[i].pgdir must be put above
+
     // alloc kernel stack
     ptr_t kernel_stack;
     if(!pcb[i].kernel_stack_base){
@@ -298,14 +302,15 @@ regs_context_t *init_pcb_via_id(int i, int taskid){
     }
 
     // alloc user stack
-    // todo: how to reuse user_stack page
-    // note: if reused, remember to map va to pa in pgdir
     ptr_t user_stack;
     user_stack = USER_STACK_ADDR;
-    alloc_page_helper(USER_STACK_ADDR-PAGE_SIZE, pcb[i].pgdir);
+    alloc_page_helper(USER_STACK_ADDR-PAGE_SIZE, pcb+i);
 
     // alloc and load task by reading sd card
-    ptr_t entrypoint = load_app_img(taskid, pcb[i].pgdir);
+    ptr_t entrypoint = load_app_img(taskid, pcb+i);
+
+    pf_list_print(&pcb[i].pf_list);
+    printl("\n");
 
     // init pcb stack
     regs_context_t *pt_regs = init_pcb_stack(
@@ -433,6 +438,13 @@ int do_kill(pid_t pid){
                         do_mutex_lock_release_compulsorily(j);
                     }
                     spin_lock_release(&mlocks[j].lock);
+                }
+
+                // recycle pages
+                while((node=list_pop(&pcb[i].pf_list))){
+                    LIST2PF(node)->inv_pte_addr = 0;
+                    LIST2PF(node)->owner = -1;
+                    list_push(&free_pf_pool, node);
                 }
 
                 // pcb[i].status=TASK_EXITED;

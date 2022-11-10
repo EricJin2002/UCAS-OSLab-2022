@@ -2,6 +2,7 @@
 #define __INCLUDE_LOADER_H__
 
 #include <type.h>
+#include <os/sched.h>
 
 // for [p1-task4]
 // copied from createimage.c
@@ -14,8 +15,8 @@
 // uint64_t load_task_img_via_name(char *taskname);
 // void excute_task_img_via_name(char *taskname);
 
-uint64_t load_app_img(int taskid, uintptr_t pgdir);
-uint64_t load_app_img_via_name(char *taskname, uintptr_t pgdir);
+uint64_t load_app_img(int taskid, pcb_t *owener_pcb);
+uint64_t load_app_img_via_name(char *taskname, pcb_t *owener_pcb);
 int load_bat_img(int taskid);
 int load_bat_img_via_name(char *taskname);
 int find_task_named(char *taskname);

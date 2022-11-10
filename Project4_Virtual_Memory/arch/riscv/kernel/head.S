@@ -43,7 +43,9 @@ clear_bss_done:
   // for [p3-task3]
   csrr t0, CSR_MHARTID
   beq t0, zero, init_sp_done
-  li t1, -PAGE_SIZE
+  # li t1, -PAGE_SIZE
+  li t1, 0x100000 // stack starts from 0x50600000 for sub core
+                  // note: this implies sub core num <= 5
 init_sp:
   add sp, sp, t1
   addi t0, t0, -1

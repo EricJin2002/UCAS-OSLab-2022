@@ -79,7 +79,7 @@ static pcb_t *do_parse_and_exec_and_wait(char *cache, pcb_t *waiton){
 }
 
 // return entrypoint(va)
-uint64_t load_app_img(int taskid, uintptr_t pgdir){
+uint64_t load_app_img(int taskid, pcb_t *owener_pcb){
     assert(taskid>=0 && taskid<task_num);
     assert(tasks[taskid].type==app);
 
@@ -113,8 +113,7 @@ uint64_t load_app_img(int taskid, uintptr_t pgdir){
     // due to the lack of padding / alignment in img
     for(int i=0;i<=needed_page_num;i++){
         // alloc a new page
-        // todo: how to reuse this part of resources
-        mem_kva = alloc_page_helper(mem_va, pgdir);
+        mem_kva = alloc_page_helper(mem_va, owener_pcb);
 
         // check if to init
         if(block_num){
@@ -156,16 +155,16 @@ uint64_t load_app_img(int taskid, uintptr_t pgdir){
 }
 
 // on success, return entrypoint(va); else, return -1
-uint64_t load_app_img_via_name(char *taskname, uintptr_t pgdir){
+uint64_t load_app_img_via_name(char *taskname, pcb_t *owener_pcb){
     int taskid = find_task_named(taskname);
     if(taskid!=-1 && tasks[taskid].type==app){
-        return load_app_img(taskid, pgdir);
+        return load_app_img(taskid, owener_pcb);
     }else{
         return -1;
     }
 }
 
-int load_bat_img(int taskid){ // todo: update this for [p4-task1]
+int load_bat_img(int taskid){
     assert(taskid>=0 && taskid<task_num);
     assert(tasks[taskid].type==bat);
 

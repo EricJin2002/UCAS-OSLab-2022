@@ -58,7 +58,7 @@ void handle_ipi(regs_context_t *regs, uint64_t stval, uint64_t scause){
 
 void handle_page_fault(regs_context_t *regs, uint64_t stval, uint64_t scause){
     assert(!((stval>>38)&1)); // check if is in kernel
-    alloc_page_helper(stval, current_running_of[get_current_cpu_id()]->pgdir);
+    alloc_page_helper(stval, current_running_of[get_current_cpu_id()]);
 }
 
 void init_exception()

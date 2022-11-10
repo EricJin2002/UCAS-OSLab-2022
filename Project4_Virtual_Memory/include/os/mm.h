@@ -28,6 +28,8 @@
 
 #include <type.h>
 #include <pgtable.h>
+#include <os/list.h>    // for [p4]
+#include <os/sched.h>   // for [p4]
 
 #define MAP_KERNEL 1
 #define MAP_USER 2
@@ -45,6 +47,34 @@
 
 // extern ptr_t allocKernelPage(int numPage);
 // extern ptr_t allocUserPage(int numPage);
+
+// for [p4]
+#define NUM_MAX_PAGEFRAME 20
+// page frame
+typedef struct pf{
+    uint64_t kva;
+    uint64_t inv_pte_addr;
+    pid_t owner;
+    list_node_t list;
+} pf_t;
+extern pf_t pfs[NUM_MAX_PAGEFRAME];
+extern list_head free_pf_pool;
+#define LIST2PF(listptr) ((pf_t *)((void *)(listptr)-STRUCT_OFFSET(pf, list)))
+// for debug
+#include <printk.h>
+static inline void pf_list_print(list_head *listptr){
+    list_node_t *next=listptr;
+    while((next=next->next)!=listptr){
+        printl("kva 0x%x ",LIST2PF(next)->kva);
+        printl("owener %d ",LIST2PF(next)->owner);
+        printl("inv_pte_addr 0x%x ",LIST2PF(next)->inv_pte_addr);
+        printl("\n");
+    }
+    // printl("\n\r");
+}
+
+extern void init_pageframes();
+extern ptr_t alloc_page_from_pool(PTE *inv_pte_addr, pcb_t *owner_pcb);
 
 extern ptr_t allocPage(int numPage);
 // TODO [P4-task1] */
@@ -64,7 +94,7 @@ extern ptr_t allocLargePage(int numPage);
 // TODO [P4-task1] */
 extern void* kmalloc(size_t size);
 extern void share_pgtable(uintptr_t dest_pgdir, uintptr_t src_pgdir);
-extern uintptr_t alloc_page_helper(uintptr_t va, uintptr_t pgdir);
+extern uintptr_t alloc_page_helper(uintptr_t va, /*uintptr_t pgdir*/pcb_t *owner_pcb);
 
 // TODO [P4-task4]: shm_page_get/dt */
 uintptr_t shm_page_get(int key);
