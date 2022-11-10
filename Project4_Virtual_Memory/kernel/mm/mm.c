@@ -52,6 +52,27 @@ void freePage(ptr_t baseAddr)
 void *kmalloc(size_t size)
 {
     // TODO [P4-task1] (design you 'kmalloc' here if you need):
+    static uintptr_t free_head = 0;
+    static uintptr_t free_tail = 0;
+    
+    // alignment
+    // Q: Should we align here?
+    // do it anyway
+    while(size%16){
+        size++;
+    }
+
+    if(free_head+size>free_tail){
+        // drop the rest space
+        // alloc new space to meet the size
+        int needed_page = (size - 1 + PAGE_SIZE) / PAGE_SIZE;
+        free_head = allocPage(needed_page);
+        free_tail = free_head + needed_page;
+    }
+
+    uintptr_t ret = free_head;
+    free_head += size;
+    return ret;
 }
 
 

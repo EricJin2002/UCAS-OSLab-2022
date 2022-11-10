@@ -164,6 +164,12 @@ int main(void)
         int wait_end = 1;
         if(!strcmp(argv[argc-1],"&")){
             wait_end = 0;
+            argc--;
+            argv[argc]=(char *)0;
+        }
+        
+        if(!argc){
+            continue;
         }
 
         if(!strcmp(argv[0],"exec")){

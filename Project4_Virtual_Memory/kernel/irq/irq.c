@@ -7,6 +7,7 @@
 #include <assert.h>
 #include <screen.h>
 #include <os/smp.h> // for [p3-task3]
+#include <os/mm.h>  // for [p4-task2]
 
 handler_t irq_table[IRQC_COUNT];
 handler_t exc_table[EXCC_COUNT];
@@ -55,6 +56,11 @@ void handle_ipi(regs_context_t *regs, uint64_t stval, uint64_t scause){
     disable_IRQ_S_SOFT();
 }
 
+void handle_page_fault(regs_context_t *regs, uint64_t stval, uint64_t scause){
+    assert(!((stval>>38)&1)); // check if is in kernel
+    alloc_page_helper(stval, current_running_of[get_current_cpu_id()]->pgdir);
+}
+
 void init_exception()
 {
     /* TODO: [p2-task3] initialize exc_table */
@@ -69,8 +75,8 @@ void init_exception()
     // exc_table[EXCC_STORE_ACCESS]        = handle_other;
     exc_table[EXCC_SYSCALL]             = handle_syscall;
     // exc_table[EXCC_INST_PAGE_FAULT]     = handle_other;
-    // exc_table[EXCC_LOAD_PAGE_FAULT]     = handle_other;
-    // exc_table[EXCC_STORE_PAGE_FAULT]    = handle_other;
+    exc_table[EXCC_LOAD_PAGE_FAULT]     = handle_page_fault;
+    exc_table[EXCC_STORE_PAGE_FAULT]    = handle_page_fault;
 
     /* TODO: [p2-task4] initialize irq_table */
     /* NOTE: handle_int, handle_other, etc.*/

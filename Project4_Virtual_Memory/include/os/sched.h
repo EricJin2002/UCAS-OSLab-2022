@@ -138,9 +138,6 @@ void do_sleep(uint32_t);
 void do_block(list_node_t *, list_head *queue, spin_lock_t *lock);
 void do_unblock(list_node_t *);
 
-// for [p3]
-#define STRUCT_OFFSET(struct_type, element) (unsigned long)&((struct struct_type *)0)->element
-
 // for [p2-task1]
 // #define LIST2PCB(listptr) ((pcb_t *)((void *)(listptr)-16)) // wrong in [p3]
 #define LIST2PCB(listptr) ((pcb_t *)((void *)(listptr)-STRUCT_OFFSET(pcb, list)))

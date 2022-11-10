@@ -109,6 +109,9 @@ static void init_pcb(void)
     // `ps` won't print exited pcb
     for(int i=0;i<NUM_MAX_TASK;i++){
         pcb[i].status=TASK_UNUSED;
+        pcb[i].kernel_stack_base=0;
+        pcb[i].user_stack_base=0;
+        pcb[i].pgdir=0;
     }
 
     /* TODO: [p2-task1] remember to initialize 'current_running_of[0]' */

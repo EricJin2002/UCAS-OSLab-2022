@@ -268,7 +268,12 @@ regs_context_t *init_pcb_via_id(int i, int taskid){
 
     // for [p4-task1]
     // alloc a new pgdir
-    pcb[i].pgdir = allocPage(1);
+    if(!pcb[i].pgdir){
+        // haven't alloc before
+        // no page to reuse
+        pcb[i].pgdir = allocPage(1);
+    }
+    // init pgdir
     clear_pgdir(pcb[i].pgdir);
     share_pgtable(pcb[i].pgdir, current_running_of[get_current_cpu_id()]->pgdir);
     
@@ -278,14 +283,25 @@ regs_context_t *init_pcb_via_id(int i, int taskid){
 
     // alloc kernel stack
     ptr_t kernel_stack;
-    if(!strcmp(tasks[taskid].name,"shell")){
-        kernel_stack = allocPage(2) + 2*PAGE_SIZE;
+    if(!pcb[i].kernel_stack_base){
+        // haven't alloc before
+        // no page to reuse
+        if(!strcmp(tasks[taskid].name,"shell")){
+            kernel_stack = allocPage(2) + 2*PAGE_SIZE;
+        }else{
+            kernel_stack = allocPage(1) + PAGE_SIZE;
+        }
     }else{
-        kernel_stack = allocPage(1) + PAGE_SIZE;
+        // reuse page
+        // todo: what if new task is a shell (thus requires more pages)
+        kernel_stack = pcb[i].kernel_stack_base;
     }
 
     // alloc user stack
-    ptr_t user_stack = USER_STACK_ADDR;
+    // todo: how to reuse user_stack page
+    // note: if reused, remember to map va to pa in pgdir
+    ptr_t user_stack;
+    user_stack = USER_STACK_ADDR;
     alloc_page_helper(USER_STACK_ADDR-PAGE_SIZE, pcb[i].pgdir);
 
     // alloc and load task by reading sd card
@@ -402,7 +418,6 @@ int do_kill(pid_t pid){
     for(int i=1;i<process_id;i++){
         if(pcb[i].status!=TASK_UNUSED){
             if(pcb[i].pid==pid){
-                pcb[i].status=TASK_EXITED;
                 list_delete(&pcb[i].list);
 
                 // wakeup all the node blocked on wait_list
@@ -420,6 +435,8 @@ int do_kill(pid_t pid){
                     spin_lock_release(&mlocks[j].lock);
                 }
 
+                // pcb[i].status=TASK_EXITED;
+                pcb[i].status=TASK_UNUSED;
                 return 1;
             }
         }

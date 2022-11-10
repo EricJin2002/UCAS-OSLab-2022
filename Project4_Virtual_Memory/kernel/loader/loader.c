@@ -43,6 +43,12 @@ static pcb_t *do_parse_and_exec_and_wait(char *cache, pcb_t *waiton){
     int wait_end = 1;
     if(!strcmp(argv[argc-1],"&")){
         wait_end = 0;
+        argc--;
+        argv[argc]=(char *)0;
+    }
+        
+    if(!argc){
+        return waiton;
     }
     
     // allow comment
@@ -107,6 +113,7 @@ uint64_t load_app_img(int taskid, uintptr_t pgdir){
     // due to the lack of padding / alignment in img
     for(int i=0;i<=needed_page_num;i++){
         // alloc a new page
+        // todo: how to reuse this part of resources
         mem_kva = alloc_page_helper(mem_va, pgdir);
 
         // check if to init
@@ -177,7 +184,7 @@ int load_bat_img(int taskid){ // todo: update this for [p4-task1]
     uint32_t bat_off = tasks[taskid].offset;
     uint16_t bat_block_id = bat_off/SECTOR_SIZE;
     uint16_t bat_block_num = NBYTES2SEC(bat_off%SECTOR_SIZE + bat_size);
-    bios_sdread((unsigned int)(uint64_t)bat_cache, bat_block_num, bat_block_id);
+    bios_sdread((unsigned int)(uint64_t)kva2pa(bat_cache), bat_block_num, bat_block_id);
     memcpy((uint8_t *)bat_cache, (uint8_t *)(uint64_t)(bat_cache + bat_off%SECTOR_SIZE), bat_size);
     printk(bat_cache);
     printk("\n===Finish reading!===\n");

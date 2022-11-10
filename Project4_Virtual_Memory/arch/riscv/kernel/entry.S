@@ -56,7 +56,7 @@
   sd   t6, OFFSET_REG_T6   (sp)
   sd   sp, PCB_KERNEL_SP   (tp)
 
-  // todo: WHY?
+  // Q: WHY?
   /*
    * Disable user-mode memory access as it should only be set in the
    * actual user copy routines.

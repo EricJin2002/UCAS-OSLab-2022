@@ -87,4 +87,7 @@ static inline list_node_t *list_find_and_pop(list_head *queue, void *filter){
     return 0;
 }
 
+// for [p3]
+#define STRUCT_OFFSET(struct_type, element) (unsigned long)&((struct struct_type *)0)->element
+
 #endif
