@@ -1,5 +1,8 @@
 #include <os/mm.h>
 #include <assert.h>
+#include <os/kernel.h>  // for [p4-task3]
+#include <os/loader.h>  // for [p4-task3]
+#include <os/task.h>    // for [p4-task3]
 
 // static ptr_t kernMemCurr = FREEMEM_KERNEL;
 // static ptr_t userMemCurr = FREEMEM_USER;
@@ -36,24 +39,116 @@ ptr_t allocPage(int numPage)
 LIST_HEAD(free_pf_pool);
 pf_t pfs[NUM_MAX_PAGEFRAME];
 
-void init_pageframes(){
+// for [p4-task3]
+LIST_HEAD(free_swp_pool);
+swp_t swps[NUM_MAX_SWAPPAGE];
+
+void init_pages(){
     for(int i=0;i<NUM_MAX_PAGEFRAME;i++){
         pfs[i].kva = allocPage(1);
-        pfs[i].inv_pte_addr = 0;
+        pfs[i].va = 0;
         pfs[i].owner = -1;
         list_push(&free_pf_pool, &pfs[i].list);
     }
+
+    int cnt = (tasks[task_num-1].offset + tasks[task_num-1].size + SECTOR_SIZE - 1) / SECTOR_SIZE;
+    for(int i=0;i<NUM_MAX_SWAPPAGE;i++){
+        swps[i].block_id = cnt;
+        cnt += PAGE_SIZE/SECTOR_SIZE;
+        swps[i].va = 0;
+        swps[i].owner = -1;
+        list_push(&free_swp_pool, &swps[i].list);
+    }
 }
 
-ptr_t alloc_page_from_pool(PTE *inv_pte_addr, pcb_t *owner_pcb){
-    if(list_is_empty(&free_pf_pool)){
-        // todo: swap out code pages
+void swap_out(int pf_id){
+    
+    list_node_t *new_swp_node = list_pop(&free_swp_pool);
+    assert(new_swp_node);
 
+    swp_t *new_swp = LIST2SWP(new_swp_node);
+    new_swp->va = pfs[pf_id].va;
+    new_swp->owner = pfs[pf_id].owner;
+    list_push(&pfs[pf_id].owner_pcb->swp_list, &new_swp->list);
+
+    bios_sdwrite(kva2pa(pfs[pf_id].kva), PAGE_SIZE/SECTOR_SIZE, new_swp->block_id);
+
+    printl("[in swap_out]\n");
+    printl("kva 0x%x is swapped into block_id %d\n", pfs[pf_id].kva, new_swp->block_id);
+    printl("\n");
+
+    set_pte_invalid(pfs[pf_id].va, pfs[pf_id].owner_pcb->pgdir);
+
+    pfs[pf_id].va = 0;
+    pfs[pf_id].owner = -1;
+    list_delete(&pfs[pf_id].list);
+    list_push(&free_pf_pool, &pfs[pf_id].list);
+}
+
+void swap_out_randomly(){
+    // randomly select page to swap out
+    // copied from tiny_libc/rand.c
+    static int x = 2022; // seed
+    uint64_t tmp = 0x5deece66dll * x + 0xbll;
+    x = tmp & 0x7fffffff;
+    
+    int lucky_pf_id = x%NUM_MAX_PAGEFRAME;
+    int found = 0;
+    do{
+        if(pfs[lucky_pf_id].va){
+            // the page is not a pgdir
+            // thus swappable
+            found=1;
+            break;
+        }
+        lucky_pf_id++;
+        lucky_pf_id%=NUM_MAX_PAGEFRAME;
+    }while(lucky_pf_id!=x%NUM_MAX_PAGEFRAME);
+
+    if(!found){
+        // no available page to swap
         assert(0);  // temporarily
     }
+
+    swap_out(lucky_pf_id);
+}
+
+void swap_in(swp_t *swpptr, pcb_t *owner_pcb){
+    ptr_t new_pf_kva = alloc_page_helper(swpptr->va, owner_pcb);
+
+    bios_sdread(kva2pa(new_pf_kva), PAGE_SIZE/SECTOR_SIZE, swpptr->block_id);
+
+    printl("[in swap_in]\n");
+    printl("block_id %d is swapped into kva 0x%x\n", swpptr->block_id, new_pf_kva);
+    printl("\n");
+
+    swpptr->va = 0;
+    swpptr->owner = -1;
+    list_delete(&swpptr->list);
+    list_push(&free_swp_pool, &swpptr->list);
+}
+
+static uint64_t filter_swp_stval;
+static pid_t filter_swp_owner_pid;
+static int filter_swp(list_node_t *node){
+    swp_t *swpptr = LIST2SWP(node);
+    return swpptr->owner == filter_swp_owner_pid 
+        && (swpptr->va >> NORMAL_PAGE_SHIFT) == (filter_swp_stval >> NORMAL_PAGE_SHIFT);
+}
+list_node_t *find_and_pop_swp_node(uintptr_t va, pcb_t *owner_pcb){
+    filter_swp_stval = va;
+    filter_swp_owner_pid = owner_pcb->pid;
+    return list_find_and_pop(&owner_pcb->swp_list, filter_swp);
+}
+
+ptr_t alloc_page_from_pool(uintptr_t va, pcb_t *owner_pcb){
+    if(list_is_empty(&free_pf_pool)){
+        swap_out_randomly();
+    }
     pf_t *new_pf = LIST2PF(list_pop(&free_pf_pool));
-    new_pf->inv_pte_addr = inv_pte_addr;
+    new_pf->va = va&~(NORMAL_PAGE_SIZE-1);
     new_pf->owner = owner_pcb->pid;
+    new_pf->owner_pcb = owner_pcb;
     list_push(&owner_pcb->pf_list, &new_pf->list);
     // pf_list_print(&owner_pcb->pf_list);
     // printl("\n");
@@ -100,7 +195,7 @@ void *kmalloc(size_t size)
 
     uintptr_t ret = free_head;
     free_head += size;
-    return ret;
+    return (void *)ret;
 }
 
 
@@ -136,7 +231,7 @@ uintptr_t alloc_page_helper(uintptr_t va, /*uintptr_t pgdir*/pcb_t *owner_pcb)
         // alloc a new page directory
         set_pfn(&pgd[vpn2], kva2pa(
             // allocPage(1)
-            alloc_page_from_pool(&pgd[vpn2], owner_pcb)
+            alloc_page_from_pool(0, owner_pcb)
         )>>NORMAL_PAGE_SHIFT);
         set_attribute(&pgd[vpn2], _PAGE_PRESENT | _PAGE_USER);
         clear_pgdir(pa2kva(get_pa(pgd[vpn2])));
@@ -148,7 +243,7 @@ uintptr_t alloc_page_helper(uintptr_t va, /*uintptr_t pgdir*/pcb_t *owner_pcb)
         // alloc a new page directory
         set_pfn(&pmd[vpn1], kva2pa(
             // allocPage(1)
-            alloc_page_from_pool(&pmd[vpn1], owner_pcb)
+            alloc_page_from_pool(0, owner_pcb)
         )>>NORMAL_PAGE_SHIFT);
         set_attribute(&pmd[vpn1], _PAGE_PRESENT | _PAGE_USER);
         clear_pgdir(pa2kva(get_pa(pmd[vpn1])));
@@ -160,7 +255,7 @@ uintptr_t alloc_page_helper(uintptr_t va, /*uintptr_t pgdir*/pcb_t *owner_pcb)
         // alloc a new page directory
         set_pfn(&pte[vpn0], kva2pa(
             // allocPage(1)
-            alloc_page_from_pool(&pte[vpn0], owner_pcb)
+            alloc_page_from_pool(va, owner_pcb)
         )>>NORMAL_PAGE_SHIFT);
         set_attribute(&pte[vpn0], _PAGE_PRESENT | _PAGE_READ | _PAGE_WRITE | _PAGE_EXEC | 
                                     _PAGE_USER | _PAGE_ACCESSED | _PAGE_DIRTY);

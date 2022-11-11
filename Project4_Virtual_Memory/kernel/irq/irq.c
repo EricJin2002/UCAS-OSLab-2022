@@ -58,7 +58,16 @@ void handle_ipi(regs_context_t *regs, uint64_t stval, uint64_t scause){
 
 void handle_page_fault(regs_context_t *regs, uint64_t stval, uint64_t scause){
     assert(!((stval>>38)&1)); // check if is in kernel
-    alloc_page_helper(stval, current_running_of[get_current_cpu_id()]);
+    list_node_t *node = find_and_pop_swp_node(stval, &current_running_of[get_current_cpu_id()]);
+
+    if(!node){
+        // not in swap
+        // alloc new
+        alloc_page_helper(stval, current_running_of[get_current_cpu_id()]);
+    }else{
+        swap_in(LIST2SWP(node), current_running_of[get_current_cpu_id()]);
+    }
+    local_flush_tlb_all();
 }
 
 void init_exception()
@@ -74,7 +83,7 @@ void init_exception()
     // exc_table[EXCC_LOAD_ACCESS]         = handle_other;
     // exc_table[EXCC_STORE_ACCESS]        = handle_other;
     exc_table[EXCC_SYSCALL]             = handle_syscall;
-    // exc_table[EXCC_INST_PAGE_FAULT]     = handle_other;
+    exc_table[EXCC_INST_PAGE_FAULT]     = handle_page_fault;
     exc_table[EXCC_LOAD_PAGE_FAULT]     = handle_page_fault;
     exc_table[EXCC_STORE_PAGE_FAULT]    = handle_page_fault;
 

@@ -3,6 +3,7 @@
 
 #include <type.h>
 #include <printk.h>
+#include <assert.h>
 
 #define SATP_MODE_SV39 8
 #define SATP_MODE_SV48 9
@@ -216,6 +217,28 @@ static inline void print_va_at_pgdir(uintptr_t va, uintptr_t pgdir_va){
         return;
     }
 
+    return;
+}
+
+static inline void set_pte_invalid(uintptr_t va, uintptr_t pgdir_va){
+    va &= VA_MASK;
+    uint64_t vpn2 = va >> (NORMAL_PAGE_SHIFT + PPN_BITS + PPN_BITS);
+    uint64_t vpn1 = (vpn2 << PPN_BITS) ^ (va >> (NORMAL_PAGE_SHIFT + PPN_BITS));
+    uint64_t vpn0 = (vpn2 << (PPN_BITS + PPN_BITS)) ^ (vpn1 << PPN_BITS) ^ (va >> (NORMAL_PAGE_SHIFT));
+
+    PTE *pgd = (PTE *)pgdir_va;
+    assert(get_attribute(pgd[vpn2], _PAGE_PRESENT));
+    assert(!get_attribute(pgd[vpn2], _PAGE_READ | _PAGE_WRITE | _PAGE_EXEC));
+
+    PTE *pmd = (PTE *)pa2kva(get_pa(pgd[vpn2]));
+    assert(get_attribute(pmd[vpn1], _PAGE_PRESENT));
+    assert(!get_attribute(pmd[vpn1], _PAGE_READ | _PAGE_WRITE | _PAGE_EXEC));
+    
+    PTE *pte = (PTE *)pa2kva(get_pa(pmd[vpn1]));
+    assert(get_attribute(pte[vpn0], _PAGE_PRESENT));
+    assert(get_attribute(pte[vpn0], _PAGE_READ | _PAGE_WRITE | _PAGE_EXEC));
+    
+    set_attribute(&pte[vpn0], 0);
     return;
 }
 

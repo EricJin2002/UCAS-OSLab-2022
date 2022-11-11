@@ -30,6 +30,7 @@
 #include <pgtable.h>
 #include <os/list.h>    // for [p4]
 #include <os/sched.h>   // for [p4]
+#include <printk.h>     // for [p4]
 
 #define MAP_KERNEL 1
 #define MAP_USER 2
@@ -48,33 +49,61 @@
 // extern ptr_t allocKernelPage(int numPage);
 // extern ptr_t allocUserPage(int numPage);
 
+
 // for [p4]
 #define NUM_MAX_PAGEFRAME 20
-// page frame
-typedef struct pf{
-    uint64_t kva;
-    uint64_t inv_pte_addr;
+typedef struct pf{  // page frame
+    uint64_t kva;   // kva is fixed
+    uint64_t va;    // only non-zero for non-pgdir
     pid_t owner;
+    pcb_t *owner_pcb;
     list_node_t list;
 } pf_t;
 extern pf_t pfs[NUM_MAX_PAGEFRAME];
 extern list_head free_pf_pool;
 #define LIST2PF(listptr) ((pf_t *)((void *)(listptr)-STRUCT_OFFSET(pf, list)))
 // for debug
-#include <printk.h>
 static inline void pf_list_print(list_head *listptr){
     list_node_t *next=listptr;
     while((next=next->next)!=listptr){
         printl("kva 0x%x ",LIST2PF(next)->kva);
         printl("owener %d ",LIST2PF(next)->owner);
-        printl("inv_pte_addr 0x%x ",LIST2PF(next)->inv_pte_addr);
+        printl("va 0x%lx ",LIST2PF(next)->va);
         printl("\n");
     }
     // printl("\n\r");
 }
 
-extern void init_pageframes();
-extern ptr_t alloc_page_from_pool(PTE *inv_pte_addr, pcb_t *owner_pcb);
+// for [p4-task3]
+# define NUM_MAX_SWAPPAGE 100
+typedef struct swp{
+    int block_id;
+    uint64_t va;
+    pid_t owner;
+    list_node_t list;
+} swp_t;
+extern swp_t swps[NUM_MAX_SWAPPAGE];
+extern list_head free_swp_pool;
+#define LIST2SWP(listptr) ((swp_t *)((void *)(listptr)-STRUCT_OFFSET(swp, list)))
+// for debug
+static inline void swp_list_print(list_head *listptr){
+    list_node_t *next=listptr;
+    while((next=next->next)!=listptr){
+        printl("block id %d ",LIST2SWP(next)->block_id);
+        printl("owener %d ",LIST2SWP(next)->owner);
+        printl("va 0x%lx ",LIST2SWP(next)->va);
+        printl("\n");
+    }
+    // printl("\n\r");
+}
+
+// for [p4]
+extern void init_pages();
+extern void swap_out(int pf_id);
+extern void swap_out_randomly();
+extern void swap_in(swp_t *swpptr, pcb_t *owner_pcb);
+extern list_node_t *find_and_pop_swp_node(uintptr_t va, pcb_t *owner_pcb);
+extern ptr_t alloc_page_from_pool(uintptr_t va, pcb_t *owner_pcb);
 
 extern ptr_t allocPage(int numPage);
 // TODO [P4-task1] */

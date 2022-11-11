@@ -249,6 +249,7 @@ regs_context_t *init_pcb_via_id(int i, int taskid){
 
     // for [p4-task3]
     assert(list_is_empty(&pcb[i].pf_list));
+    assert(list_is_empty(&pcb[i].swp_list));
 
     // for [p3-task1]
     assert(list_is_empty(&pcb[i].wait_list));
@@ -310,6 +311,8 @@ regs_context_t *init_pcb_via_id(int i, int taskid){
     ptr_t entrypoint = load_app_img(taskid, pcb+i);
 
     pf_list_print(&pcb[i].pf_list);
+    printl("\n");
+    swp_list_print(&pcb[i].swp_list);
     printl("\n");
 
     // init pcb stack
@@ -373,9 +376,18 @@ pid_t do_exec(char *name, int argc, char *argv[]){
             ptr_t user_sp_now = user_sp_origin-8*(argc+1);
             ptr_t argv_base = user_sp_now;
 
+            // todo: what if the args is larger than a page size?
+
             uint64_t *argv_base_kva = (uint64_t *)(get_kva_of(argv_base, pcb[i].pgdir));
+            if(!argv_base_kva){
+                list_node_t *swp_node = find_and_pop_swp_node(argv_base, &pcb[i]);
+                assert(swp_node);
+                swap_in(LIST2SWP(swp_node), &pcb[i]);
+            }
+            argv_base_kva = (uint64_t *)(get_kva_of(argv_base, pcb[i].pgdir));
+
             for(int j=0;j<argc;j++){
-                user_sp_now -= strlen(argv[j])+1;
+                user_sp_now -= strlen(argv[j])+1;   // fixme: argv is swapped out of memory
                 strcpy((char *)get_kva_of(user_sp_now, pcb[i].pgdir), argv[j]);
                 argv_base_kva[j] = user_sp_now;
             }
@@ -442,9 +454,14 @@ int do_kill(pid_t pid){
 
                 // recycle pages
                 while((node=list_pop(&pcb[i].pf_list))){
-                    LIST2PF(node)->inv_pte_addr = 0;
+                    LIST2PF(node)->va = 0;
                     LIST2PF(node)->owner = -1;
                     list_push(&free_pf_pool, node);
+                }
+                while((node=list_pop(&pcb[i].swp_list))){
+                    LIST2PF(node)->va = 0;
+                    LIST2PF(node)->owner = -1;
+                    list_push(&free_swp_pool, node);
                 }
 
                 // pcb[i].status=TASK_EXITED;

@@ -83,6 +83,7 @@ typedef struct pcb
 
     // for [p4]
     list_head pf_list;
+    list_head swp_list;
 
     /* pgdir */
     uintptr_t pgdir; // stored as kva

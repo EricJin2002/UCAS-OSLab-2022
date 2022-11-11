@@ -116,6 +116,8 @@ static void init_pcb(void)
         pcb[i].wait_list.next = &pcb[i].wait_list;
         pcb[i].pf_list.prev = &pcb[i].pf_list;
         pcb[i].pf_list.next = &pcb[i].pf_list;
+        pcb[i].swp_list.prev = &pcb[i].swp_list;
+        pcb[i].swp_list.next = &pcb[i].swp_list;
     }
 
     /* TODO: [p2-task1] remember to initialize 'current_running_of[0]' */
@@ -278,7 +280,7 @@ int main(void)
     // load_all_tasks_in_advance();
 
     // for [p4-task3]
-    init_pageframes();
+    init_pages();
 
     // Init Process Control Blocks |•'-'•) ✧
     init_pcb();
