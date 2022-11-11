@@ -239,6 +239,7 @@ static inline void set_pte_invalid(uintptr_t va, uintptr_t pgdir_va){
     assert(get_attribute(pte[vpn0], _PAGE_READ | _PAGE_WRITE | _PAGE_EXEC));
     
     set_attribute(&pte[vpn0], 0);
+    local_flush_tlb_all();
     return;
 }
 

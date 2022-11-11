@@ -113,15 +113,15 @@ void do_scheduler(void)
     //     unlock_kernel();
     // }
 
-    // printl("[core %d] switching from [pid %d name %s] to [pid %d name %s]\n",
-    //     get_current_cpu_id(),
-    //     prev_running->pid,
-    //     prev_running->name,
-    //     current_running_of[get_current_cpu_id()]->pid,
-    //     current_running_of[get_current_cpu_id()]->name
-    // );
-    // printl("[core %d] after  scheduler: ",get_current_cpu_id());pcb_list_print(&ready_queue);
-    // printl("\n");
+    printl("[core %d] switching from [pid %d name %s] to [pid %d name %s]\n",
+        get_current_cpu_id(),
+        prev_running->pid,
+        prev_running->name,
+        current_running_of[get_current_cpu_id()]->pid,
+        current_running_of[get_current_cpu_id()]->name
+    );
+    printl("[core %d] after  scheduler: ",get_current_cpu_id());pcb_list_print(&ready_queue);
+    printl("\n");
 
     // unlock_kernel();
 
@@ -341,6 +341,22 @@ pid_t do_exec(char *name, int argc, char *argv[]){
     for(int i=1;i<NUM_MAX_TASK;i++){
         if(pcb[i].status==TASK_UNUSED){
 
+            // save the args in buff
+            // in case argv is swapped out of memory in the following init_pcb_via_id
+            // note: we assume argc < 100, argv length < 4K
+            // todo: what if the args is larger than a page size?
+            static char *_argv[100];
+            static char _argv_buff[4096];
+            int _argv_buff_head = 0;
+
+            for(int j=0;j<argc;j++){
+                strcpy(_argv_buff + _argv_buff_head, argv[j]);
+                _argv[j] = _argv_buff + _argv_buff_head;
+                _argv_buff_head += strlen(argv[j])+1;
+            }
+            _argv[argc] = (uint64_t)0;
+
+
 // #ifdef S_CORE
 //             uint64_t entrypoint = load_task_img(id);
 // #else
@@ -380,6 +396,8 @@ pid_t do_exec(char *name, int argc, char *argv[]){
 
             uint64_t *argv_base_kva = (uint64_t *)(get_kva_of(argv_base, pcb[i].pgdir));
             if(!argv_base_kva){
+                // the stack that just alloced is swapped out of memory
+                // therefore we should swap in first
                 list_node_t *swp_node = find_and_pop_swp_node(argv_base, &pcb[i]);
                 assert(swp_node);
                 swap_in(LIST2SWP(swp_node), &pcb[i]);
@@ -387,8 +405,8 @@ pid_t do_exec(char *name, int argc, char *argv[]){
             argv_base_kva = (uint64_t *)(get_kva_of(argv_base, pcb[i].pgdir));
 
             for(int j=0;j<argc;j++){
-                user_sp_now -= strlen(argv[j])+1;   // fixme: argv is swapped out of memory
-                strcpy((char *)get_kva_of(user_sp_now, pcb[i].pgdir), argv[j]);
+                user_sp_now -= strlen(_argv[j])+1;   // fixme: argv is swapped out of memory
+                strcpy((char *)get_kva_of(user_sp_now, pcb[i].pgdir), _argv[j]);
                 argv_base_kva[j] = user_sp_now;
             }
             argv_base_kva[argc] = (uint64_t)0;
@@ -459,8 +477,8 @@ int do_kill(pid_t pid){
                     list_push(&free_pf_pool, node);
                 }
                 while((node=list_pop(&pcb[i].swp_list))){
-                    LIST2PF(node)->va = 0;
-                    LIST2PF(node)->owner = -1;
+                    LIST2SWP(node)->va = 0;
+                    LIST2SWP(node)->owner = -1;
                     list_push(&free_swp_pool, node);
                 }
 

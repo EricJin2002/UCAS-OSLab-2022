@@ -51,7 +51,17 @@ void init_pages(){
         list_push(&free_pf_pool, &pfs[i].list);
     }
 
-    int cnt = (tasks[task_num-1].offset + tasks[task_num-1].size + SECTOR_SIZE - 1) / SECTOR_SIZE;
+    // the below line is abandoned
+    // because it will overwrite task-info area
+    // thus cannot repeatedly `make run`
+    // int cnt = (tasks[task_num-1].offset + tasks[task_num-1].size + SECTOR_SIZE - 1) / SECTOR_SIZE;
+
+    // instead, we use this
+    uintptr_t bootblock_end_addr = 0x50200200;
+    uint16_t task_info_block_id = *(uint16_t *)(bootblock_end_addr - 8);
+    uint16_t task_info_block_num = *(uint16_t *)(bootblock_end_addr - 6);
+    int cnt = (int)task_info_block_id + (int)task_info_block_num;
+
     for(int i=0;i<NUM_MAX_SWAPPAGE;i++){
         swps[i].block_id = cnt;
         cnt += PAGE_SIZE/SECTOR_SIZE;
@@ -62,20 +72,21 @@ void init_pages(){
 }
 
 void swap_out(int pf_id){
+    printl("[in swap_out]\n");
     
     list_node_t *new_swp_node = list_pop(&free_swp_pool);
     assert(new_swp_node);
 
     swp_t *new_swp = LIST2SWP(new_swp_node);
+    assert(new_swp->block_id);
     new_swp->va = pfs[pf_id].va;
     new_swp->owner = pfs[pf_id].owner;
     list_push(&pfs[pf_id].owner_pcb->swp_list, &new_swp->list);
 
     bios_sdwrite(kva2pa(pfs[pf_id].kva), PAGE_SIZE/SECTOR_SIZE, new_swp->block_id);
 
-    printl("[in swap_out]\n");
-    printl("kva 0x%x is swapped into block_id %d\n", pfs[pf_id].kva, new_swp->block_id);
-    printl("\n");
+    printl("[va 0x%lx owener %d] kva 0x%x is swapped into block_id %d\n", 
+        pfs[pf_id].va, pfs[pf_id].owner, pfs[pf_id].kva, new_swp->block_id);
 
     set_pte_invalid(pfs[pf_id].va, pfs[pf_id].owner_pcb->pgdir);
 
@@ -83,6 +94,8 @@ void swap_out(int pf_id){
     pfs[pf_id].owner = -1;
     list_delete(&pfs[pf_id].list);
     list_push(&free_pf_pool, &pfs[pf_id].list);
+
+    printl("[leave swap_out]\n");
 }
 
 void swap_out_randomly(){
@@ -114,18 +127,21 @@ void swap_out_randomly(){
 }
 
 void swap_in(swp_t *swpptr, pcb_t *owner_pcb){
+    printl("[in swap_in]\n");
+
     ptr_t new_pf_kva = alloc_page_helper(swpptr->va, owner_pcb);
 
     bios_sdread(kva2pa(new_pf_kva), PAGE_SIZE/SECTOR_SIZE, swpptr->block_id);
 
-    printl("[in swap_in]\n");
-    printl("block_id %d is swapped into kva 0x%x\n", swpptr->block_id, new_pf_kva);
-    printl("\n");
+    printl("[va 0x%lx owener %d] block_id %d is swapped into kva 0x%x\n", 
+        swpptr->va, swpptr->owner, swpptr->block_id, new_pf_kva);
 
     swpptr->va = 0;
     swpptr->owner = -1;
     list_delete(&swpptr->list);
     list_push(&free_swp_pool, &swpptr->list);
+    
+    printl("[leave swap_in]\n");
 }
 
 static uint64_t filter_swp_stval;
@@ -220,6 +236,8 @@ void share_pgtable(uintptr_t dest_pgdir, uintptr_t src_pgdir)
 uintptr_t alloc_page_helper(uintptr_t va, /*uintptr_t pgdir*/pcb_t *owner_pcb)
 {
     // TODO [P4-task1] alloc_page_helper:
+    printl("[in alloc_page_helper]\n");
+
     va &= VA_MASK;
     uint64_t vpn2 = va >> (NORMAL_PAGE_SHIFT + PPN_BITS + PPN_BITS);
     uint64_t vpn1 = (vpn2 << PPN_BITS) ^ (va >> (NORMAL_PAGE_SHIFT + PPN_BITS));
@@ -262,9 +280,9 @@ uintptr_t alloc_page_helper(uintptr_t va, /*uintptr_t pgdir*/pcb_t *owner_pcb)
         // clear_pgdir(pa2kva(get_pa(pte[vpn0]))); // Must we clear here ?
     }
 
-    printl("[in alloc_page_helper]\n");
     print_va_at_pgdir(va, owner_pcb->pgdir);
-    printl("\n");
+    local_flush_tlb_all();
+    printl("[leave alloc_page_helper]\n");
     return pa2kva(get_pa(pte[vpn0]));
 }
 

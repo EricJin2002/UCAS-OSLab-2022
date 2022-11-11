@@ -1,6 +1,6 @@
-rw 0x10800000 0x80200000 0xa0000320 &
 lock 6 &
 lock 7 &
 lock 8 &
 lock 9 &
 fly &
+p4_rw

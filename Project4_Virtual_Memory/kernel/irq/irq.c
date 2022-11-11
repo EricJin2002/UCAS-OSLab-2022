@@ -57,8 +57,20 @@ void handle_ipi(regs_context_t *regs, uint64_t stval, uint64_t scause){
 }
 
 void handle_page_fault(regs_context_t *regs, uint64_t stval, uint64_t scause){
+    printl("[in handle_page_fault] [pid %d stval 0x%lx sepc 0x%lx %s]\n", 
+        current_running_of[get_current_cpu_id()]->pid, stval, regs->sepc,
+        scause==EXCC_INST_PAGE_FAULT?"inst":"data");
+
     assert(!((stval>>38)&1)); // check if is in kernel
-    list_node_t *node = find_and_pop_swp_node(stval, &current_running_of[get_current_cpu_id()]);
+
+    // for debug
+    assert(stval>=0x10000ul);
+    if(stval == EXCC_INST_PAGE_FAULT){
+        // check if code goes to stack
+        assert(stval & (1<<4)); // 1xxxx
+    }
+
+    list_node_t *node = find_and_pop_swp_node(stval, current_running_of[get_current_cpu_id()]);
 
     if(!node){
         // not in swap
@@ -68,6 +80,14 @@ void handle_page_fault(regs_context_t *regs, uint64_t stval, uint64_t scause){
         swap_in(LIST2SWP(node), current_running_of[get_current_cpu_id()]);
     }
     local_flush_tlb_all();
+    local_flush_icache_all();
+    printl("[leave handle_page_fault]\n");
+    printl("\n");
+    
+    pf_list_print(&current_running_of[get_current_cpu_id()]->pf_list);
+    printl("\n");
+    swp_list_print(&current_running_of[get_current_cpu_id()]->swp_list);
+    printl("\n");
 }
 
 void init_exception()

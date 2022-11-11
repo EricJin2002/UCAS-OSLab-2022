@@ -80,6 +80,7 @@ static pcb_t *do_parse_and_exec_and_wait(char *cache, pcb_t *waiton){
 
 // return entrypoint(va)
 uint64_t load_app_img(int taskid, pcb_t *owener_pcb){
+    printl("[in load_app_img]\n");
     assert(taskid>=0 && taskid<task_num);
     assert(tasks[taskid].type==app);
 
@@ -106,7 +107,8 @@ uint64_t load_app_img(int taskid, pcb_t *owener_pcb){
     uint64_t mem_va = tasks[taskid].entrypoint;
     int needed_page_num = (tasks[taskid].memsz - 1 + PAGE_SIZE) / PAGE_SIZE;
     uint64_t offset_in_sector = tasks[taskid].offset%SECTOR_SIZE;
-    uint64_t mem_kva, mem_kva_last=0;
+    uint64_t mem_kva=0;
+    static char sdread_buff[2*PAGE_SIZE];
 
     // the `<=` in the next line MUST be preserved !!
     // the extra page is used to transfer offseted data
@@ -115,42 +117,25 @@ uint64_t load_app_img(int taskid, pcb_t *owener_pcb){
         // alloc a new page
         mem_kva = alloc_page_helper(mem_va, owener_pcb);
 
-        // check if to init
-        if(block_num){
-            // read sd
-            unsigned int read_block_num = block_num>PAGE_SIZE/SECTOR_SIZE ? PAGE_SIZE/SECTOR_SIZE : block_num;
-            // print_va_at_pgdir(mem_kva, current_running_of[get_current_cpu_id()]->pgdir);
-            bios_sdread(
-                kva2pa(mem_kva), 
-                read_block_num,
-                block_id
-            );
+        // read sd
+        bios_sdread(
+            kva2pa(sdread_buff), 
+            2*PAGE_SIZE/SECTOR_SIZE,
+            block_id
+        );
 
-            // shift the fisrt few bytes of the new page to the last page
-            if(mem_kva_last){
-                memcpy(
-                    (uint8_t *)(mem_kva_last + PAGE_SIZE - offset_in_sector), 
-                    (uint8_t *)(mem_kva),
-                    offset_in_sector
-                );
-            }
+        // shift task entrypoint to the right address
+        memcpy(
+            (uint8_t *)(mem_kva), 
+            (uint8_t *)(sdread_buff + offset_in_sector), 
+            PAGE_SIZE
+        );
 
-            // shift task entrypoint to the right address
-            memcpy(
-                (uint8_t *)(mem_kva), 
-                (uint8_t *)(mem_kva + offset_in_sector), 
-                PAGE_SIZE - offset_in_sector
-            );
-
-            // prepare for the next read
-            block_id += read_block_num;
-            block_num -= read_block_num;
-        }
-
+        block_id += PAGE_SIZE/SECTOR_SIZE;
         mem_va += PAGE_SIZE;
-        mem_kva_last = mem_kva;
     }
-    
+
+    printl("\n");
     return tasks[taskid].entrypoint;
 }
 
@@ -178,7 +163,8 @@ int load_bat_img(int taskid){
 
     // read batch content
     // fixme: the buffer is too big that shell's stack ~~may~~ overflow
-    char bat_cache[1024]; //TODO: what if bat.txt is too big
+    // note: we cannot change the `bat_cache` to static, because bat can call bat
+    char bat_cache[1024]; //todo: what if bat.txt is too big
     uint32_t bat_size = tasks[taskid].size;
     uint32_t bat_off = tasks[taskid].offset;
     uint16_t bat_block_id = bat_off/SECTOR_SIZE;
