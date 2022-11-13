@@ -394,18 +394,10 @@ pid_t do_exec(char *name, int argc, char *argv[]){
 
             // todo: what if the args is larger than a page size?
 
-            uint64_t *argv_base_kva = (uint64_t *)(get_kva_of(argv_base, pcb[i].pgdir));
-            if(!argv_base_kva){
-                // the stack that just alloced is swapped out of memory
-                // therefore we should swap in first
-                list_node_t *swp_node = find_and_pop_swp_node(argv_base, &pcb[i]);
-                assert(swp_node);
-                swap_in(LIST2SWP(swp_node), &pcb[i]);
-            }
-            argv_base_kva = (uint64_t *)(get_kva_of(argv_base, pcb[i].pgdir));
+            uint64_t *argv_base_kva = (uint64_t *)(check_and_get_kva_of(argv_base, &pcb[i]));
 
             for(int j=0;j<argc;j++){
-                user_sp_now -= strlen(_argv[j])+1;   // fixme: argv is swapped out of memory
+                user_sp_now -= strlen(_argv[j])+1;
                 strcpy((char *)get_kva_of(user_sp_now, pcb[i].pgdir), _argv[j]);
                 argv_base_kva[j] = user_sp_now;
             }

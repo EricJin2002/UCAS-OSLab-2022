@@ -3,7 +3,7 @@
 #include <stdio.h>
 
 #define PAGE_SIZE 4096
-#define TEST_NUM 100
+#define TEST_NUM 200
 
 int main(){
     volatile int data[PAGE_SIZE*TEST_NUM];

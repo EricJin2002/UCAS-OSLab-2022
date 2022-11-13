@@ -51,7 +51,7 @@
 
 
 // for [p4]
-#define NUM_MAX_PAGEFRAME 40
+#define NUM_MAX_PAGEFRAME 100
 typedef struct pf{  // page frame
     uint64_t kva;   // kva is fixed
     uint64_t va;    // only non-zero for non-pgdir
@@ -75,7 +75,7 @@ static inline void pf_list_print(list_head *listptr){
 }
 
 // for [p4-task3]
-# define NUM_MAX_SWAPPAGE 200
+# define NUM_MAX_SWAPPAGE 400
 typedef struct swp{
     int block_id;
     uint64_t va;
@@ -105,6 +105,7 @@ extern void swap_in(swp_t *swpptr, pcb_t *owner_pcb);
 extern list_node_t *find_and_pop_swp_node(uintptr_t va, pcb_t *owner_pcb);
 extern int find_pf_node(uintptr_t va, pcb_t *owner_pcb);
 extern ptr_t alloc_page_from_pool(uintptr_t va, pcb_t *owner_pcb);
+extern uintptr_t check_and_get_kva_of(uintptr_t va, pcb_t *owner_pcb);
 
 extern ptr_t allocPage(int numPage);
 // TODO [P4-task1] */

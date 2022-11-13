@@ -184,6 +184,22 @@ ptr_t alloc_page_from_pool(uintptr_t va, pcb_t *owner_pcb){
     return new_pf->kva;
 }
 
+// the data might have been swapped out of memory, thus we check it and swap in if necessary
+uintptr_t check_and_get_kva_of(uintptr_t va, pcb_t *owner_pcb){
+    
+    uintptr_t kva = get_kva_of(va, owner_pcb->pgdir);
+    if(!kva){
+        // the page that `va` points to has been swapped out memory
+        // therefore we should swap in first
+        list_node_t *swap_node = find_and_pop_swp_node(va, owner_pcb);
+        assert(swap_node);
+        swap_in(LIST2SWP(swap_node), owner_pcb);
+    }
+    kva = get_kva_of(va, owner_pcb->pgdir);
+    assert(kva);
+    return kva;
+}
+
 // NOTE: Only need for S-core to alloc 2MB large page
 #ifdef S_CORE
 static ptr_t largePageMemCurr = LARGE_PAGE_FREEMEM;

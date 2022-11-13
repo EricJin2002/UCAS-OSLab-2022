@@ -58,18 +58,8 @@ void thread_create(tid_t *tidptr, uint64_t entrypoint, long a0, long a1, long a2
 
     assert(father_pcb->pgdir==current_running_of[get_current_cpu_id()]->pgdir);
     tcb->pgdir = current_running_of[get_current_cpu_id()]->pgdir;
-    
-    tid_t *tidptr_kva = (tid_t *)(get_kva_of((uintptr_t)tidptr, tcb->pgdir));
-    if(!tidptr_kva){
-        // the page that `tidptr` points to has just been swapped out memory
-        // therefore we should swap in first
-        list_node_t *swap_node = find_and_pop_swp_node((uintptr_t)tidptr, father_pcb);
-        assert(swap_node);
-        swap_in(LIST2SWP(swap_node), father_pcb);
-    }
-    tidptr_kva = (tid_t *)(get_kva_of((uintptr_t)tidptr, tcb->pgdir));
-    
-    *tidptr_kva=tcb->tid;
+
+    *(tid_t *)(check_and_get_kva_of((uintptr_t)tidptr, father_pcb)) = tcb->tid;
 
     // alloc user stack
     ptr_t user_stack = USER_STACK_ADDR + 0x10000 * tcb->tid;
@@ -118,16 +108,7 @@ int thread_join(tid_t tid, void **retvalptr){
     }
 
     pcb_t *father_pcb = find_father_pcb_for_tcb(current_running_of[get_current_cpu_id()]);
-    void **retvalptr_kva = (void **)(get_kva_of((uintptr_t)retvalptr, father_pcb->pgdir));
-    if(!retvalptr_kva){
-        // the page that `retvalptr` points to has been swapped out memory
-        // therefore we should swap in first
-        list_node_t *swap_node = find_and_pop_swp_node((uintptr_t)retvalptr, father_pcb);
-        assert(swap_node);
-        swap_in(LIST2SWP(swap_node), father_pcb);
-    }
-    retvalptr_kva = (void **)(get_kva_of((uintptr_t)retvalptr, father_pcb->pgdir));
-    *retvalptr_kva = joining_tcb->retval;
+    *(void **)(check_and_get_kva_of((uintptr_t)retvalptr, father_pcb)) = joining_tcb->retval;
 
     list_delete(joining_node);
     // list_pop(joining_node->prev); // delete joining_node from tcb_list
