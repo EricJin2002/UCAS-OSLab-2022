@@ -131,6 +131,9 @@ static void init_pcb(void)
     pid0_pcb.list.next=&pid0_pcb.list;
     pid0_pcb.wait_list.prev=&pid0_pcb.wait_list;
     pid0_pcb.wait_list.next=&pid0_pcb.wait_list;
+    pid0_pcb.tid=0;
+    pid0_pcb.tcb_list.prev=&pid0_pcb.tcb_list;
+    pid0_pcb.tcb_list.next=&pid0_pcb.tcb_list;
     pid0_pcb.pgdir=pa2kva(PGDIR_PA);
     
     // current_running_of[0]->status=TASK_BLOCKED; // to stop pcb0 from being pushed into ready_queue
@@ -248,6 +251,9 @@ int main(void)
         pcb_for_new_core->list.next=&pcb_for_new_core->list;
         pcb_for_new_core->wait_list.prev=&pcb_for_new_core->wait_list;
         pcb_for_new_core->wait_list.next=&pcb_for_new_core->wait_list;
+        pcb_for_new_core->tid=0;
+        pcb_for_new_core->tcb_list.prev=&pcb_for_new_core->tcb_list;
+        pcb_for_new_core->tcb_list.next=&pcb_for_new_core->tcb_list;
         pcb_for_new_core->mask=3;
         pcb_for_new_core->running_core=get_current_cpu_id();
         pcb_for_new_core->pgdir=pa2kva(PGDIR_PA);

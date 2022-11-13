@@ -51,7 +51,7 @@
 
 
 // for [p4]
-#define NUM_MAX_PAGEFRAME 20
+#define NUM_MAX_PAGEFRAME 40
 typedef struct pf{  // page frame
     uint64_t kva;   // kva is fixed
     uint64_t va;    // only non-zero for non-pgdir
@@ -75,7 +75,7 @@ static inline void pf_list_print(list_head *listptr){
 }
 
 // for [p4-task3]
-# define NUM_MAX_SWAPPAGE 100
+# define NUM_MAX_SWAPPAGE 200
 typedef struct swp{
     int block_id;
     uint64_t va;

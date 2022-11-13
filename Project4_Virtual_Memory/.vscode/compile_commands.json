@@ -10,14 +10,56 @@
             "-Wall",
             "-mcmodel=medany",
             "-ggdb3",
+            "-I./arch/riscv/include",
+            "-Iinclude",
+            "-Idrivers",
+            "-e",
+            "_boot",
+            "-o",
+            "build/main",
+            "arch/riscv/kernel/head.S"
+        ],
+        "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
+        "file": "arch/riscv/kernel/head.S"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./tiny_libc/include",
+            "-o",
+            "build/printf.o",
+            "tiny_libc/printf.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
+        "file": "tiny_libc/printf.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
             "-I./tiny_libc/include",
             "./build/crt0.o",
             "-o",
-            "build/rw",
-            "test/test_project4/rw.c"
+            "build/lock",
+            "test/test_project4/lock.c"
         ],
         "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
-        "file": "test/test_project4/rw.c"
+        "file": "test/test_project4/lock.c"
     },
     {
         "arguments": [
@@ -77,35 +119,13 @@
             "-mcmodel=medany",
             "-ggdb3",
             "-I./tiny_libc/include",
+            "./build/crt0.o",
             "-o",
-            "build/printf.o",
-            "tiny_libc/printf.c"
+            "build/rw",
+            "test/test_project4/rw.c"
         ],
         "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
-        "file": "tiny_libc/printf.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./arch/riscv/include",
-            "-Iinclude",
-            "-Idrivers",
-            "-e",
-            "_boot",
-            "-o",
-            "build/main",
-            "init/main.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
-        "file": "init/main.c"
+        "file": "test/test_project4/rw.c"
     },
     {
         "arguments": [
@@ -121,32 +141,11 @@
             "-I./tiny_libc/include",
             "./build/crt0.o",
             "-o",
-            "build/shell",
-            "test/shell.c"
+            "build/add2",
+            "test/test_project4/add2.c"
         ],
         "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
-        "file": "test/shell.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./arch/riscv/include",
-            "-e",
-            "main",
-            "-o",
-            "build/bootblock",
-            "arch/riscv/boot/bootblock.S"
-        ],
-        "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
-        "file": "arch/riscv/boot/bootblock.S"
+        "file": "test/test_project4/add2.c"
     },
     {
         "arguments": [
@@ -166,30 +165,10 @@
             "_boot",
             "-o",
             "build/main",
-            "drivers/screen.c"
+            "arch/riscv/kernel/start.S"
         ],
         "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
-        "file": "drivers/screen.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./tiny_libc/include",
-            "./build/crt0.o",
-            "-o",
-            "build/consensus",
-            "test/test_project4/consensus.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
-        "file": "test/test_project4/consensus.c"
+        "file": "arch/riscv/kernel/start.S"
     },
     {
         "arguments": [
@@ -209,33 +188,10 @@
             "_boot",
             "-o",
             "build/main",
-            "kernel/locking/lock.c"
+            "libs/printk.c"
         ],
         "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
-        "file": "kernel/locking/lock.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./arch/riscv/include",
-            "-Iinclude",
-            "-Idrivers",
-            "-e",
-            "_boot",
-            "-o",
-            "build/main",
-            "libs/string.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
-        "file": "libs/string.c"
+        "file": "libs/printk.c"
     },
     {
         "arguments": [
@@ -278,10 +234,380 @@
             "_boot",
             "-o",
             "build/main",
-            "kernel/irq/irq.c"
+            "arch/riscv/bios/common.c"
         ],
         "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
-        "file": "kernel/irq/irq.c"
+        "file": "arch/riscv/bios/common.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./arch/riscv/include",
+            "-Iinclude",
+            "-Idrivers",
+            "-e",
+            "_boot",
+            "-o",
+            "build/main",
+            "kernel/sched/time.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
+        "file": "kernel/sched/time.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./tiny_libc/include",
+            "-o",
+            "build/syscall.o",
+            "tiny_libc/syscall.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
+        "file": "tiny_libc/syscall.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./tiny_libc/include",
+            "./build/crt0.o",
+            "-o",
+            "build/on_demanding",
+            "test/test_project4/on_demanding.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
+        "file": "test/test_project4/on_demanding.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./arch/riscv/include",
+            "-Iinclude",
+            "-Idrivers",
+            "-e",
+            "_boot",
+            "-o",
+            "build/main",
+            "kernel/syscall/syscall.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
+        "file": "kernel/syscall/syscall.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./arch/riscv/include",
+            "-Iinclude",
+            "-Idrivers",
+            "-e",
+            "_boot",
+            "-o",
+            "build/main",
+            "arch/riscv/kernel/entry.S"
+        ],
+        "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
+        "file": "arch/riscv/kernel/entry.S"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./tiny_libc/include",
+            "-o",
+            "build/itoa.o",
+            "tiny_libc/itoa.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
+        "file": "tiny_libc/itoa.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./arch/riscv/include",
+            "-Iinclude",
+            "-Idrivers",
+            "-e",
+            "_boot",
+            "-o",
+            "build/main",
+            "kernel/loader/loader.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
+        "file": "kernel/loader/loader.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./tiny_libc/include",
+            "-o",
+            "build/pthread.o",
+            "tiny_libc/pthread.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
+        "file": "tiny_libc/pthread.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./arch/riscv/include",
+            "-Iinclude",
+            "-Idrivers",
+            "-e",
+            "_boot",
+            "-o",
+            "build/main",
+            "kernel/sched/thread.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
+        "file": "kernel/sched/thread.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./tiny_libc/include",
+            "-I./arch/riscv/include",
+            "-o",
+            "build/crt0.o",
+            "arch/riscv/crt0/crt0.S"
+        ],
+        "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
+        "file": "arch/riscv/crt0/crt0.S"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./arch/riscv/include",
+            "-Iinclude",
+            "-Idrivers",
+            "-e",
+            "_boot",
+            "-o",
+            "build/main",
+            "drivers/screen.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
+        "file": "drivers/screen.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./tiny_libc/include",
+            "-o",
+            "build/string.o",
+            "tiny_libc/string.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
+        "file": "tiny_libc/string.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./arch/riscv/include",
+            "-Iinclude",
+            "-Idrivers",
+            "-e",
+            "_boot",
+            "-o",
+            "build/main",
+            "init/main.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
+        "file": "init/main.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./arch/riscv/include",
+            "-Iinclude",
+            "-Idrivers",
+            "-e",
+            "_boot",
+            "-o",
+            "build/main",
+            "libs/string.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
+        "file": "libs/string.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./tiny_libc/include",
+            "-o",
+            "build/mailbox.o",
+            "tiny_libc/mailbox.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
+        "file": "tiny_libc/mailbox.c"
+    },
+    {
+        "arguments": [
+            "gcc",
+            "-c",
+            "-ggdb",
+            "-Wall",
+            "-o",
+            "build/createimage",
+            "tools/createimage.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
+        "file": "tools/createimage.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./tiny_libc/include",
+            "-o",
+            "build/rand.o",
+            "tiny_libc/rand.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
+        "file": "tiny_libc/rand.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./tiny_libc/include",
+            "-o",
+            "build/time.o",
+            "tiny_libc/time.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
+        "file": "tiny_libc/time.c"
     },
     {
         "arguments": [
@@ -331,19 +657,6 @@
     },
     {
         "arguments": [
-            "gcc",
-            "-c",
-            "-ggdb",
-            "-Wall",
-            "-o",
-            "build/createimage",
-            "tools/createimage.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
-        "file": "tools/createimage.c"
-    },
-    {
-        "arguments": [
             "riscv64-unknown-linux-gnu-gcc",
             "-c",
             "-O0",
@@ -360,10 +673,10 @@
             "_boot",
             "-o",
             "build/main",
-            "kernel/sched/thread.c"
+            "kernel/irq/irq.c"
         ],
         "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
-        "file": "kernel/sched/thread.c"
+        "file": "kernel/irq/irq.c"
     },
     {
         "arguments": [
@@ -377,16 +690,14 @@
             "-mcmodel=medany",
             "-ggdb3",
             "-I./arch/riscv/include",
-            "-Iinclude",
-            "-Idrivers",
             "-e",
-            "_boot",
+            "main",
             "-o",
-            "build/main",
-            "arch/riscv/kernel/start.S"
+            "build/bootblock",
+            "arch/riscv/boot/bootblock.S"
         ],
         "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
-        "file": "arch/riscv/kernel/start.S"
+        "file": "arch/riscv/boot/bootblock.S"
     },
     {
         "arguments": [
@@ -399,17 +710,33 @@
             "-Wall",
             "-mcmodel=medany",
             "-ggdb3",
-            "-I./arch/riscv/include",
-            "-Iinclude",
-            "-Idrivers",
-            "-e",
-            "_boot",
+            "-I./tiny_libc/include",
             "-o",
-            "build/main",
-            "kernel/mm/mm.c"
+            "build/atoi.o",
+            "tiny_libc/atoi.c"
         ],
         "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
-        "file": "kernel/mm/mm.c"
+        "file": "tiny_libc/atoi.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./tiny_libc/include",
+            "./build/crt0.o",
+            "-o",
+            "build/consensus",
+            "test/test_project4/consensus.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
+        "file": "test/test_project4/consensus.c"
     },
     {
         "arguments": [
@@ -445,6 +772,46 @@
             "-Wall",
             "-mcmodel=medany",
             "-ggdb3",
+            "-I./tiny_libc/include",
+            "./build/crt0.o",
+            "-o",
+            "build/shell",
+            "test/shell.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
+        "file": "test/shell.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./tiny_libc/include",
+            "./build/crt0.o",
+            "-o",
+            "build/fly",
+            "test/test_project4/fly.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
+        "file": "test/test_project4/fly.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
             "-I./arch/riscv/include",
             "-Iinclude",
             "-Idrivers",
@@ -456,64 +823,6 @@
         ],
         "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
         "file": "kernel/locking/mbox.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./tiny_libc/include",
-            "-o",
-            "build/time.o",
-            "tiny_libc/time.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
-        "file": "tiny_libc/time.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./tiny_libc/include",
-            "-o",
-            "build/string.o",
-            "tiny_libc/string.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
-        "file": "tiny_libc/string.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./tiny_libc/include",
-            "-I./arch/riscv/include",
-            "-o",
-            "build/crt0.o",
-            "arch/riscv/crt0/crt0.S"
-        ],
-        "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
-        "file": "arch/riscv/crt0/crt0.S"
     },
     {
         "arguments": [
@@ -556,10 +865,10 @@
             "_boot",
             "-o",
             "build/main",
-            "arch/riscv/kernel/entry.S"
+            "kernel/locking/lock.c"
         ],
         "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
-        "file": "arch/riscv/kernel/entry.S"
+        "file": "kernel/locking/lock.c"
     },
     {
         "arguments": [
@@ -599,278 +908,9 @@
             "_boot",
             "-o",
             "build/main",
-            "arch/riscv/kernel/head.S"
+            "kernel/mm/mm.c"
         ],
         "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
-        "file": "arch/riscv/kernel/head.S"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./tiny_libc/include",
-            "-o",
-            "build/rand.o",
-            "tiny_libc/rand.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
-        "file": "tiny_libc/rand.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./arch/riscv/include",
-            "-Iinclude",
-            "-Idrivers",
-            "-e",
-            "_boot",
-            "-o",
-            "build/main",
-            "kernel/sched/time.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
-        "file": "kernel/sched/time.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./arch/riscv/include",
-            "-Iinclude",
-            "-Idrivers",
-            "-e",
-            "_boot",
-            "-o",
-            "build/main",
-            "libs/printk.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
-        "file": "libs/printk.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./arch/riscv/include",
-            "-Iinclude",
-            "-Idrivers",
-            "-e",
-            "_boot",
-            "-o",
-            "build/main",
-            "kernel/syscall/syscall.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
-        "file": "kernel/syscall/syscall.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./arch/riscv/include",
-            "-Iinclude",
-            "-Idrivers",
-            "-e",
-            "_boot",
-            "-o",
-            "build/main",
-            "arch/riscv/bios/common.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
-        "file": "arch/riscv/bios/common.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./tiny_libc/include",
-            "-o",
-            "build/syscall.o",
-            "tiny_libc/syscall.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
-        "file": "tiny_libc/syscall.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./tiny_libc/include",
-            "./build/crt0.o",
-            "-o",
-            "build/lock",
-            "test/test_project4/lock.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
-        "file": "test/test_project4/lock.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./tiny_libc/include",
-            "-o",
-            "build/atoi.o",
-            "tiny_libc/atoi.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
-        "file": "tiny_libc/atoi.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./tiny_libc/include",
-            "-o",
-            "build/itoa.o",
-            "tiny_libc/itoa.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
-        "file": "tiny_libc/itoa.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./tiny_libc/include",
-            "-o",
-            "build/mailbox.o",
-            "tiny_libc/mailbox.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
-        "file": "tiny_libc/mailbox.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./tiny_libc/include",
-            "./build/crt0.o",
-            "-o",
-            "build/fly",
-            "test/test_project4/fly.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
-        "file": "test/test_project4/fly.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./tiny_libc/include",
-            "-o",
-            "build/pthread.o",
-            "tiny_libc/pthread.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
-        "file": "tiny_libc/pthread.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./arch/riscv/include",
-            "-Iinclude",
-            "-Idrivers",
-            "-e",
-            "_boot",
-            "-o",
-            "build/main",
-            "kernel/loader/loader.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project4_Virtual_Memory",
-        "file": "kernel/loader/loader.c"
+        "file": "kernel/mm/mm.c"
     }
 ]

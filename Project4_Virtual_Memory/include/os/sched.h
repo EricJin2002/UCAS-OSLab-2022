@@ -160,6 +160,7 @@ static inline void pcb_list_print(list_head *listptr){
 #define TCBLIST2TCB(listptr) ((tcb_t *)((void *)(listptr)-STRUCT_OFFSET(pcb, tcb_list)))
 
 // for [p2-task5]
+pcb_t *find_father_pcb_for_tcb(tcb_t *tcb);
 void thread_create(tid_t *tidptr, uint64_t entrypoint, long a0, long a1, long a2);
 void thread_exit(void *retval);
 int thread_join(tid_t tid, void **retvalptr);
@@ -182,6 +183,7 @@ extern pid_t do_getpid();
 extern void do_task_show();
 
 // for [p3-task1]
+extern regs_context_t *init_pcb_stack(ptr_t kernel_stack, ptr_t user_stack, ptr_t entry_point, pcb_t *pcb);
 extern regs_context_t *init_pcb_via_id(int i, int taskid);
 extern regs_context_t *init_pcb_via_name(int i, char *taskname);
 
