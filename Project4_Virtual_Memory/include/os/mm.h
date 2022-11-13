@@ -103,6 +103,7 @@ extern void swap_out(int pf_id);
 extern void swap_out_randomly();
 extern void swap_in(swp_t *swpptr, pcb_t *owner_pcb);
 extern list_node_t *find_and_pop_swp_node(uintptr_t va, pcb_t *owner_pcb);
+extern int find_pf_node(uintptr_t va, pcb_t *owner_pcb);
 extern ptr_t alloc_page_from_pool(uintptr_t va, pcb_t *owner_pcb);
 
 extern ptr_t allocPage(int numPage);

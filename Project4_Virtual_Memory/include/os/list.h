@@ -87,6 +87,18 @@ static inline list_node_t *list_find_and_pop(list_head *queue, void *filter){
     return 0;
 }
 
+// for [p4]
+// find a node satisfied the given constraint
+// if exsist, return 1; else, return 0 
+static inline int list_find(list_head *queue, void *filter){
+    for(list_node_t *node=queue->next;node!=queue;node=node->next){
+        if((*(int (*)(list_node_t *))filter)(node)){
+            return 1;
+        }
+    }
+    return 0;
+}
+
 // for [p3]
 #define STRUCT_OFFSET(struct_type, element) (unsigned long)&((struct struct_type *)0)->element
 

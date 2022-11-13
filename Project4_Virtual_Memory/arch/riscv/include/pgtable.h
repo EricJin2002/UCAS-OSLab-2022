@@ -23,6 +23,7 @@
 static inline void local_flush_tlb_all(void)
 {
     __asm__ __volatile__ ("sfence.vma" : : : "memory");
+    // Q: will the other core flush its tlb ?
 }
 
 /* Flush one page from local TLB */

@@ -119,7 +119,7 @@ uint64_t load_app_img(int taskid, pcb_t *owener_pcb){
 
         // read sd
         bios_sdread(
-            kva2pa(sdread_buff), 
+            kva2pa((uintptr_t)sdread_buff), 
             2*PAGE_SIZE/SECTOR_SIZE,
             block_id
         );

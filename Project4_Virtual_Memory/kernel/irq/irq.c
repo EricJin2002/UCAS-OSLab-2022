@@ -61,24 +61,34 @@ void handle_page_fault(regs_context_t *regs, uint64_t stval, uint64_t scause){
         current_running_of[get_current_cpu_id()]->pid, stval, regs->sepc,
         scause==EXCC_INST_PAGE_FAULT?"inst":"data");
 
-    assert(!((stval>>38)&1)); // check if is in kernel
-
     // for debug
-    assert(stval>=0x10000ul);
-    if(stval == EXCC_INST_PAGE_FAULT){
-        // check if code goes to stack
-        assert(stval & (1<<4)); // 1xxxx
+    if(stval<0x10000ul || ((stval>>38)&1) || 
+        (stval == EXCC_INST_PAGE_FAULT && (stval & (1<<4)))
+    ){
+        printk("[pid %d stval 0x%lx sepc 0x%lx %s] ",
+            current_running_of[get_current_cpu_id()]->pid, stval, regs->sepc,
+            scause==EXCC_INST_PAGE_FAULT?"inst":"data");
+        assert(stval<0x10000ul);
+        assert(!((stval>>38)&1));                                   // check if is in kernel
+        assert(stval == EXCC_INST_PAGE_FAULT && (stval & (1<<4)));  // check if code goes to stack // 1xxxx
     }
 
-    list_node_t *node = find_and_pop_swp_node(stval, current_running_of[get_current_cpu_id()]);
+    if(find_pf_node(stval, current_running_of[get_current_cpu_id()])){
+        // the stval is already swapped into page frames
+        // so do nothing except flush tlb
+        printl("!strange: the stval is already swapped into page frames\n");
+    } else {
+        list_node_t *node = find_and_pop_swp_node(stval, current_running_of[get_current_cpu_id()]);
 
-    if(!node){
-        // not in swap
-        // alloc new
-        alloc_page_helper(stval, current_running_of[get_current_cpu_id()]);
-    }else{
-        swap_in(LIST2SWP(node), current_running_of[get_current_cpu_id()]);
+        if(!node){
+            // not in swap
+            // alloc new
+            alloc_page_helper(stval, current_running_of[get_current_cpu_id()]);
+        }else{
+            swap_in(LIST2SWP(node), current_running_of[get_current_cpu_id()]);
+        }
     }
+
     local_flush_tlb_all();
     local_flush_icache_all();
     printl("[leave handle_page_fault]\n");

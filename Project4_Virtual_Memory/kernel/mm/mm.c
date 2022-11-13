@@ -157,6 +157,19 @@ list_node_t *find_and_pop_swp_node(uintptr_t va, pcb_t *owner_pcb){
     return list_find_and_pop(&owner_pcb->swp_list, filter_swp);
 }
 
+static uint64_t filter_pf_stval;
+static pid_t filter_pf_owner_pid;
+static int filter_pf(list_node_t *node){
+    pf_t *pfptr = LIST2PF(node);
+    return pfptr->owner == filter_pf_stval
+        && (pfptr->va >> NORMAL_PAGE_SHIFT) == (filter_pf_stval >> NORMAL_PAGE_SHIFT);
+}
+int find_pf_node(uintptr_t va, pcb_t *owner_pcb){
+    filter_pf_stval = va;
+    filter_pf_owner_pid = owner_pcb->pid;
+    return list_find(&owner_pcb->pf_list, filter_pf);
+}
+
 ptr_t alloc_page_from_pool(uintptr_t va, pcb_t *owner_pcb){
     if(list_is_empty(&free_pf_pool)){
         swap_out_randomly();
