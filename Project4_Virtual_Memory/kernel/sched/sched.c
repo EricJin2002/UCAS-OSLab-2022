@@ -462,6 +462,11 @@ int do_kill(pid_t pid){
                     spin_lock_release(&mlocks[j].lock);
                 }
 
+                // kill threads
+                while((node=list_pop(&pcb[i].tcb_list))){
+                    list_delete(&TCBLIST2TCB(node)->list);
+                }
+
                 // recycle pages
                 while((node=list_pop(&pcb[i].pf_list))){
                     LIST2PF(node)->va = 0;
