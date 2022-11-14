@@ -44,6 +44,7 @@ LIST_HEAD(free_swp_pool);
 swp_t swps[NUM_MAX_SWAPPAGE];
 
 void init_pages(){
+    // init page frames
     for(int i=0;i<NUM_MAX_PAGEFRAME;i++){
         pfs[i].kva = allocPage(1);
         pfs[i].va = 0;
@@ -51,6 +52,7 @@ void init_pages(){
         list_push(&free_pf_pool, &pfs[i].list);
     }
 
+    // init swap pages
     // the below line is abandoned
     // because it will overwrite task-info area
     // thus cannot repeatedly `make run`
@@ -68,6 +70,11 @@ void init_pages(){
         swps[i].va = 0;
         swps[i].owner = -1;
         list_push(&free_swp_pool, &swps[i].list);
+    }
+
+    // init shared memory pages
+    for(int i=0;i<NUM_MAX_SHMPAGE;i++){
+        shms[i].handle_num = 0;
     }
 }
 
@@ -192,7 +199,10 @@ uintptr_t check_and_get_kva_of(uintptr_t va, pcb_t *owner_pcb){
         // the page that `va` points to has been swapped out memory
         // therefore we should swap in first
         list_node_t *swap_node = find_and_pop_swp_node(va, owner_pcb);
-        assert(swap_node);
+        if(!swap_node){
+            return 0;
+        }
+        // assert(swap_node);
         swap_in(LIST2SWP(swap_node), owner_pcb);
     }
     kva = get_kva_of(va, owner_pcb->pgdir);
@@ -315,12 +325,130 @@ uintptr_t alloc_page_helper(uintptr_t va, /*uintptr_t pgdir*/pcb_t *owner_pcb)
     return pa2kva(get_pa(pte[vpn0]));
 }
 
+void map_page(uintptr_t va, uintptr_t pa, pcb_t *owner_pcb)
+{
+    printl("[in map_page]\n");
+
+    va &= VA_MASK;
+    uint64_t vpn2 = va >> (NORMAL_PAGE_SHIFT + PPN_BITS + PPN_BITS);
+    uint64_t vpn1 = (vpn2 << PPN_BITS) ^ (va >> (NORMAL_PAGE_SHIFT + PPN_BITS));
+    uint64_t vpn0 = (vpn2 << (PPN_BITS + PPN_BITS)) ^ (vpn1 << PPN_BITS) ^ (va >> (NORMAL_PAGE_SHIFT));
+
+    PTE *pgd = (PTE *)owner_pcb->pgdir;
+    // if(!pgd[vpn2]){
+    if(!get_attribute(pgd[vpn2], _PAGE_PRESENT)){
+        // alloc a new page directory
+        set_pfn(&pgd[vpn2], kva2pa(
+            // allocPage(1)
+            alloc_page_from_pool(0, owner_pcb)
+        )>>NORMAL_PAGE_SHIFT);
+        set_attribute(&pgd[vpn2], _PAGE_PRESENT | _PAGE_USER);
+        clear_pgdir(pa2kva(get_pa(pgd[vpn2])));
+    }
+
+    PTE *pmd = (PTE *)pa2kva(get_pa(pgd[vpn2]));
+    // if(!pmd[vpn1]){
+    if(!get_attribute(pmd[vpn1], _PAGE_PRESENT)){
+        // alloc a new page directory
+        set_pfn(&pmd[vpn1], kva2pa(
+            // allocPage(1)
+            alloc_page_from_pool(0, owner_pcb)
+        )>>NORMAL_PAGE_SHIFT);
+        set_attribute(&pmd[vpn1], _PAGE_PRESENT | _PAGE_USER);
+        clear_pgdir(pa2kva(get_pa(pmd[vpn1])));
+    }
+
+    PTE *pte = (PTE *)pa2kva(get_pa(pmd[vpn1]));
+    assert(!get_attribute(pte[vpn0], _PAGE_PRESENT));
+    set_pfn(&pte[vpn0], pa>>NORMAL_PAGE_SHIFT);
+    set_attribute(&pte[vpn0], _PAGE_PRESENT | _PAGE_READ | _PAGE_WRITE | _PAGE_EXEC | 
+                                _PAGE_USER | _PAGE_ACCESSED | _PAGE_DIRTY);
+    
+    local_flush_tlb_all();
+    printl("[leave map_page]\n");
+}
+
+shm_t shms[NUM_MAX_SHMPAGE];
+
 uintptr_t shm_page_get(int key)
 {
     // TODO [P4-task4] shm_page_get:
+    pcb_t *father_pcb = find_father_pcb_for_tcb(current_running_of[get_current_cpu_id()]);
+
+    for(int i=0;i<NUM_MAX_SHMPAGE;i++){
+        if(shms[i].handle_num>0 && shms[i].key==key){
+            shms[i].handle_num++;
+
+            // find an available va
+            for(
+                uintptr_t va = SHMPAGE_VA_BASE + (i<<NORMAL_PAGE_SHIFT);
+                va < SHMPAGE_VA_BASE + SHMPAGE_VA_SIZE;
+                va += NUM_MAX_SHMPAGE<<NORMAL_PAGE_SHIFT
+            ){
+                if(!check_and_get_kva_of(va, father_pcb)){
+                    // not used
+                    map_page(va, kva2pa(shms[i].pf->kva), father_pcb);
+                    return va;
+                }
+            }
+
+            // no available shm va
+            assert(0);
+        }
+    }
+
+    for(int i=0;i<NUM_MAX_SHMPAGE;i++){
+        if(shms[i].handle_num==0){
+            shms[i].handle_num++;
+            shms[i].key = key;
+
+            // alloc a new page frame from free page frame pool
+            if(list_is_empty(&free_pf_pool)){
+                swap_out_randomly();
+            }
+            shms[i].pf = LIST2PF(list_pop(&free_pf_pool));
+            shms[i].pf->va = 0;
+            shms[i].pf->owner = 0;
+
+            // find an available va
+            for(
+                uintptr_t va = SHMPAGE_VA_BASE + (i<<NORMAL_PAGE_SHIFT);
+                va < SHMPAGE_VA_BASE + SHMPAGE_VA_SIZE;
+                va += NUM_MAX_SHMPAGE<<NORMAL_PAGE_SHIFT
+            ){
+                if(!check_and_get_kva_of(va, father_pcb)){
+                    // not used
+                    map_page(va, kva2pa(shms[i].pf->kva), father_pcb);
+                    return va;
+                }
+            }
+
+            // no available shm va
+            assert(0);
+        }
+    }
+
+    // no available shm table
+    assert(0);
 }
 
 void shm_page_dt(uintptr_t addr)
 {
     // TODO [P4-task4] shm_page_dt:
+    pcb_t *father_pcb = find_father_pcb_for_tcb(current_running_of[get_current_cpu_id()]);
+
+    uintptr_t kva = get_kva_of(addr, father_pcb->pgdir);
+    for(int i=0;i<NUM_MAX_SHMPAGE;i++){
+        if(shms[i].handle_num>0 && shms[i].pf->kva==kva){
+            set_pte_invalid(addr, father_pcb->pgdir);
+            if(!--shms[i].handle_num){
+                // todo: also release occupied shm page when exiting or being killed
+                list_push(&free_pf_pool, &shms[i].pf->list);
+            }
+            return;
+        }
+    }
+
+    // no such addr
+    assert(0);
 }

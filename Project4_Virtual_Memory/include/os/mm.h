@@ -54,7 +54,7 @@
 #define NUM_MAX_PAGEFRAME 100
 typedef struct pf{  // page frame
     uint64_t kva;   // kva is fixed
-    uint64_t va;    // only non-zero for non-pgdir
+    uint64_t va;    // only non-zero for swappable pages
     pid_t owner;
     pcb_t *owner_pcb;
     list_node_t list;
@@ -96,6 +96,17 @@ static inline void swp_list_print(list_head *listptr){
     }
     // printl("\n\r");
 }
+
+// for [p4-task5]
+# define NUM_MAX_SHMPAGE 20
+typedef struct shm{
+    pf_t *pf;   // pf->va == 0, which indicates unswappable
+    int key;
+    int handle_num;
+} shm_t;
+extern shm_t shms[NUM_MAX_SHMPAGE];
+#define SHMPAGE_VA_BASE 0x10000000
+#define SHMPAGE_VA_SIZE 0x10000000
 
 // for [p4]
 extern void init_pages();

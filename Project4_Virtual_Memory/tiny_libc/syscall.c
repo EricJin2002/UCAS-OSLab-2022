@@ -264,9 +264,11 @@ int sys_taskset_pid(int mask, pid_t pid){
 void* sys_shmpageget(int key)
 {
     /* TODO: [p4-task5] call invoke_syscall to implement sys_shmpageget */
+    return invoke_syscall(SYSCALL_SHM_GET, (long)key, IGNORE, IGNORE, IGNORE, IGNORE);
 }
 
 void sys_shmpagedt(void *addr)
 {
     /* TODO: [p4-task5] call invoke_syscall to implement sys_shmpagedt */
+    invoke_syscall(SYSCALL_SHM_DT, (long)addr, IGNORE, IGNORE, IGNORE, IGNORE);
 }

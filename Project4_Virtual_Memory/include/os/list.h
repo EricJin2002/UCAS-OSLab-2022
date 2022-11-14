@@ -89,11 +89,11 @@ static inline list_node_t *list_find_and_pop(list_head *queue, void *filter){
 
 // for [p4]
 // find a node satisfied the given constraint
-// if exsist, return 1; else, return 0 
-static inline int list_find(list_head *queue, void *filter){
+// if not exsist, return 0 
+static inline list_node_t *list_find(list_head *queue, void *filter){
     for(list_node_t *node=queue->next;node!=queue;node=node->next){
         if((*(int (*)(list_node_t *))filter)(node)){
-            return 1;
+            return node;
         }
     }
     return 0;

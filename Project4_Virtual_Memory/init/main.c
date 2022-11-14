@@ -207,6 +207,9 @@ static void init_syscall(void)
     
     syscall[SYSCALL_TASKSET_NAME]   = (long (*)())taskset_via_name;
     syscall[SYSCALL_TASKSET_PID]    = (long (*)())taskset_via_pid;
+
+    syscall[SYSCALL_SHM_GET]        = (long (*)())shm_page_get;
+    syscall[SYSCALL_SHM_DT]         = (long (*)())shm_page_dt;
 }
 
 // for [p3-task3]
