@@ -78,13 +78,26 @@ void handle_page_fault(regs_context_t *regs, uint64_t stval, uint64_t scause){
 
     PTE *pteptr = get_pte_of(stval, current_running_of[get_current_cpu_id()]->pgdir);
     if(pteptr){
-        if(scause==EXCC_INST_ACCESS || scause==EXCC_LOAD_ACCESS){
+        if(scause==EXCC_INST_PAGE_FAULT || scause==EXCC_LOAD_PAGE_FAULT){
             // todo: avoid magic number 0xfflu
             assert(!get_attribute(*pteptr, _PAGE_ACCESSED));
             set_attribute(pteptr, _PAGE_ACCESSED | get_attribute(*pteptr, 0xfflu));
-        }else if(scause==EXCC_STORE_ACCESS){
-            assert(!get_attribute(*pteptr, _PAGE_ACCESSED) || !get_attribute(*pteptr, _PAGE_DIRTY));
-            set_attribute(pteptr, _PAGE_ACCESSED | _PAGE_DIRTY | get_attribute(*pteptr, 0xfflu));
+        }else if(scause==EXCC_STORE_PAGE_FAULT){
+            if(!get_attribute(*pteptr, _PAGE_WRITE)){
+                // not able to write
+                // copy on write
+                // todo:
+                uintptr_t oldpg_kva = check_and_get_kva_of(stval, father_pcb) & ~(NORMAL_PAGE_SIZE-1);
+                uintptr_t newpg_kva = alloc_page_helper(stval, father_pcb) & ~(NORMAL_PAGE_SIZE-1);
+                for(int i=0;i<NORMAL_PAGE_SIZE;i++){
+                    ((char *)newpg_kva)[i] = ((char *)oldpg_kva)[i];
+                }
+
+            }else if(!get_attribute(*pteptr, _PAGE_ACCESSED) || !get_attribute(*pteptr, _PAGE_DIRTY)){
+                set_attribute(pteptr, _PAGE_ACCESSED | _PAGE_DIRTY | get_attribute(*pteptr, 0xfflu));
+            }else{
+                assert(0);
+            }
         }
     }else{
         if(find_pf_node(stval, father_pcb)){

@@ -272,3 +272,12 @@ void sys_shmpagedt(void *addr)
     /* TODO: [p4-task5] call invoke_syscall to implement sys_shmpagedt */
     invoke_syscall(SYSCALL_SHM_DT, (long)addr, IGNORE, IGNORE, IGNORE, IGNORE);
 }
+
+// for [p4-task5]
+uintptr_t sys_get_pa(uintptr_t va){
+    return invoke_syscall(SYSCALL_GET_PA, (long)va, IGNORE, IGNORE, IGNORE, IGNORE);
+}
+
+uintptr_t take_snapshot(uintptr_t pg_va){
+    return invoke_syscall(SYSCALL_SNAPSHOT, (long)pg_va, IGNORE, IGNORE, IGNORE, IGNORE);
+}

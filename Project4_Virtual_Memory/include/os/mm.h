@@ -142,5 +142,10 @@ extern uintptr_t alloc_page_helper(uintptr_t va, /*uintptr_t pgdir*/pcb_t *owner
 uintptr_t shm_page_get(int key);
 void shm_page_dt(uintptr_t addr);
 
+// for [p4-task6]
+uintptr_t get_pa_of(uintptr_t va);
+uintptr_t take_snapshot(uintptr_t pgdir_va);
+#define SNAPSHOT_VA_BASE 0x20000000
+#define SNAPSHOT_VA_SIZE 0x10000000
 
 #endif /* MM_H */

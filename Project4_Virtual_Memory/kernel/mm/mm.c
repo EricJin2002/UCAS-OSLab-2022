@@ -316,16 +316,16 @@ uintptr_t alloc_page_helper(uintptr_t va, /*uintptr_t pgdir*/pcb_t *owner_pcb)
 
     PTE *pte = (PTE *)pa2kva(get_pa(pmd[vpn1]));
     // if(!pte[vpn0]){
-    if(!get_attribute(pte[vpn0], _PAGE_PRESENT)){
-        // alloc a new page directory
-        set_pfn(&pte[vpn0], kva2pa(
-            // allocPage(1)
-            alloc_page_from_pool(va, owner_pcb)
-        )>>NORMAL_PAGE_SHIFT);
-        set_attribute(&pte[vpn0], _PAGE_PRESENT | _PAGE_READ | _PAGE_WRITE | _PAGE_EXEC | 
-                                    _PAGE_USER /*| _PAGE_ACCESSED | _PAGE_DIRTY*/);
-        // clear_pgdir(pa2kva(get_pa(pte[vpn0]))); // Must we clear here ?
-    }
+    // if(!get_attribute(pte[vpn0], _PAGE_PRESENT)){
+    // alloc a new page directory
+    set_pfn(&pte[vpn0], kva2pa(
+        // allocPage(1)
+        alloc_page_from_pool(va, owner_pcb)
+    )>>NORMAL_PAGE_SHIFT);
+    set_attribute(&pte[vpn0], _PAGE_PRESENT | _PAGE_READ | _PAGE_WRITE | _PAGE_EXEC | 
+                                _PAGE_USER /*| _PAGE_ACCESSED | _PAGE_DIRTY*/);
+    // clear_pgdir(pa2kva(get_pa(pte[vpn0]))); // Must we clear here ?
+    // }
 
     print_va_at_pgdir(va, owner_pcb->pgdir);
     local_flush_tlb_all();
@@ -463,4 +463,43 @@ void shm_page_dt(uintptr_t addr)
 
     // no such addr
     assert(0);
+}
+
+// for [p4-task6]
+// note: the page va points to might have been swapped out of memory
+//       and the func will return 0 under such circumstance
+// on found, reuturn pa; else return 0
+uintptr_t get_pa_of(uintptr_t va){
+    uintptr_t kva;
+    if((kva=get_kva_of(va, current_running_of[get_current_cpu_id()]->pgdir))){
+        return kva2pa(kva);
+    }else{
+        return 0;
+    }
+}
+
+uintptr_t take_snapshot(uintptr_t pg_va){
+    pcb_t *father_pcb = find_father_pcb_for_tcb(current_running_of[get_current_cpu_id()]);
+
+    // find an available va
+    uintptr_t va;
+    for(
+        va = SNAPSHOT_VA_BASE;
+        va < SNAPSHOT_VA_BASE + SNAPSHOT_VA_SIZE;
+        va += NORMAL_PAGE_SIZE
+    ){
+        if(!check_and_get_kva_of(va, father_pcb)){
+            // not used
+            map_page(va, kva2pa(check_and_get_kva_of(pg_va, father_pcb)), father_pcb);
+            break;
+        }
+    }
+    assert(va!=SNAPSHOT_VA_BASE+SNAPSHOT_VA_SIZE);
+
+    // set read-exec only
+    PTE *pg_pteptr = get_pte_of(pg_va, father_pcb->pgdir);
+    assert(pg_pteptr);
+    set_attribute(pg_pteptr, ~_PAGE_WRITE & get_attribute(*pg_pteptr, 0xfflu));
+
+    return va;
 }

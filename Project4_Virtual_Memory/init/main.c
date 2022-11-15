@@ -210,6 +210,9 @@ static void init_syscall(void)
 
     syscall[SYSCALL_SHM_GET]        = (long (*)())shm_page_get;
     syscall[SYSCALL_SHM_DT]         = (long (*)())shm_page_dt;
+
+    syscall[SYSCALL_GET_PA]         = (long (*)())get_pa_of;
+    syscall[SYSCALL_SNAPSHOT]       = (long (*)())take_snapshot;
 }
 
 // for [p3-task3]

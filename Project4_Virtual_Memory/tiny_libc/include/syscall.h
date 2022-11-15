@@ -47,4 +47,8 @@
 #define SYSCALL_TASKSET_NAME 64
 #define SYSCALL_TASKSET_PID 65
 
+// for [p4-task6]
+#define SYSCALL_GET_PA 66
+#define SYSCALL_SNAPSHOT 67
+
 #endif
