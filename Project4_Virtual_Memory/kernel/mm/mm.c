@@ -171,7 +171,7 @@ static int filter_pf(list_node_t *node){
     return pfptr->owner == filter_pf_stval
         && (pfptr->va >> NORMAL_PAGE_SHIFT) == (filter_pf_stval >> NORMAL_PAGE_SHIFT);
 }
-int find_pf_node(uintptr_t va, pcb_t *owner_pcb){
+list_node_t *find_pf_node(uintptr_t va, pcb_t *owner_pcb){
     filter_pf_stval = va;
     filter_pf_owner_pid = owner_pcb->pid;
     return list_find(&owner_pcb->pf_list, filter_pf);
@@ -225,6 +225,14 @@ ptr_t allocLargePage(int numPage)
 void freePage(ptr_t baseAddr)
 {
     // TODO [P4-task1] (design you 'freePage' here if you need):
+}
+
+void clearPage(ptr_t kva){
+    kva &= ~(NORMAL_PAGE_SIZE-1);
+    uint64_t *base_addr = (uint64_t *)kva;
+    for(int i=0;i<PAGE_SIZE/64;i++){
+        base_addr[i] = 0;
+    }
 }
 
 void *kmalloc(size_t size)
@@ -315,7 +323,7 @@ uintptr_t alloc_page_helper(uintptr_t va, /*uintptr_t pgdir*/pcb_t *owner_pcb)
             alloc_page_from_pool(va, owner_pcb)
         )>>NORMAL_PAGE_SHIFT);
         set_attribute(&pte[vpn0], _PAGE_PRESENT | _PAGE_READ | _PAGE_WRITE | _PAGE_EXEC | 
-                                    _PAGE_USER | _PAGE_ACCESSED | _PAGE_DIRTY);
+                                    _PAGE_USER /*| _PAGE_ACCESSED | _PAGE_DIRTY*/);
         // clear_pgdir(pa2kva(get_pa(pte[vpn0]))); // Must we clear here ?
     }
 
@@ -362,7 +370,7 @@ void map_page(uintptr_t va, uintptr_t pa, pcb_t *owner_pcb)
     assert(!get_attribute(pte[vpn0], _PAGE_PRESENT));
     set_pfn(&pte[vpn0], pa>>NORMAL_PAGE_SHIFT);
     set_attribute(&pte[vpn0], _PAGE_PRESENT | _PAGE_READ | _PAGE_WRITE | _PAGE_EXEC | 
-                                _PAGE_USER | _PAGE_ACCESSED | _PAGE_DIRTY);
+                                _PAGE_USER /*| _PAGE_ACCESSED | _PAGE_DIRTY*/);
     
     local_flush_tlb_all();
     printl("[leave map_page]\n");
@@ -410,6 +418,9 @@ uintptr_t shm_page_get(int key)
             shms[i].pf->va = 0;
             shms[i].pf->owner = 0;
 
+            // clear the page frame after creating
+            clearPage(shms[i].pf->kva);
+
             // find an available va
             for(
                 uintptr_t va = SHMPAGE_VA_BASE + (i<<NORMAL_PAGE_SHIFT);
@@ -430,6 +441,7 @@ uintptr_t shm_page_get(int key)
 
     // no available shm table
     assert(0);
+    return 0;
 }
 
 void shm_page_dt(uintptr_t addr)

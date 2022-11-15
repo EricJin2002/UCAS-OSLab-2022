@@ -76,19 +76,32 @@ void handle_page_fault(regs_context_t *regs, uint64_t stval, uint64_t scause){
     // for tcb, find its father
     pcb_t *father_pcb = find_father_pcb_for_tcb(current_running_of[get_current_cpu_id()]);
 
-    if(find_pf_node(stval, father_pcb)){
-        // the stval is already swapped into page frames
-        // so do nothing except flush tlb
-        printl("!strange: the stval is already swapped into page frames\n");
-    } else {
-        list_node_t *node = find_and_pop_swp_node(stval, father_pcb);
+    PTE *pteptr = get_pte_of(stval, current_running_of[get_current_cpu_id()]->pgdir);
+    if(pteptr){
+        if(scause==EXCC_INST_ACCESS || scause==EXCC_LOAD_ACCESS){
+            // todo: avoid magic number 0xfflu
+            assert(!get_attribute(*pteptr, _PAGE_ACCESSED));
+            set_attribute(pteptr, _PAGE_ACCESSED | get_attribute(*pteptr, 0xfflu));
+        }else if(scause==EXCC_STORE_ACCESS){
+            assert(!get_attribute(*pteptr, _PAGE_ACCESSED) || !get_attribute(*pteptr, _PAGE_DIRTY));
+            set_attribute(pteptr, _PAGE_ACCESSED | _PAGE_DIRTY | get_attribute(*pteptr, 0xfflu));
+        }
+    }else{
+        if(find_pf_node(stval, father_pcb)){
+            // the stval is already swapped into page frames
+            // so do nothing except flush tlb
+            printl("!strange: the stval is already swapped into page frames\n");
+            assert(0);
+        } else {
+            list_node_t *node = find_and_pop_swp_node(stval, father_pcb);
 
-        if(!node){
-            // not in swap
-            // alloc new
-            alloc_page_helper(stval, father_pcb);
-        }else{
-            swap_in(LIST2SWP(node), father_pcb);
+            if(!node){
+                // not in swap
+                // alloc new
+                alloc_page_helper(stval, father_pcb);
+            }else{
+                swap_in(LIST2SWP(node), father_pcb);
+            }
         }
     }
 
@@ -111,10 +124,10 @@ void init_exception()
         exc_table[i] = handle_other;
     }
     // exc_table[EXCC_INST_MISALIGNED]     = handle_other;
-    // exc_table[EXCC_INST_ACCESS]         = handle_other;
+    // exc_table[EXCC_INST_ACCESS]         = handle_access_fault;
     // exc_table[EXCC_BREAKPOINT]          = handle_other;
-    // exc_table[EXCC_LOAD_ACCESS]         = handle_other;
-    // exc_table[EXCC_STORE_ACCESS]        = handle_other;
+    // exc_table[EXCC_LOAD_ACCESS]         = handle_access_fault;
+    // exc_table[EXCC_STORE_ACCESS]        = handle_access_fault;
     exc_table[EXCC_SYSCALL]             = handle_syscall;
     exc_table[EXCC_INST_PAGE_FAULT]     = handle_page_fault;
     exc_table[EXCC_LOAD_PAGE_FAULT]     = handle_page_fault;

@@ -116,6 +116,7 @@ static inline long get_attribute(PTE entry, uint64_t mask)
 static inline void set_attribute(PTE *entry, uint64_t bits)
 {
     /* TODO: [P4-task1] */
+    // todo: avoid magic number 0xfflu
     *entry = (*entry & ~0xfflu) | bits;
 }
 
@@ -242,6 +243,46 @@ static inline void set_pte_invalid(uintptr_t va, uintptr_t pgdir_va){
     set_attribute(&pte[vpn0], 0);
     local_flush_tlb_all();
     return;
+}
+
+// for [p4-task6]
+// on found valid pte, return its ptr; else, return 0
+static inline PTE *get_pte_of(uintptr_t va, uintptr_t pgdir_va){
+    va &= VA_MASK;
+    uint64_t vpn2 = va >> (NORMAL_PAGE_SHIFT + PPN_BITS + PPN_BITS);
+    uint64_t vpn1 = (vpn2 << PPN_BITS) ^ (va >> (NORMAL_PAGE_SHIFT + PPN_BITS));
+    uint64_t vpn0 = (vpn2 << (PPN_BITS + PPN_BITS)) ^ (vpn1 << PPN_BITS) ^ (va >> (NORMAL_PAGE_SHIFT));
+
+    PTE *pgd = (PTE *)pgdir_va;
+    if(!get_attribute(pgd[vpn2], _PAGE_PRESENT)){
+        // no such entry
+        return 0;
+    }else if(get_attribute(pgd[vpn2], _PAGE_READ | _PAGE_WRITE | _PAGE_EXEC)){
+        // pa found
+        return &pgd[vpn2];
+    }
+
+    PTE *pmd = (PTE *)pa2kva(get_pa(pgd[vpn2]));
+    if(!get_attribute(pmd[vpn1], _PAGE_PRESENT)){
+        // no such entry
+        return 0;
+    }else if(get_attribute(pmd[vpn1], _PAGE_READ | _PAGE_WRITE | _PAGE_EXEC)){
+        // pa found
+        return &pmd[vpn1];
+    }
+
+    PTE *pte = (PTE *)pa2kva(get_pa(pmd[vpn1]));
+    if(!get_attribute(pte[vpn0], _PAGE_PRESENT)){
+        // no such entry
+        return 0;
+    }else if(get_attribute(pte[vpn0], _PAGE_READ | _PAGE_WRITE | _PAGE_EXEC)){
+        // pa found
+        return &pte[vpn0];
+    }
+
+    // four level pages
+    assert(0);
+    return 0;
 }
 
 #endif  // PGTABLE_H
