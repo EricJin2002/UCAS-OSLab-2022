@@ -75,6 +75,6 @@ void sys_shmpagedt(void *addr);
 
 // for [p4-task6]
 uintptr_t sys_get_pa(uintptr_t va);
-uintptr_t take_snapshot(uintptr_t pg_va);
+uintptr_t sys_take_snapshot(uintptr_t pg_va);
 
 #endif

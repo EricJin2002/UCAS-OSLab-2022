@@ -278,6 +278,6 @@ uintptr_t sys_get_pa(uintptr_t va){
     return invoke_syscall(SYSCALL_GET_PA, (long)va, IGNORE, IGNORE, IGNORE, IGNORE);
 }
 
-uintptr_t take_snapshot(uintptr_t pg_va){
+uintptr_t sys_take_snapshot(uintptr_t pg_va){
     return invoke_syscall(SYSCALL_SNAPSHOT, (long)pg_va, IGNORE, IGNORE, IGNORE, IGNORE);
 }

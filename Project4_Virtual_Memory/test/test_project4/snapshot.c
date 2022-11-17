@@ -20,7 +20,7 @@ int main(){
     // test 0
     printf("--------------------------------------------\n");
     data[0]++;
-    snapshot_va[0] = take_snapshot(data);
+    snapshot_va[0] = sys_take_snapshot(data);
     data[1]++;
 
     printf("[data       pa %lx] ",sys_get_pa(data));
@@ -38,8 +38,8 @@ int main(){
     //test 1
     printf("--------------------------------------------\n");
     data[2]++;
-    snapshot_va[1] = take_snapshot(data);
-    snapshot_va[2] = take_snapshot(data);
+    snapshot_va[1] = sys_take_snapshot(data);
+    snapshot_va[2] = sys_take_snapshot(data);
     data[3]++;
 
     printf("[data       pa %lx] ",sys_get_pa(data));
