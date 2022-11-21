@@ -1,0 +1,3 @@
+mailbox a &
+mailbox b &
+mailbox c &

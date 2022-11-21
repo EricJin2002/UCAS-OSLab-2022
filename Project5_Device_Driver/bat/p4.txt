@@ -1,0 +1,6 @@
+lock 6 &
+lock 7 &
+lock 8 &
+lock 9 &
+fly &
+p4_rw

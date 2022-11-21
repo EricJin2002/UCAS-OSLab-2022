@@ -1,0 +1,11 @@
+--- Makefile	2022-11-21 12:12:53.908107383 +0800
++++ Makefile	2022-11-21 12:12:53.916107295 +0800
+@@ -68,7 +70,7 @@ DIR_KERNEL      = ./kernel
+ DIR_LIBS        = ./libs
+ DIR_TINYLIBC    = ./tiny_libc
+ DIR_TEST        = ./test
+-DIR_TEST_PROJ   = $(DIR_TEST)/test_project$(PROJECT_IDX)/S_CORE
++DIR_TEST_PROJ   = $(DIR_TEST)/test_project$(PROJECT_IDX)
+ 
+ BOOTLOADER_ENTRYPOINT   = 0x50200000
+ KERNEL_ENTRYPOINT       = 0xffffffc050202000

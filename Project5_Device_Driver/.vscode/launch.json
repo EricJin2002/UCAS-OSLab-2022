@@ -1,0 +1,24 @@
+{
+    // 使用 IntelliSense 了解相关属性。 
+    // 悬停以查看现有属性的描述。
+    // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        
+        {
+            "name": "riscv64-unknown-linux-gnu-gdb",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/main",
+            "stopAtEntry": true,
+            "cwd": "${workspaceFolder}",
+            "miDebuggerServerAddress": "localhost:1234",
+            "miDebuggerPath": "/opt/riscv64-linux/bin/riscv64-unknown-linux-gnu-gdb",
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [{
+               "text":"source ${workspaceFolder}/.gdbinit"
+            }]
+        }
+    ]
+}
