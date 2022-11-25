@@ -35,6 +35,10 @@ void interrupt_helper(regs_context_t *regs, uint64_t stval, uint64_t scause)
     // for [p3-task3]
     // unlock_kernel();
     // printk("leave %d\n",get_current_cpu_id());
+
+    // for [p4]
+    local_flush_tlb_all();
+    local_flush_icache_all();
 }
 
 void handle_irq_timer(regs_context_t *regs, uint64_t stval, uint64_t scause)
