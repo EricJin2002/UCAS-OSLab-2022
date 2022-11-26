@@ -137,6 +137,8 @@ extern ptr_t allocLargePage(int numPage);
 extern void* kmalloc(size_t size);
 extern void share_pgtable(uintptr_t dest_pgdir, uintptr_t src_pgdir);
 extern uintptr_t alloc_page_helper(uintptr_t va, /*uintptr_t pgdir*/pcb_t *owner_pcb);
+extern void map_page(uintptr_t va, uintptr_t pa, pcb_t *owner_pcb);
+extern void map_page_2(uintptr_t va, uintptr_t pa, PTE *pgdir);
 
 // TODO [P4-task4]: shm_page_get/dt */
 uintptr_t shm_page_get(int key);

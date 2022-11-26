@@ -46,6 +46,7 @@
 #include <csr.h>
 #include <os/smp.h>
 #include <pgtable.h>    // for [p4-task1]
+#include <os/net.h>     // for [p5-task1]
 
 extern void ret_from_exception();
 
@@ -150,6 +151,9 @@ static void init_pcb(void)
     // for [p3]
     kernel_pcb_of[0]=&pid0_pcb;
 
+}
+
+static void init_needed_task(void){
     // for [p3-task1]
     char needed_task_name[][32] = {"shell"};
 
@@ -215,6 +219,9 @@ static void init_syscall(void)
 
     syscall[SYSCALL_GET_PA]         = (long (*)())get_pa_of;
     syscall[SYSCALL_SNAPSHOT]       = (long (*)())take_snapshot;
+
+    syscall[SYSCALL_NET_SEND]       = (long (*)())do_net_send;
+    syscall[SYSCALL_NET_RECV]       = (long (*)())do_net_recv;
 }
 
 // for [p3-task3]
@@ -231,6 +238,7 @@ static void init_syscall(void)
 // }
 
 extern void clear_SIP();
+extern void enable_preempt_except_IRQC_S_EXT();   // for [p5-task1]
 int main(void)
 {
     if(get_current_cpu_id()!=0){
@@ -316,6 +324,12 @@ int main(void)
     e1000 = (uint8_t *)ioremap((uint64_t)e1000, 8 * NORMAL_PAGE_SIZE);
     printk("> [INIT] IOremap initialization succeeded.\n");
 
+    // for [p5-task1]
+    // note: init_needed_task MUST be put after IOremap,
+    //       since IOremap records IO page table in pgdir,
+    //       and the pgdir is shared with shell in init_needed_task
+    init_needed_task();
+
     // Init lock mechanism o(´^｀)o
     init_locks();
     printk("> [INIT] Lock mechanism initialization succeeded.\n");
@@ -363,6 +377,11 @@ int main(void)
     // TODO: [p2-task4] Setup timer interrupt and enable all interrupt globally
     // NOTE: The function of sstatus.sie is different from sie's
     bios_set_timer(get_ticks() + TIMER_INTERVAL);
+
+    // for [p5-task1]
+    // Q: why will I receive 0x800...09 (Supervisor external interrupt)
+    enable_preempt_except_IRQC_S_EXT();
+
     enable_interrupt();
 
     // bios_putstr("\n\r");
@@ -480,7 +499,12 @@ int main(void)
         // do_scheduler();
 
         // If you do preemptive scheduling, they're used to enable CSR_SIE and wfi
-        enable_preempt();
+
+        // for [p5-task1]
+        // Q: why will I receive 0x800...09 (Supervisor external interrupt)
+        enable_preempt_except_IRQC_S_EXT();
+        // enable_preempt();
+
         printl("core0 waiting for tasks!\n");
         asm volatile("wfi");
     }

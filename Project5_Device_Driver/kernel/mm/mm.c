@@ -3,6 +3,7 @@
 #include <os/kernel.h>  // for [p4-task3]
 #include <os/loader.h>  // for [p4-task3]
 #include <os/task.h>    // for [p4-task3]
+#include <os/ioremap.h> // for [p5-task1]
 
 // static ptr_t kernMemCurr = FREEMEM_KERNEL;
 // static ptr_t userMemCurr = FREEMEM_USER;
@@ -273,7 +274,13 @@ void share_pgtable(uintptr_t dest_pgdir, uintptr_t src_pgdir)
     uintptr_t kva = pa2kva(PGDIR_PA);
     kva &= VA_MASK;
     uint64_t vpn2 = kva >> (NORMAL_PAGE_SHIFT + PPN_BITS + PPN_BITS);
-
+    dest[vpn2] = src[vpn2];
+    
+    // for [p5-task1]
+    // iova = 0xffff_ffe0_?xxx_xxxx // 1GB
+    uintptr_t iova = IO_ADDR_START;
+    iova &= VA_MASK;
+    vpn2 = iova >> (NORMAL_PAGE_SHIFT + PPN_BITS + PPN_BITS);
     dest[vpn2] = src[vpn2];
 }
 
@@ -333,6 +340,7 @@ uintptr_t alloc_page_helper(uintptr_t va, /*uintptr_t pgdir*/pcb_t *owner_pcb)
     return pa2kva(get_pa(pte[vpn0]));
 }
 
+// alloc pgdir from pool
 void map_page(uintptr_t va, uintptr_t pa, pcb_t *owner_pcb)
 {
     printl("[in map_page]\n");
@@ -374,6 +382,51 @@ void map_page(uintptr_t va, uintptr_t pa, pcb_t *owner_pcb)
     
     local_flush_tlb_all();
     printl("[leave map_page]\n");
+}
+
+// for [p5-task1]
+// alloc pgdir from kernMemCurr
+void map_page_2(uintptr_t va, uintptr_t pa, PTE *pgdir)
+{
+    printl("[in map_page_2]\n");
+
+    va &= VA_MASK;
+    uint64_t vpn2 = va >> (NORMAL_PAGE_SHIFT + PPN_BITS + PPN_BITS);
+    uint64_t vpn1 = (vpn2 << PPN_BITS) ^ (va >> (NORMAL_PAGE_SHIFT + PPN_BITS));
+    uint64_t vpn0 = (vpn2 << (PPN_BITS + PPN_BITS)) ^ (vpn1 << PPN_BITS) ^ (va >> (NORMAL_PAGE_SHIFT));
+
+    PTE *pgd = (PTE *)pgdir;
+    // if(!pgd[vpn2]){
+    if(!get_attribute(pgd[vpn2], _PAGE_PRESENT)){
+        // alloc a new page directory
+        set_pfn(&pgd[vpn2], kva2pa(
+            allocPage(1)
+            // alloc_page_from_pool(0, owner_pcb)
+        )>>NORMAL_PAGE_SHIFT);
+        set_attribute(&pgd[vpn2], _PAGE_PRESENT | _PAGE_USER);
+        clear_pgdir(pa2kva(get_pa(pgd[vpn2])));
+    }
+
+    PTE *pmd = (PTE *)pa2kva(get_pa(pgd[vpn2]));
+    // if(!pmd[vpn1]){
+    if(!get_attribute(pmd[vpn1], _PAGE_PRESENT)){
+        // alloc a new page directory
+        set_pfn(&pmd[vpn1], kva2pa(
+            allocPage(1)
+            // alloc_page_from_pool(0, owner_pcb)
+        )>>NORMAL_PAGE_SHIFT);
+        set_attribute(&pmd[vpn1], _PAGE_PRESENT | _PAGE_USER);
+        clear_pgdir(pa2kva(get_pa(pmd[vpn1])));
+    }
+
+    PTE *pte = (PTE *)pa2kva(get_pa(pmd[vpn1]));
+    assert(!get_attribute(pte[vpn0], _PAGE_PRESENT));
+    set_pfn(&pte[vpn0], pa>>NORMAL_PAGE_SHIFT);
+    set_attribute(&pte[vpn0], _PAGE_PRESENT | _PAGE_READ | _PAGE_WRITE | _PAGE_EXEC | 
+                                _PAGE_USER | _PAGE_ACCESSED | _PAGE_DIRTY);
+    
+    local_flush_tlb_all();
+    printl("[leave map_page_2]\n");
 }
 
 shm_t shms[NUM_MAX_SHMPAGE];

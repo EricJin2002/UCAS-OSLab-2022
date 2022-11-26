@@ -35,7 +35,7 @@
 #include <io.h>
 
 /* NIC specific static variables go here */
-#define TXDESCS 64          // Number of tx descriptors
+#define TXDESCS 5          // Number of tx descriptors
 #define RXDESCS 64          // Number of rx descriptors
 #define TX_PKT_SIZE 2048
 #define RX_PKT_SIZE 2048

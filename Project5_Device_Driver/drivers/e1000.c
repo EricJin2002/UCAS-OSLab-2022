@@ -49,18 +49,34 @@ static void e1000_reset(void)
     while (0 != e1000_read_reg(e1000, E1000_ICR)) ;
 }
 
+#define LOW_BIT(x) ((x)&(-(x))) // for [p5-task1]
 /**
  * e1000_configure_tx - Configure 8254x Transmit Unit after Reset
  **/
 static void e1000_configure_tx(void)
 {
     /* TODO: [p5-task1] Initialize tx descriptors */
+    for(int i=0;i<TXDESCS;i++){
+        tx_desc_array[i].addr = kva2pa(tx_pkt_buffer[i]);
+        tx_desc_array[i].length = TX_PKT_SIZE;
+        tx_desc_array[i].status = E1000_TXD_STAT_DD;
+        tx_desc_array[i].cmd = ~E1000_TXD_CMD_DEXT | E1000_TXD_CMD_RS/* | E1000_TXD_CMD_EOP*/;
+    }
 
     /* TODO: [p5-task1] Set up the Tx descriptor base address and length */
+    e1000_write_reg(e1000, E1000_TDBAL, (uint32_t)(kva2pa(tx_desc_array) & ((1<<32)-1)));
+    e1000_write_reg(e1000, E1000_TDBAH, (uint32_t)((kva2pa(tx_desc_array) & ~((1<<32)-1)) >> 32));
+    e1000_write_reg(e1000, E1000_TDLEN, sizeof(tx_desc_array));
 
 	/* TODO: [p5-task1] Set up the HW Tx Head and Tail descriptor pointers */
+    e1000_write_reg(e1000, E1000_TDH, 0);
+    e1000_write_reg(e1000, E1000_TDT, 0);
 
     /* TODO: [p5-task1] Program the Transmit Control Register */
+    e1000_write_reg(e1000, E1000_TCTL, E1000_TCTL_EN | E1000_TCTL_PSP 
+        | (LOW_BIT(E1000_TCTL_CT) * 0x10u)
+        | (LOW_BIT(E1000_TCTL_COLD) * 0x40u)
+    );
 }
 
 /**
@@ -105,8 +121,23 @@ void e1000_init(void)
 int e1000_transmit(void *txpacket, int length)
 {
     /* TODO: [p5-task1] Transmit one packet from txpacket */
+    int tail,head;
+    do{
+        local_flush_dcache();
+        tail = e1000_read_reg(e1000, E1000_TDT);
+        head = e1000_read_reg(e1000, E1000_TDH);
+        // tx_desc_array[tail].cmd = tx_desc_array[tail].cmd | E1000_TXD_CMD_RS;
+    }while(!(tx_desc_array[tail].status & E1000_TXD_STAT_DD));
 
-    return 0;
+    assert(length<=TX_PKT_SIZE);
+    
+    for(int i=0;i<length;i++){
+        tx_pkt_buffer[tail][i] = ((char *)txpacket)[i];
+    }
+    e1000_write_reg(e1000, E1000_TDT, (tail+1)%TXDESCS);
+    local_flush_dcache();
+
+    return length;
 }
 
 /**

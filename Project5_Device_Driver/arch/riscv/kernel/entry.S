@@ -240,6 +240,15 @@ ENTRY(disable_IRQ_S_SOFT)
   jr ra
 ENDPROC(disable_IRQ_S_SOFT)
 
+// for [p5-task1]
+ENTRY(enable_preempt_except_IRQC_S_EXT)
+  li t0, SIE_SEIE
+  not t0, t0
+  csrw CSR_SIE, t0
+
+  jr ra
+ENDPROC(enable_preempt_except_IRQC_S_EXT)
+
 // for [p3-task4]
 ENTRY(clear_SIP)
   csrw CSR_SIP, zero
