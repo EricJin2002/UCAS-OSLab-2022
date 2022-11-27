@@ -283,10 +283,18 @@ int main(void)
         setup_exception();
 
         bios_set_timer(get_ticks() + TIMER_INTERVAL);
+
+        // for [p5-task1]
+        // Q: why will I receive 0x800...09 (Supervisor external interrupt)
+        enable_preempt_except_IRQC_S_EXT();
+
         enable_interrupt();
 
         while(1){
-            enable_preempt();
+            // for [p5-task1]
+            // Q: why will I receive 0x800...09 (Supervisor external interrupt)
+            enable_preempt_except_IRQC_S_EXT();
+            // enable_preempt();
             // printl("core%d waiting for tasks!\n",get_current_cpu_id());
             asm volatile("wfi");
         }

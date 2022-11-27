@@ -139,6 +139,7 @@ void do_scheduler(void)
         kva2pa(current_running_of[get_current_cpu_id()]->pgdir) >> NORMAL_PAGE_SHIFT
     );
     local_flush_tlb_all();
+    local_flush_icache_all();
 
     // TODO: [p2-task1] switch_to current_running
     // printl("switching from %d to %d\n\r", prev_running->pid, current_running->pid);

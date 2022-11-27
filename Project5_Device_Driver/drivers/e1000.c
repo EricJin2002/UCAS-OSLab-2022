@@ -64,8 +64,8 @@ static void e1000_configure_tx(void)
     }
 
     /* TODO: [p5-task1] Set up the Tx descriptor base address and length */
-    e1000_write_reg(e1000, E1000_TDBAL, (uint32_t)(kva2pa(tx_desc_array) & ((1<<32)-1)));
-    e1000_write_reg(e1000, E1000_TDBAH, (uint32_t)((kva2pa(tx_desc_array) & ~((1<<32)-1)) >> 32));
+    e1000_write_reg(e1000, E1000_TDBAL, (uint32_t)(kva2pa(tx_desc_array) & ((1ul<<32)-1ul)));
+    e1000_write_reg(e1000, E1000_TDBAH, (uint32_t)((kva2pa(tx_desc_array) & ~((1ul<<32)-1ul)) >> 32));
     e1000_write_reg(e1000, E1000_TDLEN, sizeof(tx_desc_array));
 
 	/* TODO: [p5-task1] Set up the HW Tx Head and Tail descriptor pointers */
@@ -134,6 +134,7 @@ int e1000_transmit(void *txpacket, int length)
     for(int i=0;i<length;i++){
         tx_pkt_buffer[tail][i] = ((char *)txpacket)[i];
     }
+    tx_desc_array[tail].length = length;
     e1000_write_reg(e1000, E1000_TDT, (tail+1)%TXDESCS);
     local_flush_dcache();
 
