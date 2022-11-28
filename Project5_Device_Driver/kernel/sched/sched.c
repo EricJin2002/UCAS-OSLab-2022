@@ -11,7 +11,8 @@
 #include <os/string.h>  // for [p3-task1]
 #include <os/task.h>    // for [p3-task1]
 #include <os/smp.h>     // for [p3-task3]
-#include <os/string.h>     // for [p3-task4]
+#include <os/string.h>  // for [p3-task4]
+#include <os/net.h>     // for [p5-task3]
 
 pcb_t pcb[NUM_MAX_TASK];
 const ptr_t pid0_stack = INIT_KERNEL_STACK + PAGE_SIZE;
@@ -47,10 +48,11 @@ static int filter_mask(list_node_t *node){
 void do_scheduler(void)
 {
     // TODO: [p2-task3] Check sleep queue to wake up PCBs
-
     check_sleeping();
 
     // TODO: [p5-task3] Check send/recv queue to unblock PCBs
+    check_net_send();
+    check_net_recv();
 
 
     // TODO: [p2-task1] Modify the current_running pointer.

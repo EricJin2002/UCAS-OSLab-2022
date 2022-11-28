@@ -139,6 +139,17 @@ void e1000_init(void)
     e1000_configure_rx();
 }
 
+// for [p5-task3]
+int td_sendable(int *tailptr){
+    int tail,head;
+    local_flush_dcache();
+    tail = e1000_read_reg(e1000, E1000_TDT);
+    head = e1000_read_reg(e1000, E1000_TDH);
+    // tx_desc_array[tail].cmd = tx_desc_array[tail].cmd | E1000_TXD_CMD_RS;
+    *tailptr = tail;
+    return tx_desc_array[tail].status & E1000_TXD_STAT_DD;
+}
+
 /**
  * e1000_transmit - Transmit packet through e1000 net device
  * @param txpacket - The buffer address of packet to be transmitted
@@ -148,13 +159,8 @@ void e1000_init(void)
 int e1000_transmit(void *txpacket, int length)
 {
     /* TODO: [p5-task1] Transmit one packet from txpacket */
-    int tail,head;
-    do{
-        local_flush_dcache();
-        tail = e1000_read_reg(e1000, E1000_TDT);
-        head = e1000_read_reg(e1000, E1000_TDH);
-        // tx_desc_array[tail].cmd = tx_desc_array[tail].cmd | E1000_TXD_CMD_RS;
-    }while(!(tx_desc_array[tail].status & E1000_TXD_STAT_DD));
+    int tail;
+    assert(td_sendable(&tail)); // update tail simultaneously, so do not uncomment it!
 
     assert(length<=TX_PKT_SIZE);
     
@@ -169,6 +175,24 @@ int e1000_transmit(void *txpacket, int length)
     return length;
 }
 
+// for [p5-task3]
+int rd_recvable(int *tailptr){
+    int tail,head;
+    // screen_move_cursor(0,8);
+    local_flush_dcache();
+    tail = e1000_read_reg(e1000, E1000_RDT);
+    head = e1000_read_reg(e1000, E1000_RDH);
+    // printl("[rx desc head](%d)  ",head);
+    // printl("[rx desc tail](%d)\n",tail);
+    // for(int i=0;i<RXDESCS;i++){
+    //     if(rx_desc_array[i].status & E1000_RXD_STAT_DD){
+    //         printk("rx_desc_array[%d] dd!\n",i);
+    //     }
+    // }
+    *tailptr = tail;
+    return rx_desc_array[(tail+1)%RXDESCS].status & E1000_RXD_STAT_DD;
+}
+
 /**
  * e1000_poll - Receive packet through e1000 net device
  * @param rxbuffer - The address of buffer to store received packet
@@ -178,19 +202,8 @@ int e1000_poll(void *rxbuffer)
 {
     /* TODO: [p5-task2] Receive one packet and put it into rxbuffer */
     int tail,head,length;
-    // screen_move_cursor(0,8);
-    do{
-        local_flush_dcache();
-        tail = e1000_read_reg(e1000, E1000_RDT);
-        head = e1000_read_reg(e1000, E1000_RDH);
-        // printl("[rx desc head](%d)  ",head);
-        // printl("[rx desc tail](%d)\n",tail);
-        // for(int i=0;i<RXDESCS;i++){
-        //     if(rx_desc_array[i].status & E1000_RXD_STAT_DD){
-        //         printk("rx_desc_array[%d] dd!\n",i);
-        //     }
-        // }
-    }while(!(rx_desc_array[(tail+1)%RXDESCS].status & E1000_RXD_STAT_DD));
+    assert(rd_recvable(&tail));
+
     rx_desc_array[tail].status &= ~E1000_RXD_STAT_DD;
 
     tail = (tail+1)%RXDESCS;

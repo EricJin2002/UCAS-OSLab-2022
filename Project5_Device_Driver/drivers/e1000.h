@@ -440,4 +440,8 @@ void e1000_init(void);
 int e1000_transmit(void *txpacket, int length);
 int e1000_poll(void *rxbuffer);
 
+// for [p5-task2]
+int td_sendable(int *tailptr);
+int rd_recvable(int *tailptr);
+
 #endif  // !_E1000_HW_H_
