@@ -116,15 +116,15 @@ void do_scheduler(void)
     //     unlock_kernel();
     // }
 
-    printl("[core %d] switching from [pid %d name %s] to [pid %d name %s]\n",
-        get_current_cpu_id(),
-        prev_running->pid,
-        prev_running->name,
-        current_running_of[get_current_cpu_id()]->pid,
-        current_running_of[get_current_cpu_id()]->name
-    );
-    printl("[core %d] after  scheduler: ",get_current_cpu_id());pcb_list_print(&ready_queue);
-    printl("\n");
+    // printl("[core %d] switching from [pid %d name %s] to [pid %d name %s]\n",
+    //     get_current_cpu_id(),
+    //     prev_running->pid,
+    //     prev_running->name,
+    //     current_running_of[get_current_cpu_id()]->pid,
+    //     current_running_of[get_current_cpu_id()]->name
+    // );
+    // printl("[core %d] after  scheduler: ",get_current_cpu_id());pcb_list_print(&ready_queue);
+    // printl("\n");
 
     // unlock_kernel();
 
