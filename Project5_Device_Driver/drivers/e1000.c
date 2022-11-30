@@ -113,15 +113,18 @@ static void e1000_configure_rx(void)
     /* TODO: [p5-task2] Set up the HW Rx Head and Tail descriptor pointers */
     e1000_write_reg(e1000, E1000_RDH, 1);
     e1000_write_reg(e1000, E1000_RDT, 0);
+    // e1000_write_reg(e1000, E1000_RDH, 0);
+    // e1000_write_reg(e1000, E1000_RDT, RXDESCS-1);
 
     /* TODO: [p5-task2] Program the Receive Control Register */
     e1000_write_reg(e1000, E1000_RCTL, E1000_RCTL_EN | E1000_RCTL_BAM 
         | ~E1000_RCTL_BSEX | E1000_RCTL_SZ_2048
     );
 
-    local_flush_dcache();
-
     /* TODO: [p5-task4] Enable RXDMT0 Interrupt */
+    e1000_write_reg(e1000, E1000_IMS, E1000_IMS_RXDMT0);
+    
+    local_flush_dcache();
 }
 
 /**

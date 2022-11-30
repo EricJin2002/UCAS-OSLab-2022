@@ -47,6 +47,7 @@
 #include <os/smp.h>
 #include <pgtable.h>    // for [p4-task1]
 #include <os/net.h>     // for [p5-task1]
+#include <plic.h>       // for [p5-task4]
 
 extern void ret_from_exception();
 
@@ -286,15 +287,15 @@ int main(void)
 
         // for [p5-task1]
         // Q: why will I receive 0x800...09 (Supervisor external interrupt)
-        enable_preempt_except_IRQC_S_EXT();
+        // enable_preempt_except_IRQC_S_EXT();
 
         enable_interrupt();
 
         while(1){
             // for [p5-task1]
             // Q: why will I receive 0x800...09 (Supervisor external interrupt)
-            enable_preempt_except_IRQC_S_EXT();
-            // enable_preempt();
+            // enable_preempt_except_IRQC_S_EXT();
+            enable_preempt();
             // printl("core%d waiting for tasks!\n",get_current_cpu_id());
             asm volatile("wfi");
         }
@@ -362,8 +363,8 @@ int main(void)
     printk("> [INIT] Interrupt processing initialization succeeded.\n");
 
     // TODO: [p5-task4] Init plic
-    // plic_init(plic_addr, nr_irqs);
-    // printk("> [INIT] PLIC initialized successfully. addr = 0x%lx, nr_irqs=0x%x\n", plic_addr, nr_irqs);
+    plic_init(plic_addr, nr_irqs);
+    printk("> [INIT] PLIC initialized successfully. addr = 0x%lx, nr_irqs=0x%x\n", plic_addr, nr_irqs);
 
     // Init network device
     e1000_init();
@@ -388,7 +389,7 @@ int main(void)
 
     // for [p5-task1]
     // Q: why will I receive 0x800...09 (Supervisor external interrupt)
-    enable_preempt_except_IRQC_S_EXT();
+    // enable_preempt_except_IRQC_S_EXT();
 
     enable_interrupt();
 
@@ -510,8 +511,8 @@ int main(void)
 
         // for [p5-task1]
         // Q: why will I receive 0x800...09 (Supervisor external interrupt)
-        enable_preempt_except_IRQC_S_EXT();
-        // enable_preempt();
+        // enable_preempt_except_IRQC_S_EXT();
+        enable_preempt();
 
         printl("core0 waiting for tasks!\n");
         asm volatile("wfi");

@@ -8,6 +8,9 @@
 #include <screen.h>
 #include <os/smp.h> // for [p3-task3]
 #include <os/mm.h>  // for [p4-task2]
+#include <plic.h>   // for [p5-task4]
+#include <e1000.h>
+#include <os/net.h>
 
 handler_t irq_table[IRQC_COUNT];
 handler_t exc_table[EXCC_COUNT];
@@ -137,6 +140,28 @@ void handle_irq_ext(regs_context_t *regs, uint64_t stval, uint64_t scause)
 {
     // TODO: [p5-task4] external interrupt handler.
     // Note: plic_claim and plic_complete will be helpful ...
+    uint32_t claim_id = plic_claim();
+
+    if(claim_id==PLIC_E1000_PYNQ_IRQ){
+        net_handle_irq();
+    }
+    else{
+        // printk("\nclaim_id %d RDH %d RDT %d ICR %x IMS %x\n",
+        //     claim_id,
+        //     e1000_read_reg(e1000,E1000_RDH),
+        //     e1000_read_reg(e1000,E1000_RDT),
+        //     e1000_read_reg(e1000, E1000_ICR), // todo: delete this
+        //     e1000_read_reg(e1000, E1000_IMS)
+        // );
+        
+        // note:
+        // E1000_ICR_TXQE   == 0x00000002
+        // E1000_ICR_RXDMT0 == 0x00000010
+
+        // assert(0);
+    }
+
+    plic_complete(claim_id);
 }
 
 void init_exception()
@@ -168,7 +193,7 @@ void init_exception()
     irq_table[IRQC_S_TIMER] = handle_irq_timer;
     // irq_table[IRQC_M_TIMER] = handle_other;
     // irq_table[IRQC_U_EXT]   = handle_other;
-    // irq_table[IRQC_S_EXT]   = handle_other;
+    irq_table[IRQC_S_EXT]   = handle_irq_ext;
     // irq_table[IRQC_M_EXT]   = handle_other;
 
     /* TODO: [p2-task3] set up the entrypoint of exceptions */
