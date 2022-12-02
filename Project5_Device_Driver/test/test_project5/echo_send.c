@@ -41,8 +41,9 @@ int main(){
             }
         }
         sys_net_send(shm->buffer,shm->length);
-        sys_move_cursor(20,++cnt);
-        printf("echo sended (%d)\n",shm->length);
+        // sys_move_cursor(20,++cnt);
+        sys_move_cursor(30,2);
+        printf("echo sended (%d) (%d)\n",shm->length,++cnt);
         
         shm->sended_signal=1;
         sys_condition_signal(sended);

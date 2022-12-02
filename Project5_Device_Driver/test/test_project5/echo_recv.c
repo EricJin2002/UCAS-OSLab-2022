@@ -23,8 +23,9 @@ int main(){
     
     while(1){
         sys_net_recv(shm->buffer,1,&shm->length);
-        sys_move_cursor(0,++cnt);
-        printf("echo recved (%d)\n",shm->length);
+        // sys_move_cursor(0,++cnt);
+        sys_move_cursor(0,2);
+        printf("echo recved (%d) (%d)\n",shm->length, ++cnt);
 
         shm->recved_signal=1;
         sys_condition_signal(recved);

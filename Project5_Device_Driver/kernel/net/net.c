@@ -21,6 +21,10 @@ int do_net_send(void *txpacket, int length)
         local_flush_dcache();
 
         do_block(&current_running_of[get_current_cpu_id()]->list, &send_block_queue, &pcb_lock);
+
+        if(list_is_empty(&send_block_queue)){
+            e1000_write_reg(e1000, E1000_IMC, E1000_IMC_TXQE);
+        }
     }
 
     return e1000_transmit(txpacket, length);
