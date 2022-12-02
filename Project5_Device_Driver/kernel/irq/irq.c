@@ -143,6 +143,8 @@ void handle_irq_ext(regs_context_t *regs, uint64_t stval, uint64_t scause)
     uint32_t claim_id = plic_claim();
 
     if(claim_id==PLIC_E1000_PYNQ_IRQ){
+        screen_move_cursor(0,9);
+        printk("\nRDH %d RDT %d\n", e1000_read_reg(e1000,E1000_RDH), e1000_read_reg(e1000,E1000_RDT));
         net_handle_irq();
     }
     else{

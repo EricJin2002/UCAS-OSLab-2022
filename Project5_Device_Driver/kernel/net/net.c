@@ -51,16 +51,24 @@ int do_net_recv(void *rxbuffer, int pkt_num, int *pkt_lens)
 // for [p5-task3]
 void check_net_send(void){
     int tail;
-    if(!list_is_empty(&send_block_queue) && td_sendable(&tail)){
-        do_unblock(list_pop(&send_block_queue));
+    if(!list_is_empty(&send_block_queue)){
+        if(td_sendable(&tail)){
+            do_unblock(list_pop(&send_block_queue));
+        }else{
+            printk("td not sendable!\n");
+        }
     }
 }
 
 // for [p5-task3]
 void check_net_recv(void){
     int tail;
-    if(!list_is_empty(&recv_block_queue) && rd_recvable(&tail)){
-        do_unblock(list_pop(&recv_block_queue));
+    if(!list_is_empty(&recv_block_queue)){
+        if(rd_recvable(&tail)){
+            do_unblock(list_pop(&recv_block_queue));
+        }else{
+            printk("rd not recvable!\n");
+        }
     }
 }
 
@@ -70,7 +78,6 @@ void net_handle_irq(void)
 
     // for debug
     static int cnt0=0,cnt1=0,cnt2=0;
-    screen_move_cursor(0,9);
     printk("[in net_handle_irq] (%d)\n",cnt0++);
 
     uint32_t int_cause = e1000_read_reg(e1000, E1000_ICR);

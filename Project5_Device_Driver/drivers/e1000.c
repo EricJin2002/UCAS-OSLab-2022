@@ -61,7 +61,7 @@ static void e1000_configure_tx(void)
         tx_desc_array[i].addr = kva2pa(tx_pkt_buffer[i]);
         tx_desc_array[i].length = TX_PKT_SIZE;
         tx_desc_array[i].status = E1000_TXD_STAT_DD;
-        tx_desc_array[i].cmd = ~E1000_TXD_CMD_DEXT | E1000_TXD_CMD_RS/* | E1000_TXD_CMD_EOP*/;
+        tx_desc_array[i].cmd = E1000_TXD_CMD_RS | E1000_TXD_CMD_EOP;
     }
 
     /* TODO: [p5-task1] Set up the Tx descriptor base address and length */
@@ -111,15 +111,13 @@ static void e1000_configure_rx(void)
     e1000_write_reg(e1000, E1000_RDLEN, sizeof(rx_desc_array));
 
     /* TODO: [p5-task2] Set up the HW Rx Head and Tail descriptor pointers */
-    e1000_write_reg(e1000, E1000_RDH, 1);
-    e1000_write_reg(e1000, E1000_RDT, 0);
-    // e1000_write_reg(e1000, E1000_RDH, 0);
-    // e1000_write_reg(e1000, E1000_RDT, RXDESCS-1);
+    // e1000_write_reg(e1000, E1000_RDH, 1);
+    // e1000_write_reg(e1000, E1000_RDT, 0);
+    e1000_write_reg(e1000, E1000_RDH, 0);
+    e1000_write_reg(e1000, E1000_RDT, RXDESCS-1);
 
     /* TODO: [p5-task2] Program the Receive Control Register */
-    e1000_write_reg(e1000, E1000_RCTL, E1000_RCTL_EN | E1000_RCTL_BAM 
-        | ~E1000_RCTL_BSEX | E1000_RCTL_SZ_2048
-    );
+    e1000_write_reg(e1000, E1000_RCTL, E1000_RCTL_EN | E1000_RCTL_BAM);
 
     /* TODO: [p5-task4] Enable RXDMT0 Interrupt */
     e1000_write_reg(e1000, E1000_IMS, E1000_IMS_RXDMT0);
