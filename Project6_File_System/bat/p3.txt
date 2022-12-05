@@ -1,0 +1,4 @@
+waitpid 1 &
+barrier 4 &
+# condition 7 &
+p3_mbox

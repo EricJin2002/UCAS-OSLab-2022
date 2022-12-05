@@ -1,0 +1,227 @@
+#include <os/irq.h>
+#include <os/time.h>
+#include <os/sched.h>
+#include <os/string.h>
+#include <os/kernel.h>
+#include <printk.h>
+#include <assert.h>
+#include <screen.h>
+#include <os/smp.h> // for [p3-task3]
+#include <os/mm.h>  // for [p4-task2]
+#include <plic.h>   // for [p5-task4]
+#include <e1000.h>
+#include <os/net.h>
+
+handler_t irq_table[IRQC_COUNT];
+handler_t exc_table[EXCC_COUNT];
+
+void interrupt_helper(regs_context_t *regs, uint64_t stval, uint64_t scause)
+{
+    // for [p3-task3]
+    // printk("enter %d\n",get_current_cpu_id());
+    // lock_kernel();
+    asm volatile("mv %0, tp":"=r"(current_running_of[get_current_cpu_id()]));
+
+    // TODO: [p2-task3] & [p2-task4] interrupt handler.
+    // call corresponding handler by the value of `scause`
+    // printl("enter interrupt_helper ");
+    if(scause>>63){
+        // printl("irq_table code %d\n",scause&0x7fffffffffffffffU);
+        irq_table[scause&0x7fffffffffffffffU](regs, stval, scause);
+    }else{
+        // printl("exc_table code %d\n",scause);
+        exc_table[scause](regs, stval, scause);
+    }
+    // printl("leave interrupt_helper\n");
+    // printl("\n\r");
+    
+    // for [p3-task3]
+    // unlock_kernel();
+    // printk("leave %d\n",get_current_cpu_id());
+
+    // for [p4]
+    local_flush_tlb_all();
+    local_flush_icache_all();
+}
+
+void handle_irq_timer(regs_context_t *regs, uint64_t stval, uint64_t scause)
+{
+    // TODO: [p2-task4] clock interrupt handler.
+    // Note: use bios_set_timer to reset the timer and remember to reschedule
+    // printl("handle_irq_timer pid %d\n", ((pcb_t *)regs->regs[4])->pid);
+    bios_set_timer(get_ticks() + TIMER_INTERVAL);
+    do_scheduler();
+}
+
+extern void disable_IRQ_S_SOFT();
+void handle_ipi(regs_context_t *regs, uint64_t stval, uint64_t scause){
+    // it seems that even main core itself will receive ipi sent by itself
+    // so we do nothing
+    // subcore won't enter execption_handler_entry and will handle ipi in main.c
+    printk("Successfully enter handle_ipi (main core)! [%s]\n",current_running_of[get_current_cpu_id()]->name);
+    printk("%s aroused!\n",current_running_of[1]?current_running_of[1]->name:"Sub core hasn't");
+    disable_IRQ_S_SOFT();
+}
+
+void handle_page_fault(regs_context_t *regs, uint64_t stval, uint64_t scause){
+    printl("[in handle_page_fault] [pid %d stval 0x%lx sepc 0x%lx %s]\n", 
+        current_running_of[get_current_cpu_id()]->pid, stval, regs->sepc,
+        scause==EXCC_INST_PAGE_FAULT?"inst":"data");
+
+    // for debug
+    if(stval<0x10000ul || ((stval>>38)&1) || 
+        (stval == EXCC_INST_PAGE_FAULT && (stval & (1<<4)))
+    ){
+        printk("[pid %d stval 0x%lx sepc 0x%lx %s] ",
+            current_running_of[get_current_cpu_id()]->pid, stval, regs->sepc,
+            scause==EXCC_INST_PAGE_FAULT?"inst":"data");
+        assert(stval<0x10000ul);
+        assert(!((stval>>38)&1));                                   // check if is in kernel
+        assert(stval == EXCC_INST_PAGE_FAULT && (stval & (1<<4)));  // check if code goes to stack // 1xxxx
+    }
+
+    // for tcb, find its father
+    pcb_t *father_pcb = find_father_pcb_for_tcb(current_running_of[get_current_cpu_id()]);
+
+    PTE *pteptr = get_pte_of(stval, current_running_of[get_current_cpu_id()]->pgdir);
+    if(pteptr){
+        if(scause==EXCC_INST_PAGE_FAULT || scause==EXCC_LOAD_PAGE_FAULT){
+            // todo: avoid magic number 0xfflu
+            assert(!get_attribute(*pteptr, _PAGE_ACCESSED));
+            set_attribute(pteptr, _PAGE_ACCESSED | get_attribute(*pteptr, 0xfflu));
+        }else if(scause==EXCC_STORE_PAGE_FAULT){
+            if(!get_attribute(*pteptr, _PAGE_WRITE)){
+                // not able to write
+                // copy on write
+                // todo:
+                uintptr_t oldpg_kva = check_and_get_kva_of(stval, father_pcb) & ~(NORMAL_PAGE_SIZE-1);
+                uintptr_t newpg_kva = alloc_page_helper(stval, father_pcb) & ~(NORMAL_PAGE_SIZE-1);
+                for(int i=0;i<NORMAL_PAGE_SIZE;i++){
+                    ((char *)newpg_kva)[i] = ((char *)oldpg_kva)[i];
+                }
+
+            }else if(!get_attribute(*pteptr, _PAGE_ACCESSED) || !get_attribute(*pteptr, _PAGE_DIRTY)){
+                set_attribute(pteptr, _PAGE_ACCESSED | _PAGE_DIRTY | get_attribute(*pteptr, 0xfflu));
+            }else{
+                assert(0);
+            }
+        }
+    }else{
+        if(find_pf_node(stval, father_pcb)){
+            // the stval is already swapped into page frames
+            // so do nothing except flush tlb
+            printl("!strange: the stval is already swapped into page frames\n");
+            assert(0);
+        } else {
+            list_node_t *node = find_and_pop_swp_node(stval, father_pcb);
+
+            if(!node){
+                // not in swap
+                // alloc new
+                alloc_page_helper(stval, father_pcb);
+            }else{
+                swap_in(LIST2SWP(node), father_pcb);
+            }
+        }
+    }
+
+    local_flush_tlb_all();
+    local_flush_icache_all();
+    printl("[leave handle_page_fault]\n");
+    printl("\n");
+    
+    pf_list_print(&father_pcb->pf_list);
+    printl("\n");
+    swp_list_print(&father_pcb->swp_list);
+    printl("\n");
+}
+
+void handle_irq_ext(regs_context_t *regs, uint64_t stval, uint64_t scause)
+{
+    // TODO: [p5-task4] external interrupt handler.
+    // Note: plic_claim and plic_complete will be helpful ...
+    uint32_t claim_id = plic_claim();
+
+    if(claim_id==PLIC_E1000_PYNQ_IRQ){
+        screen_move_cursor(0,9);
+        printk("\nRDH %d RDT %d\n", e1000_read_reg(e1000,E1000_RDH), e1000_read_reg(e1000,E1000_RDT));
+        net_handle_irq();
+    }
+    else{
+        // printk("\nclaim_id %d RDH %d RDT %d ICR %x IMS %x\n",
+        //     claim_id,
+        //     e1000_read_reg(e1000,E1000_RDH),
+        //     e1000_read_reg(e1000,E1000_RDT),
+        //     e1000_read_reg(e1000, E1000_ICR), // todo: delete this
+        //     e1000_read_reg(e1000, E1000_IMS)
+        // );
+        
+        // note:
+        // E1000_ICR_TXQE   == 0x00000002
+        // E1000_ICR_RXDMT0 == 0x00000010
+
+        // assert(0);
+    }
+
+    plic_complete(claim_id);
+}
+
+void init_exception()
+{
+    /* TODO: [p2-task3] initialize exc_table */
+    /* NOTE: handle_syscall, handle_other, etc.*/
+    for(int i=0;i<EXCC_COUNT;i++){
+        exc_table[i] = handle_other;
+    }
+    // exc_table[EXCC_INST_MISALIGNED]     = handle_other;
+    // exc_table[EXCC_INST_ACCESS]         = handle_access_fault;
+    // exc_table[EXCC_BREAKPOINT]          = handle_other;
+    // exc_table[EXCC_LOAD_ACCESS]         = handle_access_fault;
+    // exc_table[EXCC_STORE_ACCESS]        = handle_access_fault;
+    exc_table[EXCC_SYSCALL]             = handle_syscall;
+    exc_table[EXCC_INST_PAGE_FAULT]     = handle_page_fault;
+    exc_table[EXCC_LOAD_PAGE_FAULT]     = handle_page_fault;
+    exc_table[EXCC_STORE_PAGE_FAULT]    = handle_page_fault;
+
+    /* TODO: [p2-task4] initialize irq_table */
+    /* NOTE: handle_int, handle_other, etc.*/
+    for(int i=0;i<IRQC_COUNT;i++){
+        irq_table[i] = handle_other;
+    }
+    // irq_table[IRQC_U_SOFT]  = handle_other;
+    irq_table[IRQC_S_SOFT]  = handle_ipi;
+    // irq_table[IRQC_M_SOFT]  = handle_other;
+    // irq_table[IRQC_U_TIMER] = handle_other;
+    irq_table[IRQC_S_TIMER] = handle_irq_timer;
+    // irq_table[IRQC_M_TIMER] = handle_other;
+    // irq_table[IRQC_U_EXT]   = handle_other;
+    irq_table[IRQC_S_EXT]   = handle_irq_ext;
+    // irq_table[IRQC_M_EXT]   = handle_other;
+
+    /* TODO: [p2-task3] set up the entrypoint of exceptions */
+    setup_exception();
+}
+
+void handle_other(regs_context_t *regs, uint64_t stval, uint64_t scause)
+{
+    char* reg_name[] = {
+        "zero "," ra  "," sp  "," gp  "," tp  ",
+        " t0  "," t1  "," t2  ","s0/fp"," s1  ",
+        " a0  "," a1  "," a2  "," a3  "," a4  ",
+        " a5  "," a6  "," a7  "," s2  "," s3  ",
+        " s4  "," s5  "," s6  "," s7  "," s8  ",
+        " s9  "," s10 "," s11 "," t3  "," t4  ",
+        " t5  "," t6  "
+    };
+    for (int i = 0; i < 32; i += 3) {
+        for (int j = 0; j < 3 && i + j < 32; ++j) {
+            printk("%s : %016lx ",reg_name[i+j], regs->regs[i+j]);
+        }
+        printk("\n\r");
+    }
+    printk("sstatus: 0x%lx sbadaddr: 0x%lx scause: %lu\n\r",
+           regs->sstatus, regs->sbadaddr, regs->scause);
+    printk("sepc: 0x%lx\n\r", regs->sepc);
+    printk("tval: 0x%lx cause: 0x%lx\n", stval, scause);
+    assert(0);
+}

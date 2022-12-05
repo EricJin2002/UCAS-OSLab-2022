@@ -1,0 +1,10 @@
+--- arch/riscv/crt0/crt0.S	2022-10-22 18:55:02.419021920 +0800
++++ arch/riscv/crt0/crt0.S	2022-10-22 18:55:02.439022377 +0800
+@@ -12,6 +12,7 @@ ENTRY(_start)
+     /* TODO: [p1-task3] finish task and return to the kernel */
+     /* NOTE: You need to replace this with new mechanism in p3-task2! */
+ 
++    /* TODO: [P3] call sys_exit */
+ 
+ // while(1) loop, unreachable here
+ loop:

@@ -1,0 +1,5 @@
+mbox_server 11 &
+mbox_client &
+mbox_client &
+mbox_client &
+mbox_client &

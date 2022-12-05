@@ -1,0 +1,11 @@
+--- tiny_libc/include/unistd.h	2022-11-07 13:24:40.393103453 +0800
++++ tiny_libc/include/unistd.h	2022-11-07 13:24:40.405103742 +0800
+@@ -3,7 +3,7 @@
+ 
+ #include <stdint.h>
+ typedef int32_t pid_t;
+-
++typedef pid_t pthread_t;
+ 
+ void sys_sleep(uint32_t time);
+ void sys_yield(void);
