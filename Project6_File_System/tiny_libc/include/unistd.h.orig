@@ -77,4 +77,8 @@ void sys_shmpagedt(void *addr);
 uintptr_t sys_get_pa(uintptr_t va);
 uintptr_t sys_take_snapshot(uintptr_t pg_va);
 
+/* net send and recv */
+int sys_net_send(void *txpacket, int length);
+int sys_net_recv(void *rxbuffer, int pkt_num, int *pkt_lens);
+
 #endif

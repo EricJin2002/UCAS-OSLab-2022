@@ -96,6 +96,8 @@ static inline void swp_list_print(list_head *listptr){
     }
     // printl("\n\r");
 }
+extern int swap_start_sector_id;
+extern int swap_end_sector_id;
 
 // for [p4-task5]
 # define NUM_MAX_SHMPAGE 20

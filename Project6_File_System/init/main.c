@@ -48,6 +48,7 @@
 #include <pgtable.h>    // for [p4-task1]
 #include <os/net.h>     // for [p5-task1]
 #include <plic.h>       // for [p5-task4]
+#include <os/fs.h>      // for [p6-task1]
 
 extern void ret_from_exception();
 
@@ -223,6 +224,22 @@ static void init_syscall(void)
 
     syscall[SYSCALL_NET_SEND]       = (long (*)())do_net_send;
     syscall[SYSCALL_NET_RECV]       = (long (*)())do_net_recv;
+
+    syscall[SYSCALL_FS_MKFS]        = (long (*)())do_mkfs;
+    syscall[SYSCALL_FS_STATFS]      = (long (*)())do_statfs;
+    syscall[SYSCALL_FS_CD]          = (long (*)())do_cd;
+    syscall[SYSCALL_FS_MKDIR]       = (long (*)())do_mkdir;
+    syscall[SYSCALL_FS_RMDIR]       = (long (*)())do_rmdir;
+    syscall[SYSCALL_FS_LS]          = (long (*)())do_ls;
+    syscall[SYSCALL_FS_TOUCH]       = (long (*)())do_touch;
+    syscall[SYSCALL_FS_CAT]         = (long (*)())do_cat;
+    syscall[SYSCALL_FS_FOPEN]       = (long (*)())do_fopen;
+    syscall[SYSCALL_FS_FREAD]       = (long (*)())do_fread;
+    syscall[SYSCALL_FS_FWRITE]      = (long (*)())do_fwrite;
+    syscall[SYSCALL_FS_FCLOSE]      = (long (*)())do_fclose;
+    syscall[SYSCALL_FS_LN]          = (long (*)())do_ln;
+    syscall[SYSCALL_FS_RM]          = (long (*)())do_rm;
+    syscall[SYSCALL_FS_LSEEK]       = (long (*)())do_lseek;
 }
 
 // for [p3-task3]
@@ -279,7 +296,7 @@ int main(void)
         current_running_of[get_current_cpu_id()]=pcb_for_new_core;
         kernel_pcb_of[get_current_cpu_id()]=pcb_for_new_core;
 
-        printk("Successfully aroused (sub core)! [%s]\n",name);
+        // printk("Successfully aroused (sub core)! [%s]\n",name);
 
         setup_exception();
 
@@ -323,6 +340,7 @@ int main(void)
 
     // Read Flatten Device Tree (｡•ᴗ-)_
     time_base = bios_read_fdt(TIMEBASE);
+#ifdef NET
     e1000 = (volatile uint8_t *)bios_read_fdt(EHTERNET_ADDR);
     uint64_t plic_addr = bios_read_fdt(PLIC_ADDR);
     uint32_t nr_irqs = (uint32_t)bios_read_fdt(NR_IRQS);
@@ -332,6 +350,7 @@ int main(void)
     plic_addr = (uintptr_t)ioremap((uint64_t)plic_addr, 0x4000 * NORMAL_PAGE_SIZE);
     e1000 = (uint8_t *)ioremap((uint64_t)e1000, 8 * NORMAL_PAGE_SIZE);
     printk("> [INIT] IOremap initialization succeeded.\n");
+#endif
 
     // for [p5-task1]
     // note: init_needed_task MUST be put after IOremap,
@@ -362,6 +381,7 @@ int main(void)
     init_exception();
     printk("> [INIT] Interrupt processing initialization succeeded.\n");
 
+#ifdef NET
     // TODO: [p5-task4] Init plic
     plic_init(plic_addr, nr_irqs);
     printk("> [INIT] PLIC initialized successfully. addr = 0x%lx, nr_irqs=0x%x\n", plic_addr, nr_irqs);
@@ -369,6 +389,7 @@ int main(void)
     // Init network device
     e1000_init();
     printk("> [INIT] E1000 device initialized successfully.\n");
+#endif
 
     // Init system call table (0_0)
     init_syscall();
@@ -377,6 +398,10 @@ int main(void)
     // Init screen (QAQ)
     init_screen();
     printk("> [INIT] SCREEN initialization succeeded.\n");
+
+    // Init file system
+    init_fs();
+    printk("> [INIT] Filesystem initialized successfully.\n");
 
     // for [p3-task3]
     smp_init();

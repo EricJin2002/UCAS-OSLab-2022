@@ -44,6 +44,10 @@ pf_t pfs[NUM_MAX_PAGEFRAME];
 LIST_HEAD(free_swp_pool);
 swp_t swps[NUM_MAX_SWAPPAGE];
 
+// for [p6-task1]
+int swap_start_sector_id;
+int swap_end_sector_id;
+
 void init_pages(){
     // init page frames
     for(int i=0;i<NUM_MAX_PAGEFRAME;i++){
@@ -65,6 +69,8 @@ void init_pages(){
     uint16_t task_info_block_num = *(uint16_t *)(bootblock_end_addr - 6);
     int cnt = (int)task_info_block_id + (int)task_info_block_num;
 
+    swap_start_sector_id=cnt;
+
     for(int i=0;i<NUM_MAX_SWAPPAGE;i++){
         swps[i].block_id = cnt;
         cnt += PAGE_SIZE/SECTOR_SIZE;
@@ -72,6 +78,10 @@ void init_pages(){
         swps[i].owner = -1;
         list_push(&free_swp_pool, &swps[i].list);
     }
+
+    swap_end_sector_id=cnt;
+    printl("swap_start_sector_id %d\n", swap_start_sector_id);
+    printl("swap_end_sector_id %d\n",swap_end_sector_id);
 
     // init shared memory pages
     for(int i=0;i<NUM_MAX_SHMPAGE;i++){
@@ -388,7 +398,7 @@ void map_page(uintptr_t va, uintptr_t pa, pcb_t *owner_pcb)
 // alloc pgdir from kernMemCurr
 void map_page_2(uintptr_t va, uintptr_t pa, PTE *pgdir)
 {
-    printl("[in map_page_2]\n");
+    // printl("[in map_page_2]\n");
 
     va &= VA_MASK;
     uint64_t vpn2 = va >> (NORMAL_PAGE_SHIFT + PPN_BITS + PPN_BITS);
@@ -426,7 +436,7 @@ void map_page_2(uintptr_t va, uintptr_t pa, PTE *pgdir)
                                 _PAGE_USER | _PAGE_ACCESSED | _PAGE_DIRTY);
     
     local_flush_tlb_all();
-    printl("[leave map_page_2]\n");
+    // printl("[leave map_page_2]\n");
 }
 
 shm_t shms[NUM_MAX_SHMPAGE];

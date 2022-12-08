@@ -1,0 +1,13 @@
+--- test/shell.c	2022-12-04 00:00:43.806914696 +0800
++++ test/shell.c	2022-12-04 00:00:43.810914739 +0800
+@@ -47,6 +47,10 @@ int main(void)
+         // note: backspace maybe 8('\b') or 127(delete)
+ 
+         // TODO [P3-task1]: ps, exec, kill, clear        
++
++        // TODO [P6-task1]: mkfs, statfs, cd, mkdir, rmdir, ls
++
++        // TODO [P6-task2]: touch, cat, ln, ls -l, rm
+     }
+ 
+     return 0;

@@ -157,8 +157,6 @@ int main(void)
         // printf("\n");
 
         // TODO [P3-task1]: ps, exec, kill, clear        
-        // TODO [P6-task1]: mkfs, statfs, cd, mkdir, rmdir, ls
-        // TODO [P6-task2]: touch, cat, ln, ls -l, rm
         if(!argc){
             continue;
         }
@@ -240,19 +238,6 @@ int main(void)
                     printf("Error: Running a BAT / No such APP / No available PCB!\n");
                 }
             }
-        }else if(!strcmp(argv[0],"mkfs")){
-            sys_mkfs();
-        }else if(!strcmp(argv[0],"statfs")){
-            sys_statfs();
-        }else if(!strcmp(argv[0],"cd")){
-            sys_cd(argv[1]); // not support blank in dir name yet
-        }else if(!strcmp(argv[0],"mkdir")){
-            sys_mkdir(argv[1]);
-        }else if(!strcmp(argv[0],"rmdir")){
-            sys_rmdir(argv[1]);
-        }else if(!strcmp(argv[0],"ls")){
-            // todo: support option
-            sys_ls(argv[1],NULL);
         }else{
             printf("Error: Unknown command %s!\n",argv[0]);
             err=1;

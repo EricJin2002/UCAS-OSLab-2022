@@ -1,0 +1,11 @@
+--- include/sys/syscall.h	2022-12-04 00:00:43.806914696 +0800
++++ include/sys/syscall.h	2022-12-04 00:00:43.810914739 +0800
+@@ -31,7 +31,7 @@
+ #include <os/sched.h>
+ #include <type.h>
+ 
+-#define NUM_SYSCALLS 64
++#define NUM_SYSCALLS 96
+ 
+ /* syscall function pointer */
+ extern long (*syscall[NUM_SYSCALLS])();

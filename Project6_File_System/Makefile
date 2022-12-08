@@ -2,7 +2,7 @@
 # Project Information
 # -----------------------------------------------------------------------
 
-PROJECT_IDX	= 5
+PROJECT_IDX	= 6
 
 # -----------------------------------------------------------------------
 # Host Linux Variables
@@ -205,6 +205,6 @@ $(ELF_CREATEIMAGE): $(SRC_CREATEIMAGE)
 
 image: $(ELF_CREATEIMAGE) $(ELF_BOOT) $(ELF_MAIN) $(ELF_USER)
 	cd $(DIR_BUILD) && ./$(<F) --extended $(filter-out $(<F), $(^F))\
-	&& dd if=/dev/zero of=image oflag=append conv=notrunc bs=1024KB count=2
+	&& dd if=/dev/zero of=image oflag=append conv=notrunc bs=1024MB count=2
 
 .PHONY: image
