@@ -55,6 +55,20 @@ int alloc_inode(){
 }
 
 // for [p6-task1]
+void free_inode(int id){
+    int inodemap_sector_idx = id/8/SECTOR_SIZE;
+    int inodemap_buff_idx = (id%(8*SECTOR_SIZE))/8;
+    int inodemap_byte_idx = id%8;
+    
+    static char inodemap_buff[SECTOR_SIZE];
+    sd_read(kva2pa(inodemap_buff), 1, 
+        superblock.start_sector_id + superblock.inodemap_sector_offset + inodemap_sector_idx);
+    inodemap_buff[inodemap_buff_idx] &=~(1<<inodemap_byte_idx);
+    sd_write(kva2pa(inodemap_buff), 1,
+        superblock.start_sector_id + superblock.inodemap_sector_offset + inodemap_sector_idx);
+}
+
+// for [p6-task1]
 int map_dentry(dir_t *dirptr, char *name, int inode_id){
     for(int i=0;i<FS_DENTRY_NUM;i++){
         if(!dirptr->dentries[i].valid){
@@ -87,6 +101,74 @@ int parse_path(char *path, char **result){
 }
 
 // for [p6-task1]
+static inline void sd_read_inode(inode_t *buff, int inode_id){
+    sd_read(kva2pa(buff), 1, 
+        superblock.start_sector_id + superblock.inode_sector_offset + inode_id);
+}
+static inline void sd_write_inode(inode_t *buff, int inode_id){
+    sd_write(kva2pa(buff), 1,
+        superblock.start_sector_id + superblock.inode_sector_offset + inode_id);
+}
+static inline void sd_read_dir(dir_t *buff, int datablock_id){
+    sd_read(kva2pa(buff), FS_DATABLOCK_SIZE_COUNT_IN_SECTORS,
+        superblock.start_sector_id + superblock.data_sector_offset +
+        FS_DATABLOCK_SIZE_COUNT_IN_SECTORS * datablock_id);
+}
+static inline void sd_write_dir(dir_t *buff, int datablock_id){
+    sd_write(kva2pa(buff), FS_DATABLOCK_SIZE_COUNT_IN_SECTORS,
+        superblock.start_sector_id + superblock.data_sector_offset +
+        FS_DATABLOCK_SIZE_COUNT_IN_SECTORS * datablock_id);
+}
+
+// for [p6-task1]
+// search in the direct dentries
+// if exists, return inode_id; else, return -1
+int search_inode_from_inode(inode_t *father_inodeptr, char *name){
+    static dir_t tmp_dir;
+    for(int i=0;i<FS_DIRECT_INODE_ENTRY_NUM;i++){
+        if(father_inodeptr->direct[i].valid){
+            sd_read_dir(&tmp_dir, father_inodeptr->direct[i].datablock_id);
+            int tmp_dir_cnt = tmp_dir.cnt;
+            for(int j=0;j<FS_DENTRY_NUM&&tmp_dir_cnt>0;j++){
+                if(tmp_dir.dentries[j].valid){
+                    tmp_dir_cnt--;
+                    if(!strcmp(tmp_dir.dentries[j].name, name)){
+                        return tmp_dir.dentries[j].inode_id;
+                    }
+                }
+            }
+        }else{
+            break;
+        }
+    }
+    return -1;
+}
+
+// for [p6-task1]
+// only for direct dentries
+void delete_dentry_from_inode(inode_t *father_inodeptr, char *name){
+    static dir_t tmp_dir;
+    for(int i=0;i<FS_DIRECT_INODE_ENTRY_NUM;i++){
+        if(father_inodeptr->direct[i].valid){
+            sd_read_dir(&tmp_dir, father_inodeptr->direct[i].datablock_id);
+            int tmp_dir_cnt = tmp_dir.cnt;
+            for(int j=0;j<FS_DENTRY_NUM&&tmp_dir_cnt>0;j++){
+                if(tmp_dir.dentries[j].valid){
+                    tmp_dir_cnt--;
+                    if(!strcmp(tmp_dir.dentries[j].name, name)){
+                        tmp_dir.dentries[j].valid=0;
+                        tmp_dir.cnt--;
+                    }
+                }
+            }
+            sd_write_dir(&tmp_dir, father_inodeptr->direct[i].datablock_id);
+        }else{
+            break;
+        }
+    }
+}
+
+// for [p6-task1]
 // return inode id
 int create_new_dir(int is_root, int father_inode_id){
     static inode_t tmp_inode;
@@ -98,8 +180,7 @@ int create_new_dir(int is_root, int father_inode_id){
     tmp_inode.type=DIR;
     tmp_inode.direct[0].valid=1;
     tmp_inode.direct[0].datablock_id=alloc_datablock();
-    sd_write(kva2pa(&tmp_inode), 1, 
-        superblock.start_sector_id + superblock.inode_sector_offset + tmp_inode.id);
+    sd_write_inode(&tmp_inode, tmp_inode.id);
     
     static dir_t tmp_dir;
     memset(&tmp_dir, 0, sizeof(dir_t));
@@ -109,9 +190,7 @@ int create_new_dir(int is_root, int father_inode_id){
     }else{
         map_dentry(&tmp_dir, "..", father_inode_id);
     }
-    sd_write(kva2pa(&tmp_dir), FS_DATABLOCK_SIZE_COUNT_IN_SECTORS, 
-        superblock.start_sector_id + superblock.data_sector_offset + 
-        FS_DATABLOCK_SIZE_COUNT_IN_SECTORS*tmp_inode.direct[0].datablock_id);
+    sd_write_dir(&tmp_dir, tmp_inode.direct[0].datablock_id);
 
     printl("[create_new_dir] (%d . %d)\n", father_inode_id, tmp_inode.id);
     return tmp_inode.id;
@@ -165,12 +244,12 @@ int do_mkfs(void)
 
     printk("[FS] Setting inode-map...\n");
     for(int i=0;i<superblock.inodemap_sector_num;i++){
-        sd_write(kva2pa(blank), 1, superblock.start_sector_id + superblock.inodemap_sector_offset+i);
+        sd_write(kva2pa(blank), 1, superblock.start_sector_id + superblock.inodemap_sector_offset + i);
     }
 
     printk("[FS] Setting block-map...\n");
     for(int i=0;i<superblock.blockmap_sector_num;i++){
-        sd_write(kva2pa(blank), 1, superblock.start_sector_id + superblock.blockmap_sector_offset+i);
+        sd_write(kva2pa(blank), 1, superblock.start_sector_id + superblock.blockmap_sector_offset + i);
     }
 
     printk("[FS] Setting inode...\n");
@@ -184,7 +263,7 @@ int do_statfs(void)
 {
     // TODO [P6-task1]: Implement do_statfs
     if(superblock.magic!=SUPERBLOCK_MAGIC){
-        printk("> [FS] Filesystem not exists!");
+        printk("[FS] Filesystem not exists!");
         return -1;
     }
 
@@ -205,6 +284,45 @@ int do_statfs(void)
 int do_cd(char *path)
 {
     // TODO [P6-task1]: Implement do_cd
+    // parse path
+    if(!path){
+        path=".";
+    }
+    char *parsed_path[FS_DIR_MAX_LEVEL];  // note: this implies that the level of dir < 10
+    int cnt=parse_path(path, parsed_path);
+
+    int curr_inode_id=cwd_inode_id;
+    int curr_parsed_path_idx=0;
+    static inode_t tmp_inode;
+
+    while(curr_parsed_path_idx<cnt){
+        // read father inode
+        sd_read_inode(&tmp_inode, curr_inode_id);
+        if(tmp_inode.type!=DIR){
+            printk("Error: %s not a dir!\n", parsed_path[curr_parsed_path_idx-1]);
+            return -1;
+        }
+
+        // search in the direct dentry
+        int tmp_curr_inode_id=search_inode_from_inode(&tmp_inode, parsed_path[curr_parsed_path_idx]);
+        if(tmp_curr_inode_id!=-1){
+            // son inode exists
+            curr_inode_id=tmp_curr_inode_id;
+            curr_parsed_path_idx++;
+        }else{
+            // no such dir
+            printk("Error: no dir named %s!\n", parsed_path[curr_parsed_path_idx]);
+            return -1;
+        }
+    }
+
+    sd_read_inode(&tmp_inode, curr_inode_id);
+    if(tmp_inode.type!=DIR){
+        printk("Error: %s not a dir!\n", parsed_path[curr_parsed_path_idx-1]);
+        return -1;
+    }
+
+    cwd_inode_id=curr_inode_id;
 
     return 0;  // do_cd succeeds
 }
@@ -212,18 +330,17 @@ int do_cd(char *path)
 int do_mkdir(char *path)
 {
     // TODO [P6-task1]: Implement do_mkdir
-
     // parse path
     if(!path){
         path=".";
     }
     char *parsed_path[FS_DIR_MAX_LEVEL];  // note: this implies that the level of dir < 10
     int cnt=parse_path(path, parsed_path);
-    printk("Path (");
-    for(int i=0;i<cnt;i++){
-        printk("%s/",parsed_path[i]);
-    }
-    printk(") is parsed!\n");
+    // printk("Path (");
+    // for(int i=0;i<cnt;i++){
+    //     printk("%s/",parsed_path[i]);
+    // }
+    // printk(") is parsed!\n");
 
 
     int curr_inode_id=cwd_inode_id;
@@ -232,33 +349,20 @@ int do_mkdir(char *path)
     static dir_t tmp_dir;
 
     while(curr_parsed_path_idx<cnt){
-        sd_read(kva2pa(&tmp_inode), 1,
-            superblock.start_sector_id + superblock.inode_sector_offset + curr_inode_id);
+        // read father inode
+        sd_read_inode(&tmp_inode, curr_inode_id);
         if(tmp_inode.type!=DIR){
             printk("Error: %s not a dir!\n", parsed_path[curr_parsed_path_idx-1]);
             return -1;
         }
 
         // search in the direct dentry
-        for(int i=0;i<FS_DIRECT_INODE_ENTRY_NUM;i++){
-            if(tmp_inode.direct[i].valid){
-                sd_read(kva2pa(&tmp_dir), FS_DATABLOCK_SIZE_COUNT_IN_SECTORS,
-                    superblock.start_sector_id + superblock.data_sector_offset +
-                    FS_DATABLOCK_SIZE_COUNT_IN_SECTORS*tmp_inode.direct[i].datablock_id);
-                int tmp_dir_cnt = tmp_dir.cnt;
-                for(int i=0;i<FS_DENTRY_NUM&&tmp_dir_cnt>0;i++){
-                    if(tmp_dir.dentries[i].valid){
-                        tmp_dir_cnt--;
-                        if(!strcmp(tmp_dir.dentries[i].name, parsed_path[curr_parsed_path_idx])){
-                            curr_inode_id=tmp_dir.dentries[i].inode_id;
-                            curr_parsed_path_idx++;
-                            goto done;
-                        }
-                    }
-                }
-            }else{
-                break;
-            }
+        int tmp_curr_inode_id=search_inode_from_inode(&tmp_inode, parsed_path[curr_parsed_path_idx]);
+        if(tmp_curr_inode_id!=-1){
+            // son inode exists
+            curr_inode_id=tmp_curr_inode_id;
+            curr_parsed_path_idx++;
+            goto done;
         }
 
         // no such dir, create one
@@ -267,18 +371,14 @@ int do_mkdir(char *path)
         // record dentry in last dir
         for(int i=0;i<FS_DIRECT_INODE_ENTRY_NUM;i++){
             if(tmp_inode.direct[i].valid){
-                sd_read(kva2pa(&tmp_dir), FS_DATABLOCK_SIZE_COUNT_IN_SECTORS,
-                    superblock.start_sector_id + superblock.data_sector_offset +
-                    FS_DATABLOCK_SIZE_COUNT_IN_SECTORS*tmp_inode.direct[i].datablock_id);
+                sd_read_dir(&tmp_dir, tmp_inode.direct[i].datablock_id);
                 
                 if(map_dentry(&tmp_dir, parsed_path[curr_parsed_path_idx], newly_created_inode_id)==-1){
                     // this dir already full
                     continue;
                 }
 
-                sd_write(kva2pa(&tmp_dir), FS_DATABLOCK_SIZE_COUNT_IN_SECTORS,
-                    superblock.start_sector_id + superblock.data_sector_offset +
-                    FS_DATABLOCK_SIZE_COUNT_IN_SECTORS*tmp_inode.direct[i].datablock_id);
+                sd_write_dir(&tmp_dir, tmp_inode.direct[i].datablock_id);
                 
                 curr_inode_id = newly_created_inode_id;
                 curr_parsed_path_idx++;
@@ -286,15 +386,12 @@ int do_mkdir(char *path)
             }else{
                 tmp_inode.direct[i].valid=1;
                 tmp_inode.direct[i].datablock_id=alloc_datablock();
-                sd_write(kva2pa(&tmp_inode), 1,
-                    superblock.start_sector_id + superblock.inode_sector_offset + tmp_inode.id);
-                
+                sd_write_inode(&tmp_inode, tmp_inode.id);
+
                 static dir_t new_dir;
                 memset(&new_dir, 0, sizeof(dir_t));
                 map_dentry(&new_dir, parsed_path[curr_parsed_path_idx], newly_created_inode_id);
-                sd_write(kva2pa(&new_dir), FS_DATABLOCK_SIZE_COUNT_IN_SECTORS,
-                    superblock.start_sector_id + superblock.data_sector_offset +
-                    FS_DATABLOCK_SIZE_COUNT_IN_SECTORS*tmp_inode.direct[i].datablock_id);
+                sd_write_dir(&new_dir, tmp_inode.direct[i].datablock_id);
                 
                 curr_inode_id = newly_created_inode_id;
                 curr_parsed_path_idx++;
@@ -312,6 +409,98 @@ int do_mkdir(char *path)
 int do_rmdir(char *path)
 {
     // TODO [P6-task1]: Implement do_rmdir
+    // parse path
+    if(!path){
+        path=".";
+    }
+    char *parsed_path[FS_DIR_MAX_LEVEL];  // note: this implies that the level of dir < 10
+    int cnt=parse_path(path, parsed_path);
+
+    int curr_inode_id=cwd_inode_id;
+    int curr_parsed_path_idx=0;
+    static inode_t tmp_inode;
+
+    while(curr_parsed_path_idx<cnt-1){
+        // read father inode
+        sd_read_inode(&tmp_inode, curr_inode_id);
+        if(tmp_inode.type!=DIR){
+            printk("Error: %s not a dir!\n", parsed_path[curr_parsed_path_idx-1]);
+            return -1;
+        }
+
+        // search in the direct dentry
+        int tmp_curr_inode_id=search_inode_from_inode(&tmp_inode, parsed_path[curr_parsed_path_idx]);
+        if(tmp_curr_inode_id!=-1){
+            // son inode exists
+            curr_inode_id=tmp_curr_inode_id;
+            curr_parsed_path_idx++;
+        }else{
+            // no such dir
+            printk("Error: no dir named %s!\n", parsed_path[curr_parsed_path_idx]);
+            return -1;
+        }
+    }
+
+    // read father inode
+    sd_read_inode(&tmp_inode, curr_inode_id);
+    if(tmp_inode.type!=DIR){
+        printk("Error: %s not a dir!\n", parsed_path[curr_parsed_path_idx-1]);
+        return -1;
+    }
+
+    // search in the direct dentry
+    int son_inode_id=search_inode_from_inode(&tmp_inode, parsed_path[curr_parsed_path_idx]);
+    if(son_inode_id==-1){
+        // no such dir
+        printk("Error: no dir named %s!\n", parsed_path[curr_parsed_path_idx]);
+        return -1;
+    }
+
+    // son inode exists
+    static inode_t son_inode;
+    sd_read_inode(&son_inode, son_inode_id);
+    if(son_inode.type!=DIR){
+        printk("Error: %s not a dir!\n", parsed_path[cnt-1]);
+        return -1;
+    }
+
+    // judge if son dir is empty
+    static dir_t son_dir;
+    for(int i=0;i<FS_DIRECT_INODE_ENTRY_NUM;i++){
+        if(son_inode.direct[i].valid){
+            sd_read_dir(&son_dir, son_inode.direct[i].datablock_id);
+            int son_dir_cnt = son_dir.cnt;
+            for(int j=0;j<FS_DENTRY_NUM&&son_dir_cnt>0;j++){
+                if(son_dir.dentries[j].valid){
+                    son_dir_cnt--;
+                    if(strcmp(son_dir.dentries[j].name, ".")&&strcmp(son_dir.dentries[j].name, "..")){
+                        printk("Error: %s not empty!\n", parsed_path[cnt-1]);
+                        return -1;
+                    }
+                }
+            }
+        }else{
+            break;
+        }
+    }
+
+    // judge if removing itself
+    if(!strcmp(parsed_path[cnt-1],".") || !strcmp(parsed_path[cnt-1],"..")){
+        printk("Error: Illegal dir name!\n");
+        return -1;
+    }
+
+    // delete son inode in father dir
+    delete_dentry_from_inode(&tmp_inode, parsed_path[cnt-1]);
+
+    // decrease inode nlinks
+    son_inode.nlinks--;
+    sd_write_inode(&son_inode, son_inode_id);
+
+    // delete son inode if nlinks comes to 0
+    if(!son_inode.nlinks){
+        free_inode(son_inode_id);
+    }
 
     return 0;  // do_rmdir succeeds
 }
@@ -325,12 +514,6 @@ int do_ls(char *path, int option)
     }
     char *parsed_path[FS_DIR_MAX_LEVEL];  // note: this implies that the level of dir < 10
     int cnt=parse_path(path, parsed_path);
-    printk("Path (");
-    for(int i=0;i<cnt;i++){
-        printk("%s/",parsed_path[i]);
-    }
-    printk(") is parsed!\n");
-
     
     int curr_inode_id=cwd_inode_id;
     int curr_parsed_path_idx=0;
@@ -338,54 +521,36 @@ int do_ls(char *path, int option)
     static dir_t tmp_dir;
 
     while(curr_parsed_path_idx<cnt){
-        sd_read(kva2pa(&tmp_inode), 1,
-            superblock.start_sector_id + superblock.inode_sector_offset + curr_inode_id);
+        // read father inode
+        sd_read_inode(&tmp_inode, curr_inode_id);
         if(tmp_inode.type!=DIR){
             printk("Error: %s not a dir!\n", parsed_path[curr_parsed_path_idx-1]);
             return -1;
         }
 
         // search in the direct dentry
-        for(int i=0;i<FS_DIRECT_INODE_ENTRY_NUM;i++){
-            if(tmp_inode.direct[i].valid){
-                sd_read(kva2pa(&tmp_dir), FS_DATABLOCK_SIZE_COUNT_IN_SECTORS,
-                    superblock.start_sector_id + superblock.data_sector_offset +
-                    FS_DATABLOCK_SIZE_COUNT_IN_SECTORS*tmp_inode.direct[i].datablock_id);
-                int tmp_dir_cnt = tmp_dir.cnt;
-                for(int i=0;i<FS_DENTRY_NUM&&tmp_dir_cnt>0;i++){
-                    if(tmp_dir.dentries[i].valid){
-                        tmp_dir_cnt--;
-                        if(!strcmp(tmp_dir.dentries[i].name, parsed_path[curr_parsed_path_idx])){
-                            curr_inode_id=tmp_dir.dentries[i].inode_id;
-                            curr_parsed_path_idx++;
-                            goto done;
-                        }
-                    }
-                }
-            }else{
-                break;
-            }
+        int tmp_curr_inode_id=search_inode_from_inode(&tmp_inode, parsed_path[curr_parsed_path_idx]);
+        if(tmp_curr_inode_id!=-1){
+            // son inode exists
+            curr_inode_id=tmp_curr_inode_id;
+            curr_parsed_path_idx++;
+        }else{
+            // no such dir
+            printk("Error: no dir named %s!\n",parsed_path[curr_parsed_path_idx]);
+            return -1;
         }
-
-        printk("Error: no such dir!\n");
-        return -1;
-
-        done:;
     }
 
-    sd_read(kva2pa(&tmp_inode), 1,
-        superblock.start_sector_id + superblock.inode_sector_offset + curr_inode_id);
+    sd_read_inode(&tmp_inode, curr_inode_id);
     if(tmp_inode.type!=DIR){
         printk("Error: %s not a dir!\n", parsed_path[curr_parsed_path_idx-1]);
         return -1;
     }
 
-    // search in the direct dentry
+    // print file/dir name
     for(int i=0;i<FS_DIRECT_INODE_ENTRY_NUM;i++){
         if(tmp_inode.direct[i].valid){
-            sd_read(kva2pa(&tmp_dir), FS_DATABLOCK_SIZE_COUNT_IN_SECTORS,
-                superblock.start_sector_id + superblock.data_sector_offset +
-                FS_DATABLOCK_SIZE_COUNT_IN_SECTORS*tmp_inode.direct[i].datablock_id);
+            sd_read_dir(&tmp_dir, tmp_inode.direct[i].datablock_id);
             int tmp_dir_cnt = tmp_dir.cnt;
             for(int i=0;i<FS_DENTRY_NUM&&tmp_dir_cnt>0;i++){
                 if(tmp_dir.dentries[i].valid){
