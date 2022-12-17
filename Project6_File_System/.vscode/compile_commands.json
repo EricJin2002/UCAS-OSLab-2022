@@ -12,53 +12,11 @@
             "-ggdb3",
             "-I./tiny_libc/include",
             "-o",
-            "build/time.o",
-            "tiny_libc/time.c"
+            "build/string.o",
+            "tiny_libc/string.c"
         ],
         "directory": "/home/stu/jinyang20/Project6_File_System",
-        "file": "tiny_libc/time.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./arch/riscv/include",
-            "-Iinclude",
-            "-Idrivers",
-            "-e",
-            "_boot",
-            "-o",
-            "build/main",
-            "kernel/locking/lock.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project6_File_System",
-        "file": "kernel/locking/lock.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./tiny_libc/include",
-            "-o",
-            "build/printf.o",
-            "tiny_libc/printf.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project6_File_System",
-        "file": "tiny_libc/printf.c"
+        "file": "tiny_libc/string.c"
     },
     {
         "arguments": [
@@ -94,25 +52,6 @@
             "-Wall",
             "-mcmodel=medany",
             "-ggdb3",
-            "-I./tiny_libc/include",
-            "-o",
-            "build/itoa.o",
-            "tiny_libc/itoa.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project6_File_System",
-        "file": "tiny_libc/itoa.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
             "-I./arch/riscv/include",
             "-Iinclude",
             "-Idrivers",
@@ -120,10 +59,10 @@
             "_boot",
             "-o",
             "build/main",
-            "libs/printk.c"
+            "init/main.c"
         ],
         "directory": "/home/stu/jinyang20/Project6_File_System",
-        "file": "libs/printk.c"
+        "file": "init/main.c"
     },
     {
         "arguments": [
@@ -138,11 +77,11 @@
             "-ggdb3",
             "-I./tiny_libc/include",
             "-o",
-            "build/rand.o",
-            "tiny_libc/rand.c"
+            "build/pthread.o",
+            "tiny_libc/pthread.c"
         ],
         "directory": "/home/stu/jinyang20/Project6_File_System",
-        "file": "tiny_libc/rand.c"
+        "file": "tiny_libc/pthread.c"
     },
     {
         "arguments": [
@@ -162,272 +101,10 @@
             "_boot",
             "-o",
             "build/main",
-            "arch/riscv/kernel/entry.S"
+            "drivers/plic.c"
         ],
         "directory": "/home/stu/jinyang20/Project6_File_System",
-        "file": "arch/riscv/kernel/entry.S"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./tiny_libc/include",
-            "-o",
-            "build/syscall.o",
-            "tiny_libc/syscall.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project6_File_System",
-        "file": "tiny_libc/syscall.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./arch/riscv/include",
-            "-Iinclude",
-            "-Idrivers",
-            "-e",
-            "_boot",
-            "-o",
-            "build/main",
-            "kernel/mm/mm.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project6_File_System",
-        "file": "kernel/mm/mm.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./arch/riscv/include",
-            "-Iinclude",
-            "-Idrivers",
-            "-e",
-            "_boot",
-            "-o",
-            "build/main",
-            "kernel/sched/sched.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project6_File_System",
-        "file": "kernel/sched/sched.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./tiny_libc/include",
-            "-o",
-            "build/atoi.o",
-            "tiny_libc/atoi.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project6_File_System",
-        "file": "tiny_libc/atoi.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./arch/riscv/include",
-            "-Iinclude",
-            "-Idrivers",
-            "-e",
-            "_boot",
-            "-o",
-            "build/main",
-            "kernel/fs/fs.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project6_File_System",
-        "file": "kernel/fs/fs.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./arch/riscv/include",
-            "-e",
-            "main",
-            "-o",
-            "build/bootblock",
-            "arch/riscv/boot/bootblock.S"
-        ],
-        "directory": "/home/stu/jinyang20/Project6_File_System",
-        "file": "arch/riscv/boot/bootblock.S"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./arch/riscv/include",
-            "-Iinclude",
-            "-Idrivers",
-            "-e",
-            "_boot",
-            "-o",
-            "build/main",
-            "kernel/locking/cond.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project6_File_System",
-        "file": "kernel/locking/cond.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./tiny_libc/include",
-            "-o",
-            "build/mailbox.o",
-            "tiny_libc/mailbox.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project6_File_System",
-        "file": "tiny_libc/mailbox.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./arch/riscv/include",
-            "-Iinclude",
-            "-Idrivers",
-            "-e",
-            "_boot",
-            "-o",
-            "build/main",
-            "drivers/e1000.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project6_File_System",
-        "file": "drivers/e1000.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./arch/riscv/include",
-            "-Iinclude",
-            "-Idrivers",
-            "-e",
-            "_boot",
-            "-o",
-            "build/main",
-            "kernel/sched/thread.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project6_File_System",
-        "file": "kernel/sched/thread.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./arch/riscv/include",
-            "-Iinclude",
-            "-Idrivers",
-            "-e",
-            "_boot",
-            "-o",
-            "build/main",
-            "kernel/locking/mbox.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project6_File_System",
-        "file": "kernel/locking/mbox.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./arch/riscv/include",
-            "-Iinclude",
-            "-Idrivers",
-            "-e",
-            "_boot",
-            "-o",
-            "build/main",
-            "kernel/syscall/syscall.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project6_File_System",
-        "file": "kernel/syscall/syscall.c"
+        "file": "drivers/plic.c"
     },
     {
         "arguments": [
@@ -460,33 +137,10 @@
             "_boot",
             "-o",
             "build/main",
-            "arch/riscv/kernel/trap.S"
+            "kernel/locking/cond.c"
         ],
         "directory": "/home/stu/jinyang20/Project6_File_System",
-        "file": "arch/riscv/kernel/trap.S"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./arch/riscv/include",
-            "-Iinclude",
-            "-Idrivers",
-            "-e",
-            "_boot",
-            "-o",
-            "build/main",
-            "kernel/net/net.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project6_File_System",
-        "file": "kernel/net/net.c"
+        "file": "kernel/locking/cond.c"
     },
     {
         "arguments": [
@@ -549,10 +203,10 @@
             "_boot",
             "-o",
             "build/main",
-            "drivers/plic.c"
+            "arch/riscv/kernel/boot.c"
         ],
         "directory": "/home/stu/jinyang20/Project6_File_System",
-        "file": "drivers/plic.c"
+        "file": "arch/riscv/kernel/boot.c"
     },
     {
         "arguments": [
@@ -572,160 +226,10 @@
             "_boot",
             "-o",
             "build/main",
-            "kernel/locking/barr.c"
+            "kernel/locking/mbox.c"
         ],
         "directory": "/home/stu/jinyang20/Project6_File_System",
-        "file": "kernel/locking/barr.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./tiny_libc/include",
-            "-o",
-            "build/string.o",
-            "tiny_libc/string.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project6_File_System",
-        "file": "tiny_libc/string.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./tiny_libc/include",
-            "-I./arch/riscv/include",
-            "-o",
-            "build/crt0.o",
-            "arch/riscv/crt0/crt0.S"
-        ],
-        "directory": "/home/stu/jinyang20/Project6_File_System",
-        "file": "arch/riscv/crt0/crt0.S"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./arch/riscv/include",
-            "-Iinclude",
-            "-Idrivers",
-            "-e",
-            "_boot",
-            "-o",
-            "build/main",
-            "kernel/sched/time.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project6_File_System",
-        "file": "kernel/sched/time.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./arch/riscv/include",
-            "-Iinclude",
-            "-Idrivers",
-            "-e",
-            "_boot",
-            "-o",
-            "build/main",
-            "kernel/irq/irq.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project6_File_System",
-        "file": "kernel/irq/irq.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./arch/riscv/include",
-            "-Iinclude",
-            "-Idrivers",
-            "-e",
-            "_boot",
-            "-o",
-            "build/main",
-            "kernel/smp/smp.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project6_File_System",
-        "file": "kernel/smp/smp.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./tiny_libc/include",
-            "-o",
-            "build/pthread.o",
-            "tiny_libc/pthread.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project6_File_System",
-        "file": "tiny_libc/pthread.c"
-    },
-    {
-        "arguments": [
-            "riscv64-unknown-linux-gnu-gcc",
-            "-c",
-            "-O0",
-            "-fno-builtin",
-            "-nostdlib",
-            "-nostdinc",
-            "-Wall",
-            "-mcmodel=medany",
-            "-ggdb3",
-            "-I./arch/riscv/include",
-            "-Iinclude",
-            "-Idrivers",
-            "-e",
-            "_boot",
-            "-o",
-            "build/main",
-            "kernel/mm/ioremap.c"
-        ],
-        "directory": "/home/stu/jinyang20/Project6_File_System",
-        "file": "kernel/mm/ioremap.c"
+        "file": "kernel/locking/mbox.c"
     },
     {
         "arguments": [
@@ -765,10 +269,508 @@
             "_boot",
             "-o",
             "build/main",
+            "kernel/sched/thread.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project6_File_System",
+        "file": "kernel/sched/thread.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./arch/riscv/include",
+            "-Iinclude",
+            "-Idrivers",
+            "-e",
+            "_boot",
+            "-o",
+            "build/main",
+            "arch/riscv/kernel/entry.S"
+        ],
+        "directory": "/home/stu/jinyang20/Project6_File_System",
+        "file": "arch/riscv/kernel/entry.S"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./tiny_libc/include",
+            "-o",
+            "build/syscall.o",
+            "tiny_libc/syscall.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project6_File_System",
+        "file": "tiny_libc/syscall.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./arch/riscv/include",
+            "-Iinclude",
+            "-Idrivers",
+            "-e",
+            "_boot",
+            "-o",
+            "build/main",
             "arch/riscv/kernel/start.S"
         ],
         "directory": "/home/stu/jinyang20/Project6_File_System",
         "file": "arch/riscv/kernel/start.S"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./tiny_libc/include",
+            "-o",
+            "build/itoa.o",
+            "tiny_libc/itoa.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project6_File_System",
+        "file": "tiny_libc/itoa.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./arch/riscv/include",
+            "-Iinclude",
+            "-Idrivers",
+            "-e",
+            "_boot",
+            "-o",
+            "build/main",
+            "kernel/fs/fs.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project6_File_System",
+        "file": "kernel/fs/fs.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./arch/riscv/include",
+            "-Iinclude",
+            "-Idrivers",
+            "-e",
+            "_boot",
+            "-o",
+            "build/main",
+            "kernel/syscall/syscall.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project6_File_System",
+        "file": "kernel/syscall/syscall.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./arch/riscv/include",
+            "-Iinclude",
+            "-Idrivers",
+            "-e",
+            "_boot",
+            "-o",
+            "build/main",
+            "drivers/e1000.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project6_File_System",
+        "file": "drivers/e1000.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./arch/riscv/include",
+            "-Iinclude",
+            "-Idrivers",
+            "-e",
+            "_boot",
+            "-o",
+            "build/main",
+            "libs/print_custom.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project6_File_System",
+        "file": "libs/print_custom.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./tiny_libc/include",
+            "-I./arch/riscv/include",
+            "-o",
+            "build/crt0.o",
+            "arch/riscv/crt0/crt0.S"
+        ],
+        "directory": "/home/stu/jinyang20/Project6_File_System",
+        "file": "arch/riscv/crt0/crt0.S"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./arch/riscv/include",
+            "-Iinclude",
+            "-Idrivers",
+            "-e",
+            "_boot",
+            "-o",
+            "build/main",
+            "kernel/sched/sched.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project6_File_System",
+        "file": "kernel/sched/sched.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./tiny_libc/include",
+            "-o",
+            "build/mailbox.o",
+            "tiny_libc/mailbox.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project6_File_System",
+        "file": "tiny_libc/mailbox.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./arch/riscv/include",
+            "-Iinclude",
+            "-Idrivers",
+            "-e",
+            "_boot",
+            "-o",
+            "build/main",
+            "libs/printk.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project6_File_System",
+        "file": "libs/printk.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./arch/riscv/include",
+            "-Iinclude",
+            "-Idrivers",
+            "-e",
+            "_boot",
+            "-o",
+            "build/main",
+            "kernel/mm/ioremap.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project6_File_System",
+        "file": "kernel/mm/ioremap.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./arch/riscv/include",
+            "-Iinclude",
+            "-Idrivers",
+            "-e",
+            "_boot",
+            "-o",
+            "build/main",
+            "kernel/fs/utils.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project6_File_System",
+        "file": "kernel/fs/utils.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./tiny_libc/include",
+            "-o",
+            "build/atoi.o",
+            "tiny_libc/atoi.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project6_File_System",
+        "file": "tiny_libc/atoi.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./arch/riscv/include",
+            "-Iinclude",
+            "-Idrivers",
+            "-e",
+            "_boot",
+            "-o",
+            "build/main",
+            "kernel/smp/smp.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project6_File_System",
+        "file": "kernel/smp/smp.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./tiny_libc/include",
+            "-o",
+            "build/time.o",
+            "tiny_libc/time.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project6_File_System",
+        "file": "tiny_libc/time.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./arch/riscv/include",
+            "-Iinclude",
+            "-Idrivers",
+            "-e",
+            "_boot",
+            "-o",
+            "build/main",
+            "kernel/mm/mm.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project6_File_System",
+        "file": "kernel/mm/mm.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./arch/riscv/include",
+            "-Iinclude",
+            "-Idrivers",
+            "-e",
+            "_boot",
+            "-o",
+            "build/main",
+            "kernel/irq/irq.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project6_File_System",
+        "file": "kernel/irq/irq.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./tiny_libc/include",
+            "-o",
+            "build/printf.o",
+            "tiny_libc/printf.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project6_File_System",
+        "file": "tiny_libc/printf.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./arch/riscv/include",
+            "-Iinclude",
+            "-Idrivers",
+            "-e",
+            "_boot",
+            "-o",
+            "build/main",
+            "kernel/locking/lock.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project6_File_System",
+        "file": "kernel/locking/lock.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./arch/riscv/include",
+            "-Iinclude",
+            "-Idrivers",
+            "-e",
+            "_boot",
+            "-o",
+            "build/main",
+            "kernel/sched/time.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project6_File_System",
+        "file": "kernel/sched/time.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./tiny_libc/include",
+            "-o",
+            "build/rand.o",
+            "tiny_libc/rand.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project6_File_System",
+        "file": "tiny_libc/rand.c"
     },
     {
         "arguments": [
@@ -811,10 +813,33 @@
             "_boot",
             "-o",
             "build/main",
-            "arch/riscv/kernel/boot.c"
+            "drivers/screen.c"
         ],
         "directory": "/home/stu/jinyang20/Project6_File_System",
-        "file": "arch/riscv/kernel/boot.c"
+        "file": "drivers/screen.c"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./arch/riscv/include",
+            "-Iinclude",
+            "-Idrivers",
+            "-e",
+            "_boot",
+            "-o",
+            "build/main",
+            "kernel/locking/barr.c"
+        ],
+        "directory": "/home/stu/jinyang20/Project6_File_System",
+        "file": "kernel/locking/barr.c"
     },
     {
         "arguments": [
@@ -851,16 +876,14 @@
             "-mcmodel=medany",
             "-ggdb3",
             "-I./arch/riscv/include",
-            "-Iinclude",
-            "-Idrivers",
             "-e",
-            "_boot",
+            "main",
             "-o",
-            "build/main",
-            "drivers/screen.c"
+            "build/bootblock",
+            "arch/riscv/boot/bootblock.S"
         ],
         "directory": "/home/stu/jinyang20/Project6_File_System",
-        "file": "drivers/screen.c"
+        "file": "arch/riscv/boot/bootblock.S"
     },
     {
         "arguments": [
@@ -880,10 +903,10 @@
             "_boot",
             "-o",
             "build/main",
-            "init/main.c"
+            "kernel/net/net.c"
         ],
         "directory": "/home/stu/jinyang20/Project6_File_System",
-        "file": "init/main.c"
+        "file": "kernel/net/net.c"
     },
     {
         "arguments": [
@@ -907,5 +930,28 @@
         ],
         "directory": "/home/stu/jinyang20/Project6_File_System",
         "file": "arch/riscv/kernel/head.S"
+    },
+    {
+        "arguments": [
+            "riscv64-unknown-linux-gnu-gcc",
+            "-c",
+            "-O0",
+            "-fno-builtin",
+            "-nostdlib",
+            "-nostdinc",
+            "-Wall",
+            "-mcmodel=medany",
+            "-ggdb3",
+            "-I./arch/riscv/include",
+            "-Iinclude",
+            "-Idrivers",
+            "-e",
+            "_boot",
+            "-o",
+            "build/main",
+            "arch/riscv/kernel/trap.S"
+        ],
+        "directory": "/home/stu/jinyang20/Project6_File_System",
+        "file": "arch/riscv/kernel/trap.S"
     }
 ]

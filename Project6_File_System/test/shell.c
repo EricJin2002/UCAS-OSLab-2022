@@ -251,8 +251,19 @@ int main(void)
         }else if(!strcmp(argv[0],"rmdir")){
             sys_rmdir(argv[1]);
         }else if(!strcmp(argv[0],"ls")){
-            // todo: support option
-            sys_ls(argv[1],NULL);
+            if(argv[1] && !strcmp(argv[1],"-l")){
+                // ls -l path
+                printf("Parsing ls command as [ls -l path]...\n");
+                sys_ls(argv[2], 1);
+            }else{
+                // ls path
+                printf("Parsing ls command as [ls path]...\n");
+                sys_ls(argv[1],NULL);
+            }
+        }else if(!strcmp(argv[0],"touch")){
+            sys_touch(argv[1]);
+        }else if(!strcmp(argv[0],"cat")){
+            sys_cat(argv[1]);
         }else{
             printf("Error: Unknown command %s!\n",argv[0]);
             err=1;

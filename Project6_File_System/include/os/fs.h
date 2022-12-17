@@ -4,6 +4,9 @@
 #include <type.h>
 #include <os/mm.h>      // for [p6-task1]
 #include <os/loader.h>  // for [p6-task1]
+#include <common.h>     // for [p6-task1]
+#include <pgtable.h>    // for [p6-task1]
+#include <print_custom.h>
 
 /* macros of file system */
 #define SUPERBLOCK_MAGIC 0x20221205
@@ -30,6 +33,8 @@ typedef struct superblock_t{
     // count in bytes
     int inode_entry_size;
     int dir_entry_size;
+
+    int root_inode_id;
 } __attribute__((aligned(SECTOR_SIZE))) superblock_t;
 
 // for [p6-task1]
@@ -81,6 +86,11 @@ int cwd_inode_id;
 
 typedef struct fdesc_t{
     // TODO [P6-task2]: Implement the data structure of file descriptor
+    int valid;
+    int mode;
+    int inode_id;
+    int rd_off;
+    int wr_off;
 } fdesc_t;
 
 /* modes of do_fopen */
@@ -112,5 +122,42 @@ extern int do_fclose(int fd);
 extern int do_ln(char *src_path, char *dst_path);
 extern int do_rm(char *path);
 extern int do_lseek(int fd, int offset, int whence);
+
+// for [p6-task1]
+superblock_t superblock;
+fdesc_t fdesc_array[NUM_FDESCS];
+
+extern int alloc_datablock();
+extern int alloc_inode();
+extern void free_inode(int id);
+extern void free_datablock(int id);
+extern void free_all_datablocks_in_inode(inode_t *inodeptr);
+extern int map_dentry(dir_t *dirptr, char *name, int inode_id);
+extern int parse_path(char *path, char **result);
+extern int grope_path(char **parsed_path, int grope_level);
+static inline void sd_read_inode(inode_t *buff, int inode_id){
+    sd_read(kva2pa(buff), 1, 
+        superblock.start_sector_id + superblock.inode_sector_offset + inode_id);
+}
+static inline void sd_write_inode(inode_t *buff, int inode_id){
+    sd_write(kva2pa(buff), 1,
+        superblock.start_sector_id + superblock.inode_sector_offset + inode_id);
+}
+static inline void sd_read_data(dir_t *buff, int datablock_id){
+    sd_read(kva2pa(buff), FS_DATABLOCK_SIZE_COUNT_IN_SECTORS,
+        superblock.start_sector_id + superblock.data_sector_offset +
+        FS_DATABLOCK_SIZE_COUNT_IN_SECTORS * datablock_id);
+}
+static inline void sd_write_data(dir_t *buff, int datablock_id){
+    sd_write(kva2pa(buff), FS_DATABLOCK_SIZE_COUNT_IN_SECTORS,
+        superblock.start_sector_id + superblock.data_sector_offset +
+        FS_DATABLOCK_SIZE_COUNT_IN_SECTORS * datablock_id);
+}
+extern int search_inode_from_inode(inode_t *father_inodeptr, char *name);
+extern void delete_dentry_from_inode(inode_t *father_inodeptr, char *name);
+extern void record_dentry_to_inode(inode_t *father_inodeptr, char *name, int inode_id);
+extern int create_new_dir(int is_root, int father_inode_id);
+extern int create_new_file(int father_inode_id);
+
 
 #endif

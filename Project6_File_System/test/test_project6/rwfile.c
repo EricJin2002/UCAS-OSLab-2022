@@ -6,6 +6,8 @@ static char buff[64];
 
 int main(void)
 {
+    sys_move_cursor(0,0);
+
     int fd = sys_fopen("1.txt", O_RDWR);
 
     // write 'hello world!' * 10
