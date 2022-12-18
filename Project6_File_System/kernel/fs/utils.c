@@ -276,3 +276,65 @@ int create_new_file(int father_inode_id){
     printl("[create_new_file] (%d . %d)\n", father_inode_id, tmp_inode.id);
     return tmp_inode.id;
 }
+
+static int pow(int x, int a){
+    int ret = 1;
+    for(int i=0;i<a;i++){
+        ret*=x;
+    }
+    return ret;
+}
+
+// for [p6-task1]
+// find and return datablock entry from the input entry
+// if entry invalid, create new datablock to make it valid
+// the caller MUST write back the input entry to the disk!
+inode_entry_t *find_datablock(int indirect_level, int datablock_no, inode_entry_t *entry){
+    if(!entry->valid){
+        entry->valid=1;
+        assert((entry->datablock_id=alloc_datablock())!=-1);
+        static char blank[FS_DATABLOCK_SIZE];
+        memset(blank, 0, FS_DATABLOCK_SIZE);
+        sd_write_data(blank, entry->datablock_id);
+    }
+
+    if(!indirect_level){
+        return entry;
+    }else{
+        int datablock_this_no, datablock_next_no;
+        datablock_this_no = datablock_no / pow(FS_DBTABLE_ENTRY_NUM, indirect_level-1);
+        datablock_next_no = datablock_no % pow(FS_DBTABLE_ENTRY_NUM, indirect_level-1);
+
+        // create at least 3 buff for nested calling
+        static dbtable_t datablock_table_ptr[4];
+        sd_read_data(datablock_table_ptr[indirect_level], entry->datablock_id);
+        inode_entry_t *ret_entry = find_datablock(
+            indirect_level-1, 
+            datablock_next_no, 
+            &datablock_table_ptr[indirect_level][datablock_this_no]
+        );
+        sd_write_data(datablock_table_ptr[indirect_level], entry->datablock_id);
+
+        return ret_entry;
+    }
+}
+
+// for [p6-task1]
+void print_datablock(int indirect_level, inode_entry_t *entry){
+    if(!entry->valid){
+        return;
+    }
+
+    static dbtable_t datablock_table_ptr[4];
+    sd_read_data(datablock_table_ptr[indirect_level], entry->datablock_id);
+    
+    if(!indirect_level){
+        for(int i=0;i<FS_DATABLOCK_SIZE;i++){
+            printk("%c",((char *)datablock_table_ptr[0])[i]);
+        }
+    }else{
+        for(int i=0;i<FS_DBTABLE_ENTRY_NUM;i++){
+            print_datablock(indirect_level-1, &datablock_table_ptr[indirect_level][i]);
+        }
+    }
+}

@@ -65,6 +65,10 @@ typedef struct inode_entry_t{
 } inode_entry_t;
 #define FS_DIRECT_INODE_ENTRY_NUM 6
 
+// for [p6-task1]
+#define FS_DBTABLE_ENTRY_NUM (FS_DATABLOCK_SIZE/sizeof(inode_entry_t))
+typedef inode_entry_t dbtable_t[FS_DBTABLE_ENTRY_NUM];
+
 typedef struct inode_t{ 
     // TODO [P6-task1]: Implement the data structure of inode
     int id;
@@ -127,6 +131,9 @@ extern int do_lseek(int fd, int offset, int whence);
 superblock_t superblock;
 fdesc_t fdesc_array[NUM_FDESCS];
 
+// for [p6-task1]
+// in utils.c
+
 extern int alloc_datablock();
 extern int alloc_inode();
 extern void free_inode(int id);
@@ -158,6 +165,7 @@ extern void delete_dentry_from_inode(inode_t *father_inodeptr, char *name);
 extern void record_dentry_to_inode(inode_t *father_inodeptr, char *name, int inode_id);
 extern int create_new_dir(int is_root, int father_inode_id);
 extern int create_new_file(int father_inode_id);
-
+extern inode_entry_t *find_datablock(int indirect_level, int datablock_no, inode_entry_t *entry);
+extern void print_datablock(int indirect_level, inode_entry_t *entry);
 
 #endif

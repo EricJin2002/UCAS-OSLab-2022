@@ -374,6 +374,55 @@ int do_touch(char *path)
 int do_cat(char *path)
 {
     // TODO [P6-task2]: Implement do_cat
+    // parse path
+    char *parsed_path[FS_DIR_MAX_LEVEL];
+    int cnt=parse_path(path, parsed_path);
+
+    // grope path
+    int father_inode_id = grope_path(parsed_path, cnt-1);
+    if(father_inode_id==-1){
+        return -1;
+    }
+
+    // read father inode
+    static inode_t father_inode;
+    sd_read_inode(&father_inode, father_inode_id);
+    if(father_inode.type!=DIR){
+        printk("Error: %s not a dir!\n", parsed_path[cnt-2]);
+        return -1;
+    }
+
+    // search in the direct dentry
+    int son_inode_id=search_inode_from_inode(&father_inode, parsed_path[cnt-1]);
+    if(son_inode_id==-1){
+        // no such file
+        printk("Error: No file named %s!\n", parsed_path[cnt-1]);
+        return -1;
+    }
+
+    // son inode exists
+    static inode_t son_inode;
+    sd_read_inode(&son_inode, son_inode_id);
+    if(son_inode.type!=FILE){
+        printk("Error: %s not a file!\n", parsed_path[cnt-1]);
+        return -1;
+    }
+
+    // read file
+    for(int i=0;i<FS_DIRECT_INODE_ENTRY_NUM;i++){
+        print_datablock(0, &son_inode.direct[i]);
+    }
+    print_datablock(1, &son_inode.indirect);
+    print_datablock(2, &son_inode.double_indirect);
+    print_datablock(3, &son_inode.triple_indirect);
+
+    return 0;  // do_rm succeeds 
+}
+
+// use fd to cat, abandoned
+int do_cat__old_version(char *path)
+{
+    // TODO [P6-task2]: Implement do_cat
     int fd=do_fopen(path, O_RDONLY);
     if(fd==-1){
         return -1;
@@ -486,17 +535,67 @@ int do_fread(int fd, char *buff, int length)
     int tmp_len=len;
     while(tmp_len>0){
         int datablock_no = off/FS_DATABLOCK_SIZE;
+        // assert(datablock_no<FS_DIRECT_INODE_ENTRY_NUM);
 
-        // todo: only support direct blocks yet
-        assert(datablock_no<FS_DIRECT_INODE_ENTRY_NUM);
-        assert(tmp_inode.direct[datablock_no].valid);
+        inode_entry_t *target_entry;
+        if(datablock_no<FS_DIRECT_INODE_ENTRY_NUM){
+            // direct
+            target_entry = find_datablock(0, 0, tmp_inode.direct+datablock_no);
+            sd_write_inode(&tmp_inode, tmp_inode.id);
+
+            // the same as followings:
+            // target_entry = tmp_inode.direct+datablock_no;
+            // if(!target_entry->valid){
+            //     target_entry->valid=1;
+            //     target_entry->datablock_id=alloc_datablock();
+            //     sd_write_inode(&tmp_inode, tmp_inode.id);
+            // 
+            //     static char blank[FS_DATABLOCK_SIZE];
+            //     memset(blank, 0, FS_DATABLOCK_SIZE);
+            //     sd_write_data(blank, target_entry->datablock_id);
+            // }
+
+            goto find;
+        }
+        
+        datablock_no-=FS_DIRECT_INODE_ENTRY_NUM;
+        if(datablock_no<FS_DBTABLE_ENTRY_NUM){
+            // indirect
+            target_entry = find_datablock(1, datablock_no, &tmp_inode.indirect);
+            sd_write_inode(&tmp_inode, tmp_inode.id);
+
+            goto find;
+        }
+
+        datablock_no-=FS_DBTABLE_ENTRY_NUM;
+        if(datablock_no<FS_DBTABLE_ENTRY_NUM*FS_DBTABLE_ENTRY_NUM){
+            // double indirect
+            target_entry = find_datablock(2, datablock_no, &tmp_inode.double_indirect);
+            sd_write_inode(&tmp_inode, tmp_inode.id);
+
+            goto find;
+        }
+
+        datablock_no-=FS_DBTABLE_ENTRY_NUM*FS_DBTABLE_ENTRY_NUM;
+        if(datablock_no<FS_DBTABLE_ENTRY_NUM*FS_DBTABLE_ENTRY_NUM*FS_DBTABLE_ENTRY_NUM){
+            // triple indirect
+            target_entry = find_datablock(3, datablock_no, &tmp_inode.triple_indirect);
+            sd_write_inode(&tmp_inode, tmp_inode.id);
+
+            goto find;
+        }
+
+        // file exceeds maximal size
+        assert(0);
 
         static char tmp_datablock[FS_DATABLOCK_SIZE];
-        sd_read_data(tmp_datablock, tmp_inode.direct[datablock_no].datablock_id);
+    find:    
+        sd_read_data(tmp_datablock, target_entry->datablock_id);
 
         for(int i=off%FS_DATABLOCK_SIZE;i<FS_DATA_TOT_SIZE&&tmp_len>0;i++){
             *(buff++)=tmp_datablock[i];
             tmp_len--;
+            off++;
         }
     }
 
@@ -524,34 +623,76 @@ int do_fwrite(int fd, char *buff, int length)
     // read off and len
     int off=fdesc_array[fd].wr_off;
     int len=length;
-    assert(off+len<=FS_DIRECT_INODE_ENTRY_NUM*FS_DATABLOCK_SIZE);
+    // assert(off+len<=FS_DIRECT_INODE_ENTRY_NUM*FS_DATABLOCK_SIZE);
 
     // write
     int tmp_len=len;
     while(tmp_len>0){
         int datablock_no = off/FS_DATABLOCK_SIZE;
+        // assert(datablock_no<FS_DIRECT_INODE_ENTRY_NUM);
 
-        // todo: only support direct blocks yet
-        assert(datablock_no<FS_DIRECT_INODE_ENTRY_NUM);
+        inode_entry_t *target_entry;
+        if(datablock_no<FS_DIRECT_INODE_ENTRY_NUM){
+            // direct
+            target_entry = find_datablock(0, 0, tmp_inode.direct+datablock_no);
+            sd_write_inode(&tmp_inode, tmp_inode.id);
+
+            // the same as followings:
+            // target_entry = tmp_inode.direct+datablock_no;
+            // if(!target_entry->valid){
+            //     target_entry->valid=1;
+            //     target_entry->datablock_id=alloc_datablock();
+            //     sd_write_inode(&tmp_inode, tmp_inode.id);
+            // 
+            //     static char blank[FS_DATABLOCK_SIZE];
+            //     memset(blank, 0, FS_DATABLOCK_SIZE);
+            //     sd_write_data(blank, target_entry->datablock_id);
+            // }
+
+            goto find;
+        }
         
-        if(!tmp_inode.direct[datablock_no].valid){
-            tmp_inode.direct[datablock_no].valid=1;
-            tmp_inode.direct[datablock_no].datablock_id=alloc_datablock();
-            
-            static char blank[FS_DATABLOCK_SIZE];
-            memset(blank, 0, FS_DATABLOCK_SIZE);
-            sd_write_data(blank, tmp_inode.direct[datablock_no].datablock_id);
+        datablock_no-=FS_DIRECT_INODE_ENTRY_NUM;
+        if(datablock_no<FS_DBTABLE_ENTRY_NUM){
+            // indirect
+            target_entry = find_datablock(1, datablock_no, &tmp_inode.indirect);
+            sd_write_inode(&tmp_inode, tmp_inode.id);
+
+            goto find;
         }
 
+        datablock_no-=FS_DBTABLE_ENTRY_NUM;
+        if(datablock_no<FS_DBTABLE_ENTRY_NUM*FS_DBTABLE_ENTRY_NUM){
+            // double indirect
+            target_entry = find_datablock(2, datablock_no, &tmp_inode.double_indirect);
+            sd_write_inode(&tmp_inode, tmp_inode.id);
+
+            goto find;
+        }
+
+        datablock_no-=FS_DBTABLE_ENTRY_NUM*FS_DBTABLE_ENTRY_NUM;
+        if(datablock_no<FS_DBTABLE_ENTRY_NUM*FS_DBTABLE_ENTRY_NUM*FS_DBTABLE_ENTRY_NUM){
+            // triple indirect
+            target_entry = find_datablock(3, datablock_no, &tmp_inode.triple_indirect);
+            sd_write_inode(&tmp_inode, tmp_inode.id);
+
+            goto find;
+        }
+
+        // file exceeds maximal size
+        assert(0);
+
         static char tmp_datablock[FS_DATABLOCK_SIZE];
-        sd_read_data(tmp_datablock, tmp_inode.direct[datablock_no].datablock_id);
+    find:    
+        sd_read_data(tmp_datablock, target_entry->datablock_id);
 
         for(int i=off%FS_DATABLOCK_SIZE;i<FS_DATA_TOT_SIZE&&tmp_len>0;i++){
             tmp_datablock[i]=*(buff++);
             tmp_len--;
+            off++;
         }
 
-        sd_write_data(tmp_datablock, tmp_inode.direct[datablock_no].datablock_id);
+        sd_write_data(tmp_datablock, target_entry->datablock_id);
     }
 
     fdesc_array[fd].wr_off+=len;
