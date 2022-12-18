@@ -106,6 +106,7 @@ int map_dentry(dir_t *dirptr, char *name, int inode_id){
 
 // for [p6-task1]
 int parse_path(char *path, char **result){
+    // fixme: path will be modified in being parsed
     if(!path){
         path=".";
     }

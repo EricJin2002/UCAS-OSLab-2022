@@ -227,16 +227,14 @@ int main(void)
                 // taskset -p mask pid
                 if(argc<4){
                     printf("Error: Not enough args!\n");
-                }
-                if(!sys_taskset_pid(atoi(argv[2]),atoi(argv[3]))){
+                }else if(!sys_taskset_pid(atoi(argv[2]),atoi(argv[3]))){
                     printf("Error: No such pid!\n");
                 }
             }else{
                 // taskset mask name
                 if(argc<3){
                     printf("Error: Not enough args!\n");
-                }
-                if(!sys_taskset_name(atoi(argv[1]),argv[2],argc-2,argv+2)){
+                }else if(!sys_taskset_name(atoi(argv[1]),argv[2],argc-2,argv+2)){
                     printf("Error: Running a BAT / No such APP / No available PCB!\n");
                 }
             }
@@ -264,6 +262,15 @@ int main(void)
             sys_touch(argv[1]);
         }else if(!strcmp(argv[0],"cat")){
             sys_cat(argv[1]);
+        }else if(!strcmp(argv[0],"ln")){
+            // ln src_path dst_path
+            if(argc<3){
+                printf("Error: Not enough args!\n");
+            }else{
+                sys_ln(argv[1], argv[2]);
+            }
+        }else if(!strcmp(argv[0],"rm")){
+            sys_rm(argv[1]);
         }else{
             printf("Error: Unknown command %s!\n",argv[0]);
             err=1;

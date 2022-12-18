@@ -456,7 +456,7 @@ int do_fopen(char *path, int mode)
 int do_fread(int fd, char *buff, int length)
 {
     // TODO [P6-task2]: Implement do_fread
-    if(!fdesc_array[fd].valid){
+    if(fd<0 || fd>=NUM_FDESCS || !fdesc_array[fd].valid){
         printk("Error: fd not valid!\n");
         return -1;
     }
@@ -475,6 +475,11 @@ int do_fread(int fd, char *buff, int length)
     int len=length;
     if(len+off>tmp_inode.size){
         len=tmp_inode.size-off;
+    }
+    if(len<0){
+        // the read off is already beyond the end of file
+        // do nothing
+        len=0;
     }
 
     // read
@@ -502,7 +507,7 @@ int do_fread(int fd, char *buff, int length)
 int do_fwrite(int fd, char *buff, int length)
 {
     // TODO [P6-task2]: Implement do_fwrite
-    if(!fdesc_array[fd].valid){
+    if(fd<0 || fd>=NUM_FDESCS || !fdesc_array[fd].valid){
         printk("Error: fd not valid!\n");
         return -1;
     }
@@ -574,6 +579,43 @@ int do_fclose(int fd)
 int do_ln(char *src_path, char *dst_path)
 {
     // TODO [P6-task2]: Implement do_ln
+    // parse path
+    char *parsed_src_path[FS_DIR_MAX_LEVEL];
+    int src_cnt=parse_path(src_path, parsed_src_path);
+    char *parsed_dst_path[FS_DIR_MAX_LEVEL];
+    int dst_cnt=parse_path(dst_path, parsed_dst_path);
+
+    // grope path
+    int src_inode_id = grope_path(parsed_src_path, src_cnt);
+    if(src_inode_id==-1){
+        return -1;
+    }
+    int dst_father_inode_id = grope_path(parsed_dst_path, dst_cnt-1);
+    if(dst_father_inode_id==-1){
+        return -1;
+    }
+
+    // read father inode
+    static inode_t father_inode;
+    sd_read_inode(&father_inode, dst_father_inode_id);
+    if(father_inode.type!=DIR){
+        printk("Error: %s not a dir!\n", parsed_dst_path[dst_cnt-2]);
+        return -1;
+    }
+
+    // search in the dentries
+    if(search_inode_from_inode(&father_inode, parsed_dst_path[dst_cnt-1])!=-1){
+        // file/dir already exists
+        printk("Error: %s already exists!\n", parsed_dst_path[dst_cnt-1]);
+        return -1;
+    }
+
+    // no such file, start link
+    static inode_t tmp_inode;
+    sd_read_inode(&tmp_inode, src_inode_id);
+    tmp_inode.nlinks++;
+    sd_write_inode(&tmp_inode, src_inode_id);
+    record_dentry_to_inode(&father_inode, parsed_dst_path[dst_cnt-1], src_inode_id);
 
     return 0;  // do_ln succeeds 
 }
@@ -581,6 +623,52 @@ int do_ln(char *src_path, char *dst_path)
 int do_rm(char *path)
 {
     // TODO [P6-task2]: Implement do_rm
+    // parse path
+    char *parsed_path[FS_DIR_MAX_LEVEL];
+    int cnt=parse_path(path, parsed_path);
+
+    // grope path
+    int father_inode_id = grope_path(parsed_path, cnt-1);
+    if(father_inode_id==-1){
+        return -1;
+    }
+
+    // read father inode
+    static inode_t father_inode;
+    sd_read_inode(&father_inode, father_inode_id);
+    if(father_inode.type!=DIR){
+        printk("Error: %s not a dir!\n", parsed_path[cnt-2]);
+        return -1;
+    }
+
+    // search in the direct dentry
+    int son_inode_id=search_inode_from_inode(&father_inode, parsed_path[cnt-1]);
+    if(son_inode_id==-1){
+        // no such file
+        printk("Error: No file named %s!\n", parsed_path[cnt-1]);
+        return -1;
+    }
+
+    // son inode exists
+    static inode_t son_inode;
+    sd_read_inode(&son_inode, son_inode_id);
+    if(son_inode.type!=FILE){
+        printk("Error: %s not a file!\n", parsed_path[cnt-1]);
+        return -1;
+    }
+
+    // delete son inode in father dir
+    delete_dentry_from_inode(&father_inode, parsed_path[cnt-1]);
+
+    // decrease inode nlinks
+    son_inode.nlinks--;
+    sd_write_inode(&son_inode, son_inode_id);
+
+    // delete son inode if nlinks comes to 0
+    if(!son_inode.nlinks){
+        free_all_datablocks_in_inode(&son_inode);
+        free_inode(son_inode_id);
+    }
 
     return 0;  // do_rm succeeds 
 }
@@ -588,6 +676,24 @@ int do_rm(char *path)
 int do_lseek(int fd, int offset, int whence)
 {
     // TODO [P6-task2]: Implement do_lseek
+    if(fd<0 || fd>=NUM_FDESCS || !fdesc_array[fd].valid){
+        printk("Error: fd not valid!\n");
+        return -1;
+    }
 
-    return 0;  // the resulting offset location from the beginning of the file
+    if(whence==SEEK_SET){
+        fdesc_array[fd].rd_off=offset;
+        fdesc_array[fd].wr_off=offset;
+    }else if(whence==SEEK_CUR){
+        fdesc_array[fd].rd_off+=offset;
+        fdesc_array[fd].wr_off+=offset;
+    }else if(whence==SEEK_END){
+        static inode_t tmp_inode;
+        sd_read_inode(&tmp_inode, fdesc_array[fd].inode_id);
+        fdesc_array[fd].rd_off=tmp_inode.size+offset;
+        fdesc_array[fd].wr_off=tmp_inode.size+offset;
+    }
+
+    // the resulting offset location from the beginning of the file
+    return fdesc_array[fd].wr_off;
 }
