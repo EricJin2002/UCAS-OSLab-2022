@@ -384,3 +384,11 @@ int sys_lseek(int fd, int offset, int whence)
     // TODO [P6-task2]: Implement sys_lseek
     return invoke_syscall(SYSCALL_FS_LSEEK, (long)fd, (long)offset, (long)whence, IGNORE, IGNORE);  // the resulting offset location from the beginning of the file
 }
+
+int sys_batch(char *path){
+    return invoke_syscall(SYSCALL_BATCH, (long)path, IGNORE, IGNORE, IGNORE, IGNORE);
+}
+
+int sys_mbox_bytes(int mbox_idx){
+    return invoke_syscall(SYSCALL_MBOX_BYTES, mbox_idx, IGNORE, IGNORE, IGNORE, IGNORE);
+}

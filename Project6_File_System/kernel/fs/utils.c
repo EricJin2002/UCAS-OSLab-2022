@@ -329,12 +329,44 @@ void print_datablock(int indirect_level, inode_entry_t *entry){
     sd_read_data(datablock_table_ptr[indirect_level], entry->datablock_id);
     
     if(!indirect_level){
+        // buf is for a better print speed
+        static char print_buf[FS_DATABLOCK_SIZE];
+        int head=0;
         for(int i=0;i<FS_DATABLOCK_SIZE;i++){
-            printk("%c",((char *)datablock_table_ptr[0])[i]);
+            // printk("%c",((char *)datablock_table_ptr[0])[i]);
+            if(((char *)datablock_table_ptr[0])[i]){
+                print_buf[head++]=((char *)datablock_table_ptr[0])[i];
+            }
         }
+        print_buf[head]='\0';
+        printk("%s",print_buf);
     }else{
         for(int i=0;i<FS_DBTABLE_ENTRY_NUM;i++){
             print_datablock(indirect_level-1, &datablock_table_ptr[indirect_level][i]);
+        }
+    }
+}
+
+// for [p6-task3]
+void print_datablock_to_buf(int indirect_level, inode_entry_t *entry, char **bufptr){
+    // copied from print_datablock
+
+    if(!entry->valid){
+        return;
+    }
+
+    static dbtable_t datablock_table_ptr[4];
+    sd_read_data(datablock_table_ptr[indirect_level], entry->datablock_id);
+    
+    if(!indirect_level){
+        for(int i=0;i<FS_DATABLOCK_SIZE;i++){
+            if(((char *)datablock_table_ptr[0])[i]){
+                *((*bufptr)++)=((char *)datablock_table_ptr[0])[i];
+            }
+        }
+    }else{
+        for(int i=0;i<FS_DBTABLE_ENTRY_NUM;i++){
+            print_datablock_to_buf(indirect_level-1, &datablock_table_ptr[indirect_level][i], bufptr);
         }
     }
 }

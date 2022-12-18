@@ -10,7 +10,6 @@
 
 // for [p3-task1]
 // copied from shell.c
-#define TASK_NAME_MAXLEN    50
 static inline int isspace(int ch){
     return ch == ' '  || ch == '\t' || ch == '\n' ||
            ch == '\v' || ch == '\f' || ch == '\r';
@@ -31,7 +30,7 @@ static void parse_args(char *cache, int *argc, char *(*argv)[TASK_NAME_MAXLEN+1]
     }
     (*argv)[*argc]=(char *)0;
 }
-static pcb_t *do_parse_and_exec_and_wait(char *cache, pcb_t *waiton){
+pcb_t *do_parse_and_exec_and_wait(char *cache, pcb_t *waiton){
     int argc;
     char *argv[TASK_NAME_MAXLEN+1];
     parse_args(cache, &argc, &argv);
@@ -178,22 +177,7 @@ int load_bat_img(int taskid){
 
     //excute batch
     printk("\n===Now excute batch!===\n");
-    int bat_iter = 0;
-    int bat_iter_his = 0;
-    pcb_t *pcb_hist = 0;
-    while(bat_cache[bat_iter]){
-        if(bat_cache[bat_iter]=='\n'){
-            bat_cache[bat_iter]='\0';
-            // excute_task_img_via_name(bat_cache + bat_iter_his);
-            // for [p3-task1]
-            pcb_hist = do_parse_and_exec_and_wait(bat_cache+bat_iter_his, pcb_hist);
-            bat_iter_his=bat_iter+1;
-        }
-        bat_iter++;
-    }
-    // excute_task_img_via_name(bat_cache + bat_iter_his);
-    // for [p3-task1]
-    do_parse_and_exec_and_wait(bat_cache+bat_iter_his, pcb_hist);
+    exec_batch(bat_cache);
     printk("===All tasks in batch are excuted!===\n");
 
     printk("\n");

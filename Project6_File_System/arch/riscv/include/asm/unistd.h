@@ -68,4 +68,9 @@
 #define SYSCALL_GET_PA 86
 #define SYSCALL_SNAPSHOT 87
 
+// for [p6-task3]
+#define SYSCALL_BATCH 88
+
+// for [p6-task3]
+#define SYSCALL_MBOX_BYTES 89
 #endif

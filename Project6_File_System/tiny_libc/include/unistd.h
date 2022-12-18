@@ -98,4 +98,10 @@ int sys_ln(char *src_path, char *dst_path);
 int sys_rm(char *path);
 int sys_lseek(int fd, int offset, int whence);
 
+// for [p6-task3]
+int sys_batch(char *path);
+
+// for [p6-task3]
+int sys_mbox_bytes(int mbox_idx);
+
 #endif

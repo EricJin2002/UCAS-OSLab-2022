@@ -127,6 +127,9 @@ extern int do_ln(char *src_path, char *dst_path);
 extern int do_rm(char *path);
 extern int do_lseek(int fd, int offset, int whence);
 
+// for [p6-task3]
+int do_batch(char *path);
+
 // for [p6-task1]
 superblock_t superblock;
 fdesc_t fdesc_array[NUM_FDESCS];
@@ -167,5 +170,6 @@ extern int create_new_dir(int is_root, int father_inode_id);
 extern int create_new_file(int father_inode_id);
 extern inode_entry_t *find_datablock(int indirect_level, int datablock_no, inode_entry_t *entry);
 extern void print_datablock(int indirect_level, inode_entry_t *entry);
+extern void print_datablock_to_buf(int indirect_level, inode_entry_t *entry, char **bufptr);
 
 #endif

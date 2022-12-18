@@ -201,8 +201,8 @@ void do_unblock(list_node_t *pcb_node)
     // TODO: [p2-task2] unblock the `pcb` from the block queue
     list_push(&ready_queue, pcb_node);
     LIST2PCB(pcb_node)->status = TASK_READY;
-    printl("do_unblock pid %d\n\r",LIST2PCB(pcb_node)->pid);
-    pcb_list_print(&ready_queue);
+    // printl("do_unblock pid %d\n\r",LIST2PCB(pcb_node)->pid);
+    // pcb_list_print(&ready_queue);
 }
 
 extern void ret_from_exception();

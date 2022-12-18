@@ -21,4 +21,10 @@ int load_bat_img(int taskid);
 int load_bat_img_via_name(char *taskname);
 int find_task_named(char *taskname);
 
+#define TASK_NAME_MAXLEN    50
+pcb_t *do_parse_and_exec_and_wait(char *cache, pcb_t *waiton);
+
+// for [p6-task3]
+// in batch.c
+void exec_batch(char *bat_cache);
 #endif

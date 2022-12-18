@@ -271,6 +271,12 @@ int main(void)
             }
         }else if(!strcmp(argv[0],"rm")){
             sys_rm(argv[1]);
+        }else if(!strcmp(argv[0],"batch")){
+            if(argc<2){
+                printf("Error: Not enough args!\n");
+            }else{
+                sys_batch(argv[1]);
+            }
         }else{
             printf("Error: Unknown command %s!\n",argv[0]);
             err=1;

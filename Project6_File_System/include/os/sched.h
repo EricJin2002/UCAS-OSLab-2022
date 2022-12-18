@@ -34,7 +34,7 @@
 #include <os/lock.h> // for [p3]
 #include <os/smp.h>  // for [p3]
 
-#define NUM_MAX_TASK 30
+#define NUM_MAX_TASK 100
 
 /* used to save register infomation */
 typedef struct regs_context

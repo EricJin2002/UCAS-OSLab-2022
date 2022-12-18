@@ -105,7 +105,7 @@ void do_condition_signal(int cond_idx);
 void do_condition_broadcast(int cond_idx);
 void do_condition_destroy(int cond_idx);
 
-#define MAX_MBOX_LENGTH (64)
+#define MAX_MBOX_LENGTH (512)
 
 typedef struct mailbox
 {
@@ -125,5 +125,8 @@ int do_mbox_open(char *name);
 void do_mbox_close(int mbox_idx);
 int do_mbox_send(int mbox_idx, void * msg, int msg_length);
 int do_mbox_recv(int mbox_idx, void * msg, int msg_length);
+
+// for [p6-task3]
+int mbox_bytes(int mbox_idx);
 
 #endif

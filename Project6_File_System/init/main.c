@@ -24,6 +24,8 @@
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *  * * * * * * * * * * */
 
+// #define NET
+
 #include <common.h>
 #include <asm.h>
 #include <asm/unistd.h>
@@ -240,6 +242,10 @@ static void init_syscall(void)
     syscall[SYSCALL_FS_LN]          = (long (*)())do_ln;
     syscall[SYSCALL_FS_RM]          = (long (*)())do_rm;
     syscall[SYSCALL_FS_LSEEK]       = (long (*)())do_lseek;
+    
+    syscall[SYSCALL_BATCH]          = (long (*)())do_batch;
+
+    syscall[SYSCALL_MBOX_BYTES]     = (long (*)())mbox_bytes;
 }
 
 // for [p3-task3]

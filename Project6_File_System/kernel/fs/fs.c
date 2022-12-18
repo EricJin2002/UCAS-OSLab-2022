@@ -1,5 +1,6 @@
 #include <os/string.h>
 #include <os/fs.h>
+#include <os/loader.h>  // for [p6-task3]
 
 // for [p6-task1]
 void init_fs(void){
@@ -837,4 +838,61 @@ int do_lseek(int fd, int offset, int whence)
 
     // the resulting offset location from the beginning of the file
     return fdesc_array[fd].wr_off;
+}
+
+// note: '\0' in the middle break batch
+int do_batch(char *path){
+    // copied from do_cat
+
+    // parse path
+    char *parsed_path[FS_DIR_MAX_LEVEL];
+    int cnt=parse_path(path, parsed_path);
+
+    // grope path
+    int father_inode_id = grope_path(parsed_path, cnt-1);
+    if(father_inode_id==-1){
+        return -1;
+    }
+
+    // read father inode
+    static inode_t father_inode;
+    sd_read_inode(&father_inode, father_inode_id);
+    if(father_inode.type!=DIR){
+        printk("Error: %s not a dir!\n", parsed_path[cnt-2]);
+        return -1;
+    }
+
+    // search in the direct dentry
+    int son_inode_id=search_inode_from_inode(&father_inode, parsed_path[cnt-1]);
+    if(son_inode_id==-1){
+        // no such file
+        printk("Error: No file named %s!\n", parsed_path[cnt-1]);
+        return -1;
+    }
+
+    // son inode exists
+    static inode_t son_inode;
+    sd_read_inode(&son_inode, son_inode_id);
+    if(son_inode.type!=FILE){
+        printk("Error: %s not a file!\n", parsed_path[cnt-1]);
+        return -1;
+    }
+
+    static char batch_buf[4096]; // enlarge this if necessary
+    char *batch_buf_cur = batch_buf;
+
+    // read file
+    for(int i=0;i<FS_DIRECT_INODE_ENTRY_NUM;i++){
+        print_datablock_to_buf(0, &son_inode.direct[i], &batch_buf_cur);
+    }
+    print_datablock_to_buf(1, &son_inode.indirect, &batch_buf_cur);
+    print_datablock_to_buf(2, &son_inode.double_indirect, &batch_buf_cur);
+    print_datablock_to_buf(3, &son_inode.triple_indirect, &batch_buf_cur);
+
+    *batch_buf_cur='\0';
+
+    printk("Executing batch: \n%s", batch_buf);
+
+    // execute batch
+    exec_batch(batch_buf);
 }

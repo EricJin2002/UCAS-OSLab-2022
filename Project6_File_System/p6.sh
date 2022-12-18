@@ -10,7 +10,7 @@ echo $prefix"main 0x50202000" >> $out
 for file in ${folder}/*.txt
 do  
     temp_file=`basename $file .txt`
-    if [ $temp_file == "send" ]; then
+    if [ $temp_file == "test" ]; then
         echo $prefix$temp_file >> $out
     fi
 done

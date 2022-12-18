@@ -70,6 +70,8 @@ int do_mbox_send(int mbox_idx, void * msg, int msg_length){
         mboxs[mbox_idx].buff[mboxs[mbox_idx].head%(MAX_MBOX_LENGTH+1)]=i[(char *)msg];
         mboxs[mbox_idx].head++;
     }
+
+    printl("curr mbox: %d\n", mboxs[mbox_idx].head-mboxs[mbox_idx].tail);
     
     list_node_t *node;
     // we cannot use if here
@@ -98,6 +100,8 @@ int do_mbox_recv(int mbox_idx, void * msg, int msg_length){
         mboxs[mbox_idx].tail++;
     }
     
+    printl("curr mbox: %d\n", mboxs[mbox_idx].head-mboxs[mbox_idx].tail);
+
     list_node_t *node;
     // we cannot use if here
     // because the poped sender might still not have enough space
@@ -108,4 +112,8 @@ int do_mbox_recv(int mbox_idx, void * msg, int msg_length){
 
     spin_lock_release(&mboxs[mbox_idx].lock);
     return ret;
+}
+
+int mbox_bytes(int mbox_idx){
+    return mboxs[mbox_idx].head-mboxs[mbox_idx].tail;
 }
