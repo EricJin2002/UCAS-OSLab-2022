@@ -24,7 +24,7 @@
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *  * * * * * * * * * * */
 
-// #define NET
+#define NET
 
 #include <common.h>
 #include <asm.h>

@@ -83,6 +83,39 @@ int do_statfs(void)
     printk("sector num %d   start sector id %d\n",superblock.sector_num, superblock.start_sector_id);
     printk("inode entry size %dB   dir entry size %dB\n",superblock.inode_entry_size, superblock.dir_entry_size);
     
+    // coutnt used bytes in map
+    static char map_buff[SECTOR_SIZE];
+
+    int used_block_num=0;
+    for(int i=0;i<superblock.blockmap_sector_num;i++){
+        sd_read(kva2pa(map_buff), 1, superblock.start_sector_id + superblock.blockmap_sector_offset + i);
+        for(int j=0;j<SECTOR_SIZE;j++){
+            char tmp=map_buff[j];
+            for(int k=0;k<8;k++){
+                if(tmp&1){
+                    used_block_num++;
+                }
+                tmp>>=1;
+            }
+        }
+    }
+    printk("used datablock num %d\n", used_block_num);
+
+    int used_inode_num=0;
+    for(int i=0;i<superblock.inodemap_sector_num;i++){
+        sd_read(kva2pa(map_buff), 1, superblock.start_sector_id + superblock.inodemap_sector_offset + i);
+        for(int j=0;j<SECTOR_SIZE;j++){
+            char tmp=map_buff[j];
+            for(int k=0;k<8;k++){
+                if(tmp&1){
+                    used_inode_num++;
+                }
+                tmp>>=1;
+            }
+        }
+    }
+    printk("used inode num %d\n", used_inode_num);
+
     printk("[Sector Info]\n");
     printk("CONTENT    OFFSET     NUM\n");
     // printk("superblock %d      %d\n", superblock.superblock_sector_offset, superblock.superblock_sector_num);

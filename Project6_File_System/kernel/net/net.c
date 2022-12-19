@@ -59,7 +59,7 @@ void check_net_send(void){
         if(td_sendable(&tail)){
             do_unblock(list_pop(&send_block_queue));
         }else{
-            printk("td not sendable!\n");
+            // printk("td not sendable!\n");
         }
     }
 }
@@ -71,7 +71,7 @@ void check_net_recv(void){
         if(rd_recvable(&tail)){
             do_unblock(list_pop(&recv_block_queue));
         }else{
-            printk("rd not recvable!\n");
+            // printk("rd not recvable!\n");
         }
     }
 }

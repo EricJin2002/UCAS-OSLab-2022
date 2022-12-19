@@ -16,7 +16,7 @@ do
 done
 
 # make debug
-make debug
+make debug-net
 
 
 # if not work, try this:
